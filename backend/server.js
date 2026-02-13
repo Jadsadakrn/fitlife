@@ -56,9 +56,16 @@ app.post("/api/login", async (req, res) => {
   res.json({ token });
 });
 
-app.listen(3000, () => {
-  console.log("🚀 Server running on http://localhost:3000");
+app.get("/", (req, res) => {
+  res.send("FitLife API is running 🚀");
 });
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -80,15 +87,6 @@ app.get("/api/me", authenticateToken, async (req, res) => {
   });
 
   res.json(user);
-});
-
-app.get("/api/programs", async (req, res) => {
-  try {
-    const programs = await prisma.program.findMany();
-    res.json(programs);
-  } catch (error) {
-    res.status(500).json({ error: "Something went wrong" });
-  }
 });
 
 app.get("/api/programs", async (req, res) => {
