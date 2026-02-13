@@ -12,6 +12,8 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+  activities Activity[]
+
 }
 
 model Exercise {
@@ -81,4 +83,13 @@ model Focus {
   targetGender String
   workoutIds  String
   repsInfo    String
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

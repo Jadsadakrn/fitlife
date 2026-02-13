@@ -158,3 +158,32 @@ app.get("/api/foods", async (req, res) => {
 
   res.json(foods);
 });
+
+// บันทึก activity
+app.post("/api/activity", authenticateToken, async (req, res) => {
+  const { action } = req.body;
+
+  try {
+    await prisma.activity.create({
+      data: {
+        userId: req.user.userId,
+        action,
+      },
+    });
+
+    res.json({ message: "Activity recorded" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to record activity" });
+  }
+});
+
+// ดึง activity ของตัวเอง
+app.get("/api/my-activity", authenticateToken, async (req, res) => {
+  const activities = await prisma.activity.findMany({
+    where: { userId: req.user.userId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.json(activities);
+});
+
