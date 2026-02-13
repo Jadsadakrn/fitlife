@@ -175,51 +175,46 @@ app.get("/api/foods", async (req, res) => {
   res.json(foods);
 });
 
-// บันทึก activity
-app.post("/api/activity", authenticateToken, async (req, res) => {
-  const { action } = req.body;
-
-  try {
-    await prisma.activity.create({
-      data: {
-        userId: req.user.userId,
-        action,
-      },
-    });
-
-    res.json({ message: "Activity recorded" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to record activity" });
-  }
-});
-
-// ดึง activity ของตัวเอง
-app.get("/api/my-activity", authenticateToken, async (req, res) => {
-  const activities = await prisma.activity.findMany({
-    where: { userId: req.user.userId },
-    orderBy: { createdAt: "desc" },
-  });
-
-  res.json(activities);
-});
-
-// GET MY ACTIVITIES
+// ===============================
+// CREATE ACTIVITY
+// ===============================
 app.post("/api/my-activities", authenticateToken, async (req, res) => {
   const { type, note } = req.body;
+
+  if (!type) {
+    return res.status(400).json({ error: "Type is required" });
+  }
 
   try {
     const activity = await prisma.activity.create({
       data: {
         type,
         note,
-        userId: req.user.userId
-      }
+        userId: req.user.userId,
+      },
     });
 
     res.json(activity);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to create activity" });
+  }
+});
+
+// ===============================
+// GET MY ACTIVITIES
+// ===============================
+app.get("/api/my-activities", authenticateToken, async (req, res) => {
+  try {
+    const activities = await prisma.activity.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json(activities);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch activities" });
   }
 });
 
