@@ -19,6 +19,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
 app.post("/api/register", async (req, res) => {
   const { email, password } = req.body;
 
+  // ✅ Validation
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters" });
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -32,9 +41,14 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+
 // LOGIN
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -45,16 +59,18 @@ app.post("/api/login", async (req, res) => {
   }
 
   const valid = await bcrypt.compare(password, user.password);
+
   if (!valid) {
     return res.status(400).json({ error: "Invalid credentials" });
   }
 
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
     expiresIn: "8h",
   });
 
   res.json({ token });
 });
+
 
 app.get("/", (req, res) => {
   res.send("FitLife API is running 🚀");
