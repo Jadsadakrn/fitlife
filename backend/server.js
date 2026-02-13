@@ -204,17 +204,23 @@ app.get("/api/my-activity", authenticateToken, async (req, res) => {
 });
 
 // GET MY ACTIVITIES
-app.get("/api/my-activities", authenticateToken, async (req, res) => {
+app.post("/api/my-activities", authenticateToken, async (req, res) => {
+  const { type, note } = req.body;
+
   try {
-    const activities = await prisma.activity.findMany({
-      where: { userId: req.user.userId },
-      orderBy: { createdAt: "desc" },
+    const activity = await prisma.activity.create({
+      data: {
+        type,
+        note,
+        userId: req.user.userId
+      }
     });
 
-    res.json(activities);
+    res.json(activity);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch activities" });
+    res.status(500).json({ error: "Failed to create activity" });
   }
 });
+
 
