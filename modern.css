@@ -1,0 +1,795 @@
+/* =========================================================
+   FitLife Easy — Modern UI Overrides (load LAST)
+   - สี/เงา/การ์ดให้ดูทันสมัยขึ้น
+   - จัดระยะให้ “ไม่โล่ง” ด้วย max-width + grid
+   - ทำ Progress/Macro bars หนาขึ้น (Dashboard + Nutrition)
+   ========================================================= */
+
+:root{
+  /* Palette */
+  --primary: #22c55e;
+  --primary-2: #16a34a;
+  --dark: #0f172a;
+  --light: #f6f7fb;
+
+  /* Surfaces */
+  --glass: rgba(255,255,255,.72);
+  --card: rgba(255,255,255,.86);
+  --stroke: rgba(15,23,42,.08);
+  --muted: rgba(15,23,42,.62);
+
+  /* Shadows + radius */
+  --shadow-sm: 0 10px 24px rgba(15,23,42,.06);
+  --shadow-md: 0 18px 52px rgba(15,23,42,.10);
+  --shadow-lg: 0 30px 90px rgba(15,23,42,.14);
+  --radius-lg: 22px;
+  --radius-md: 18px;
+  --radius-sm: 14px;
+}
+
+/* ---------- Base ---------- */
+html, body{ height: 100%; }
+body{
+  background:
+    radial-gradient(1000px 600px at 12% -10%, rgba(34,197,94,.20), rgba(34,197,94,0) 55%),
+    radial-gradient(900px 650px at 92% 10%, rgba(99,102,241,.18), rgba(99,102,241,0) 50%),
+    linear-gradient(180deg, #f8fafc 0%, #f6f7fb 100%);
+  color: var(--dark);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection{ background: rgba(34,197,94,.22); }
+a{ color: inherit; }
+
+/* ---------- App shell ---------- */
+.main-content{
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: 28px 22px 86px !important;
+}
+
+/* ให้ section ดูเป็นชิ้น ๆ ไม่แบน */
+.dashboard-section,
+.main-stat-card,
+.nutrition-hero,
+.profile-header-card,
+.settings-card,
+.food-card-item,
+.food-card,
+.card,
+.workout-card,
+.goal-section{
+  background: var(--card) !important;
+  border: 1px solid var(--stroke) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-sm) !important;
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-section:hover,
+.food-card-item:hover,
+.workout-card:hover{
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md) !important;
+  transition: .18s ease;
+}
+
+/* ---------- Top navigation ---------- */
+.sidebar.topnav{
+  height: 86px !important;
+  background: var(--glass) !important;
+  border-bottom: 1px solid var(--stroke) !important;
+  box-shadow: var(--shadow-sm) !important;
+  backdrop-filter: blur(18px);
+}
+
+.sidebar.topnav .nav-center{
+  gap: 10px !important;
+  padding: 10px 18px !important;
+  border-radius: 999px;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(15,23,42,.06);
+  box-shadow: 0 8px 22px rgba(15,23,42,.05);
+}
+
+.brand-logo.small .logo-icon{
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, rgba(34,197,94,.20), rgba(99,102,241,.14));
+  border: 1px solid rgba(15,23,42,.06);
+  box-shadow: 0 14px 32px rgba(15,23,42,.10);
+}
+.brand-logo.small .logo-icon i{ font-size: 20px !important; }
+
+.nav-btn{
+  position: relative;
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 14px !important;
+  color: rgba(15,23,42,.50) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  transition: .18s ease;
+}
+
+.nav-btn:hover{
+  background: rgba(34,197,94,.10) !important;
+  border-color: rgba(34,197,94,.16) !important;
+  color: var(--primary) !important;
+  transform: translateY(-1px);
+}
+
+.nav-btn.active{
+  background: linear-gradient(135deg, var(--primary), #4ade80) !important;
+  box-shadow: 0 16px 40px rgba(34,197,94,.28) !important;
+  border-color: rgba(34,197,94,.10) !important;
+}
+.nav-btn.active i{ color: #fff !important; }
+
+/* tooltip: สำหรับ topnav ให้โผล่ด้านล่างไอคอน */
+.sidebar.topnav .nav-tooltip{
+  top: 58px !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(6px) !important;
+  background: rgba(15,23,42,.86) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  letter-spacing: .2px;
+  box-shadow: 0 18px 46px rgba(0,0,0,.20);
+}
+.sidebar.topnav .nav-btn:hover .nav-tooltip{
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+
+/* รองรับ tooltip class เดิม (.tooltip) ด้วย */
+.sidebar.topnav .tooltip{
+  top: 58px !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(6px) !important;
+  background: rgba(15,23,42,.86) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  letter-spacing: .2px;
+  box-shadow: 0 18px 46px rgba(0,0,0,.20);
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.sidebar.topnav .nav-btn:hover .tooltip{
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+/* ---------- Typography polish ---------- */
+h1, h2, h3{ letter-spacing: -0.2px; }
+p, .muted, .subtext, .help{ color: var(--muted); }
+
+/* ---------- Progress / Macro bars (ทำให้หนาขึ้น) ---------- */
+.macro-track{
+  height: 18px !important;
+  border-radius: 999px !important;
+  background: rgba(148,163,184,.25) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+}
+.macro-fill{
+  border-radius: 999px !important;
+  box-shadow: 0 10px 26px rgba(15,23,42,.10);
+}
+
+.progress-bg,
+.bar-track{
+  height: 14px !important;
+  border-radius: 999px !important;
+  background: rgba(148,163,184,.22) !important;
+}
+.progress-fill,
+.bar-fill{
+  border-radius: 999px !important;
+  box-shadow: 0 12px 30px rgba(15,23,42,.10);
+}
+
+/* ตัวเลข/label ของ macro ให้ชัดขึ้น */
+.macro-row .flex-between,
+.nutrient-row .flex-between{ font-weight: 700; }
+.macro-row small,
+.nutrient-row small{ color: var(--muted); }
+
+/* ---------- Dashboard layout ---------- */
+.dashboard-layout{ gap: 22px !important; }
+@media (min-width: 1100px){
+  .dashboard-layout{ grid-template-columns: 1.25fr 0.75fr !important; }
+}
+
+/* Chart container: เพิ่มมิติ */
+.chart-container{
+  border: 1px solid rgba(15,23,42,.06) !important;
+  border-radius: var(--radius-lg) !important;
+  background: rgba(255,255,255,.55) !important;
+}
+
+/* ---------- Nutrition page ---------- */
+.nutrition-hero{
+  display: grid !important;
+  grid-template-columns: 360px 1fr !important;
+  align-items: center !important;
+  gap: 22px !important;
+}
+@media (max-width: 980px){
+  .nutrition-hero{ grid-template-columns: 1fr !important; }
+}
+
+.cal-circle-wrap{
+  background: rgba(255,255,255,.55) !important;
+  border: 1px solid rgba(15,23,42,.06) !important;
+  box-shadow: 0 14px 44px rgba(15,23,42,.08) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+/* ทำให้พื้นที่ในส่วนอาหารดูไม่โล่ง */
+.food-list{
+  background: rgba(255,255,255,.55) !important;
+  border: 1px solid rgba(15,23,42,.06) !important;
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden;
+}
+
+/* ---------- Profile page ---------- */
+.profile-container{
+  display: grid !important;
+  grid-template-columns: 420px 1fr !important;
+  gap: 22px !important;
+  align-items: start !important;
+}
+@media (max-width: 1024px){
+  .profile-container{ grid-template-columns: 1fr !important; }
+}
+
+.profile-header-card{ position: sticky; top: 110px; }
+@media (max-width: 1024px){
+  .profile-header-card{ position: static; }
+}
+
+.profile-banner{
+  background: linear-gradient(135deg, rgba(34,197,94,.22), rgba(99,102,241,.18)) !important;
+}
+
+/* ---------- Inputs & buttons ---------- */
+input, select, textarea{
+  border: 1px solid rgba(15,23,42,.10) !important;
+  border-radius: 14px !important;
+}
+input:focus, select:focus, textarea:focus{
+  outline: none !important;
+  border-color: rgba(34,197,94,.55) !important;
+  box-shadow: 0 0 0 4px rgba(34,197,94,.15) !important;
+}
+
+.save-btn, .add-food-btn, .btn-primary{
+  background: linear-gradient(135deg, var(--primary), #4ade80) !important;
+  box-shadow: 0 18px 40px rgba(34,197,94,.22) !important;
+  border-radius: 16px !important;
+}
+.save-btn:hover, .add-food-btn:hover, .btn-primary:hover{
+  filter: brightness(1.02);
+  transform: translateY(-1px);
+}
+
+/* Mobile spacing */
+@media (max-width: 640px){
+  .main-content{ padding: 22px 16px 84px !important; }
+  .sidebar.topnav{ height: 78px !important; }
+  .sidebar.topnav .nav-center{ padding: 8px 12px !important; gap: 8px !important; }
+  .nav-btn{ width: 44px !important; height: 44px !important; }
+}
+.course-card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+  margin-top:14px;
+}
+.course-title{
+  font-weight:700;
+  font-size:16px;
+  margin-bottom:6px;
+}
+.course-line{
+  font-size:14px;
+  margin-bottom:6px;
+}
+.course-sub{
+  font-size:12px;
+  color:#666;
+  margin-bottom:10px;
+}
+.course-progress{
+  width:100%;
+  height:10px;
+  background:#eef2f7;
+  border-radius:999px;
+  overflow:hidden;
+}
+.course-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#4facfe,#00f2fe);
+  transition:width .4s ease;
+}
+/* ✅ Today Recommended Workout List */
+.today-workout-card{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+
+.section-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.section-head h3{
+  margin:0;
+  font-size:18px;
+  font-weight:700;
+}
+
+.section-head small{
+  color:#888;
+}
+
+.today-workout-list{
+  display:flex;
+  flex-direction:column;
+}
+
+.workout-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 6px;
+  border-bottom:1px solid #f0f2f5;
+  cursor:pointer;
+}
+
+.workout-item:last-child{ border-bottom:none; }
+
+.workout-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.workout-thumb{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  background:#f5f7fb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  flex:0 0 44px;
+}
+
+.workout-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.workout-info{
+  min-width:0;
+}
+
+.workout-info .w-title{
+  font-weight:700;
+  margin:0;
+  font-size:16px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.workout-info .w-meta{
+  margin-top:4px;
+  font-size:12px;
+  color:#8a8a8a;
+}
+
+.workout-dot{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:2px solid #d7dbe3;
+  flex:0 0 18px;
+}
+
+.workout-item.done .workout-dot{
+  border-color:#10b981;
+  background:#10b981;
+  box-shadow:0 0 0 4px rgba(16,185,129,.15);
+}
+/* ==========================================
+   Nutrition Hub (page #food) — HARD OVERRIDE
+   Put at END of modern.css
+   ========================================== */
+
+/* 0) จำกัดผลกระทบแค่หน้า food */
+#food .food-log-container{ background: transparent; padding-bottom: 40px; }
+
+/* 1) การ์ดสรุปบนสุด (nutrition-hero) ให้เป็นกริด ไม่ชนกัน */
+#food .nutrition-hero{
+  display:grid !important;
+  grid-template-columns: 280px 1fr !important;
+  gap:16px !important;
+  align-items:center !important;
+  padding:18px !important;
+}
+@media (max-width: 860px){
+  #food .nutrition-hero{ grid-template-columns: 1fr !important; }
+}
+
+/* 2) macro bars ในหน้า food ให้หนา/สวย และไม่โดนของหน้าอื่น */
+#food .macro-track{ height: 12px !important; border-radius: 999px !important; }
+#food .macro-fill{ border-radius: 999px !important; }
+
+/* 3) บล็อคแยกมื้อ (Breakfast/Lunch/Dinner) */
+#food .nutrition-meals{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+
+#food .meal-block{
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(15,23,42,.06);
+  border-radius: 18px;
+  overflow:hidden;
+}
+
+#food .meal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 14px;
+  font-weight:800;
+  border-bottom:1px solid rgba(15,23,42,.06);
+}
+
+#food .meal-sum{ color: rgba(15,23,42,.55); font-weight:800; }
+
+/* 4) รายการอาหารในแต่ละมื้อ (ใช้ id list ของนาย) */
+#food .recommend-list{
+  display:flex;
+  flex-direction:column;
+}
+
+#food .recommend-list .list-item,
+#food .recommend-list .food-card-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-bottom:1px solid rgba(15,23,42,.06);
+  background: transparent;
+}
+
+#food .recommend-list .food-card-item:last-child,
+#food .recommend-list .list-item:last-child{ border-bottom:none; }
+
+/* 5) รูป/ข้อความในรายการให้ “ไม่ใหญ่” */
+#food .f-img,
+#food .li-icon{
+  width:64px !important;
+  height:64px !important;
+  border-radius:16px !important;
+  overflow:hidden;
+  flex:0 0 64px;
+}
+
+#food .f-img{ object-fit:cover; display:block; }
+
+#food .f-info, 
+#food .li-text{ min-width:0; }
+
+#food .f-info h4,
+#food .li-title{
+  margin:0;
+  font-weight:800;
+  font-size:15px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#food .f-info small,
+#food .li-sub{
+  display:block;
+  margin-top:4px;
+  font-size:12px;
+  color: rgba(15,23,42,.62);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* 6) แก้ “แถบยาวๆ” ที่เห็นในรูป: มันคือ scrollbar ของ container
+      ให้ scroll เฉพาะ modal/list ไม่ใช่ทั้งการ์ดแปลกๆ */
+#food .modal-box{ max-height: 82vh; overflow:auto; }
+#food .modal-box .recommend-list{ max-height: 52vh; overflow:auto; }
+
+/* 7) modal detail ของนายยังไม่มี CSS class จริงจัง → ทำให้ดูดี */
+#food #food-detail-modal .modal-content{
+  width: min(520px, 92vw);
+  max-height: 82vh;
+  overflow:auto;
+  border-radius: 22px;
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(15,23,42,.08);
+  box-shadow: 0 24px 80px rgba(15,23,42,.18);
+  padding: 18px;
+  position: relative;
+}
+
+#food #food-detail-modal .modal-close{
+  position:absolute;
+  top:12px;
+  right:12px;
+  border:none;
+  background: rgba(15,23,42,.08);
+  width:36px;
+  height:36px;
+  border-radius: 12px;
+  cursor:pointer;
+}
+
+
+/* =========================================================
+   FitLife Easy — FIXES (Nutrition Hub UI + Modals)
+   - กันการชนกันของ CSS หลายชุดใน index.html
+   - แก้การ์ดอาหารไม่ให้เกิด scrollbar ย่อย
+   - จัด layout Nutrition Hub ให้สมเหตุสมผลทุกหน้าจอ
+   ========================================================= */
+
+/* --- Scope: หน้า Food เท่านั้น --- */
+#food .nutrition-hero{
+  /* modern.css เคยบังคับเป็น grid 2 คอลัมน์ ทำให้เพี้ยนกับ CSS ในหน้า Food */
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+}
+
+/* กล่องสรุป + macro ในหน้า Food ให้ยืดเต็ม */
+#food .cal-ring-card,
+#food .macro-stats-card,
+#food .macro-container{
+  width: 100% !important;
+}
+
+/* รายการมื้ออาหาร (Breakfast/Lunch/Dinner) */
+#food .nutrition-meals{ display:flex; flex-direction:column; gap:18px; margin-top: 12px; }
+#food .meal-block{ background: transparent; }
+#food .meal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin: 4px 2px 10px;
+}
+#food .meal-head h3{ margin:0; font-size: 16px; }
+#food .meal-sum{ font-weight: 700; color: rgba(15,23,42,.62); }
+
+/* list container */
+#food .recommend-list{ display:flex; flex-direction:column; gap:12px; }
+
+/* การ์ดรายการอาหาร (รองรับหลายคลาสที่อาจถูก JS สร้าง) */
+#food .food-card-item,
+#food .rec-item{
+  display:flex !important;
+  align-items:center !important;
+  gap: 12px !important;
+  justify-content: space-between !important;
+  overflow: hidden !important;        /* กัน scrollbar ย่อย */
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* ส่วนซ้ายในรายการอาหาร */
+#food .food-card-item .food-left,
+#food .rec-item .rec-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+/* รูปในรายการอาหาร (กันรูปเด้งใหญ่เกิน) */
+#food .food-card-item img,
+#food .rec-item img{
+  width: 64px !important;
+  height: 64px !important;
+  object-fit: cover !important;
+  border-radius: 14px !important;
+  flex: 0 0 64px !important;
+  background: #eef2f7;
+}
+
+/* ข้อความในรายการอาหาร */
+#food .food-card-item .f-info,
+#food .rec-item .rec-info{
+  flex:1;
+  min-width:0;
+}
+#food .food-card-item h4,
+#food .rec-item .rec-name{
+  margin:0;
+  font-weight:700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#food .food-card-item small,
+#food .rec-item .rec-meta{
+  display:block;
+  margin-top:4px;
+  font-size: 12px;
+  color: rgba(15,23,42,.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* แคลอรี่ด้านขวา อย่าให้ลอยไปไกลเกิน + ให้ชัด */
+#food .f-cal,
+#food .meal-sum{
+  white-space: nowrap;
+}
+#food .f-cal{
+  min-width: 92px !important;
+  text-align: right !important;
+  font-weight: 800 !important;
+}
+
+/* ปุ่มลบ/เพิ่ม อย่าให้กินพื้นที่ */
+#food .delete-btn,
+#food .btn-add-circle{
+  flex: 0 0 auto;
+}
+
+/* --- Modal: ให้สวยและ scroll ที่กล่อง ไม่ใช่ในการ์ดย่อย --- */
+.modal-overlay{
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal-overlay[style*="display:none"]{ display:none !important; }
+.modal-overlay[style*="display: flex"],
+.modal-overlay.is-open{ display:flex !important; }
+
+#food .modal-box,
+#food .modal-content{
+  width: min(520px, 92vw) !important;
+  max-height: 82vh !important;
+  overflow: auto !important;
+  border-radius: 22px !important;
+}
+
+#food .modal-top{
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(15,23,42,.08);
+  padding-bottom: 10px;
+  z-index: 2;
+}
+
+/* ปุ่มปิดใน modal ให้ชิดขวา ไม่ทับเนื้อหา */
+#food .close-btn,
+#food .modal-close{
+  position: absolute;
+  right: 16px;
+  top: 14px;
+}
+
+/* ปุ่มล่างใน modal */
+#food .modal-footer{
+  position: sticky;
+  bottom: 0;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(15,23,42,.08);
+  padding-top: 12px;
+}
+
+/* Mobile: ลด padding + ปรับระยะ */
+@media (max-width: 640px){
+  #food .nutrition-hero{ padding: 16px !important; border-radius: 18px !important; }
+  #food .food-card-item img,
+  #food .rec-item img{ width: 56px !important; height: 56px !important; flex-basis: 56px !important; }
+  #food .f-cal{ min-width: 80px !important; }
+}
+
+/* ===== Dashboard: Meal tab (Breakfast/Lunch/Dinner) ===== */
+.meal-dashboard-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+@media (max-width: 980px){
+  .meal-dashboard-grid{ grid-template-columns: 1fr; }
+}
+
+.meal-section-mini{
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(15,23,42,.06);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.meal-section-head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.meal-section-head h4{
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+.meal-kcal{
+  font-weight: 800;
+  color: rgba(15,23,42,.55);
+  font-size: 13px;
+}
+
+.meal-section-mini .meal-card{
+  margin: 0;
+  width: 100%;
+}
+.meal-section-mini .meal-img{
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #f3f4f6;
+}
+
+
+/* ===== Dashboard Meal Detail Modal ===== */
+.detail-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:12px;
+}
+.detail-card{
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+.detail-card strong{
+  display:block;
+  font-size:12px;
+  color: rgba(15,23,42,.62);
+  margin-bottom:6px;
+}
+.dash-meal-box{
+  max-width: 460px;
+}

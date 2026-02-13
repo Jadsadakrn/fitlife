@@ -1,0 +1,66 @@
+id,name_en,name_th,body_part,level,equipment_type,description,image_url
+WO01,Goblet Squat,สควอทถือดัมเบล,Legs,Easy,Gym,ยืนกางขา ถือดัมเบลแนบอก ย่อตัวลงเหมือนนั่งเก้าอี้,[URL] https://cdn.phototourl.com/uploads/2026-02-09-6e4cce4b-6c7a-43d1-b879-ef927688f055.jpg
+WO02,Chair Squat,ลุกนั่งบนเก้าอี้,Legs,Easy,Bodyweight,ยืนหน้าเก้าอี้ ย่อตัวลงจนก้นแตะแล้วยืนขึ้นทันที,[URL] https://cdn.phototourl.com/uploads/2026-02-09-f0e70425-0973-491c-8cb0-9e389dfc2519.png
+WO03,Dumbbell Floor Press,นอนดันดัมเบลกับพื้น,Chest,Easy,Gym,นอนราบกับพื้น ถือดัมเบลดันขึ้นฟ้า,[URL]  https://cdn.phototourl.com/uploads/2026-02-09-78b9f725-3958-4e88-89ce-4dc28bd5333a.jpg
+WO04,Wall Push-up,วิดพื้นกับกำแพง,Chest,Easy,Bodyweight,ยืนห่างกำแพง เอามือดันกำแพงแล้วงอศอก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-0b7e3fc9-80f7-4a4e-9a5a-0e85d08db559.jpg
+WO05,One-Arm Dumbbell Row,ดัมเบลโรว์ (เลื่อยไม้),Back,Easy,Gym,มือยันโต๊ะ ดึงดัมเบลขึ้นมาหาเอว,[URL] https://cdn.phototourl.com/uploads/2026-02-04-d97205ab-3f94-4e71-b405-58ba8b0167e9.png
+WO06,Doorframe Row,ยืนดึงขอบประตู,Back,Easy,Bodyweight,จับขอบประตู เอนตัวไปหลัง แล้วดึงตัวกลับเข้ามา,[URL] https://cdn.phototourl.com/uploads/2026-02-04-836e4282-5e32-4644-9b59-61e5fca30630.png
+WO07,Seated Dumbbell Press,นั่งชูมือดัมเบล,Shoulder,Easy,Gym,นั่งหลังตรง ชูดัมเบลขึ้นเหนือศีรษะ,[URL] https://cdn.phototourl.com/uploads/2026-02-04-fdd97d6c-6f33-491a-a0bc-fa7b211c601d.jpg
+WO08,Knee Pike Push-up,วิดพื้นยกก้น (วางเข่า),Shoulder,Easy,Bodyweight,ทำท่าคลาน ยกก้นสูงนิดนึง กดหัวลงพื้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-5c45158e-4caa-4aa6-b828-c2a3fbccdf43.png
+WO09,Plank,แพลงก์,Abs,Easy,Bodyweight,นอนคว่ำ ตั้งศอก เกร็งตัวให้ตรง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-669af487-b202-4b42-953e-0a3f93b5ed0e.jpg
+WO10,Cardio Walk,เดินเร็ว,Cardio,Easy,No Equipment,เดินแกว่งแขนเร็วๆ ต่อเนื่อง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-9464516a-0b55-48ed-9a50-b0b061b4bacf.png
+WO11,Bench Press,ดันบาร์เบล/ดัมเบล,Chest,Medium,Gym,นอนบนม้านั่ง ดันน้ำหนักขึ้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-4103c7f9-dc73-4bfa-8480-ff31a64d48ad.jpg
+WO12,Standard Push-up,วิดพื้นปกติ,Chest,Medium,Bodyweight,นอนคว่ำ มือยันพื้น ดันตัวขึ้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-6810740f-23cd-4fed-b52a-8a51785b55e9.png
+WO13,Lat Pulldown,ดึงข้อ (เครื่อง/ยางยืด),Back,Medium,Gym,ดึงบาร์จากด้านบนลงมาหาอก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-92ba0a5e-8354-49ea-8bf1-605d6886392a.jpg
+WO14,Superman,ซุปเปอร์แมน,Back,Medium,Bodyweight,นอนคว่ำ ยกแขนและขาให้ลอยจากพื้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-bb18a2de-c929-44c9-a7cc-237d27aa5ffb.png
+WO15,Lateral Raise,กางแขนดัมเบล,Shoulder,Medium,Gym,ยืนกางแขนออกด้านข้างเสมอไหล่,[URL] https://cdn.phototourl.com/uploads/2026-02-04-4944e732-2e30-4b51-9bc6-64f8e2b93182.png
+WO16,Plank to Push-up,แพลงก์ดันตัว,Shoulder,Medium,Bodyweight,จากท่าแพลงก์ ดันมือขึ้นมาเป็นท่าวิดพื้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-a6dbc6cc-a654-482d-b1bc-144cc40aba56.png
+WO17,Bicep Curl,ยกดัมเบลหน้าแขน,Arms,Medium,Gym,ยืนตรง พับแขนยกดัมเบลขึ้นไหล่,[URL] https://cdn.phototourl.com/uploads/2026-02-04-dd4f6a84-b2ec-47a2-b1b9-93330dd3279b.jpg
+WO18,Towel Curl,ยืนดึงผ้าเช็ดตัว,Arms,Medium,Bodyweight,ใช้ผ้าคล้องขา ดึงสู้แรงขาตัวเอง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-d28ca076-be44-4ff2-bb24-682f3d4a5b1f.jpg
+WO19,Cardio Jogging,วิ่งเหยาะๆ,Cardio,Medium,No Equipment,วิ่งจ็อกกิ้งเบาๆ,[URL] https://cdn.phototourl.com/uploads/2026-02-04-1c908d1b-e8e5-43e4-9ccb-39e4c689b941.png
+WO20,Incline Dumbbell Press,ดันอกบนดัมเบล,Chest,Hard,Gym,นอนบนเบาะเอียง 45 องศา ดันดัมเบลขึ้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-1760908a-133f-4423-9ae2-e4f027f2eb85.jpg
+WO21,Decline Push-up,วิดพื้นยกขา (อกบน),Chest,Hard,Bodyweight,วางเท้าบนเก้าอี้ มือวางพื้น วิดพื้นลง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-7db980ce-5c42-4fd4-a75a-946405ef098a.jpg
+WO22,Dumbbell Fly,นอนกางแขนดัมเบล,Chest,Hard,Gym,นอนหงาย กางแขนออกกว้างๆ แล้วหุบแขนบีบอก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-89d562f4-699b-4403-ad56-2844b4d81a1f.png
+WO23,Wide Push-up,วิดพื้นมือกว้าง,Chest,Hard,Bodyweight,วางมือกว้างกว่าหัวไหล่ วิดพื้นเน้นอกด้านนอก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-a5b1615c-6af8-4ed7-a218-3b77f4af9819.jpg
+WO24,Tricep Extension,ยกดัมเบลหลังแขน,Arms,Hard,Gym,ชูดัมเบลเหนือหัว พับศอกไปด้านหลัง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-9f7e702b-c6df-416d-b958-88433a58703b.jpg
+WO25,Diamond Push-up,วิดพื้นรูปเพชร,Arms,Hard,Bodyweight,วางมือชิดกันเป็นรูปเพชร วิดพื้นเน้นหลังแขน,[URL] https://cdn.phototourl.com/uploads/2026-02-04-9833f923-633e-41ff-8c78-85f274191d68.jpg
+WO26,HIIT Cardio,วิ่งสลับเดินเร็ว (HIIT),Cardio,Hard,No Equipment,วิ่งเต็มสปีด 30 วิ สลับเดิน 1 นาที วนไป,[URL] https://cdn.phototourl.com/uploads/2026-02-04-e995ca4c-e643-4f1e-bd9a-fca9dc300857.png
+WO27,Jump Squat,สควอทกระโดด,Legs,Hard,Bodyweight,ย่อตัวสควอท แล้วกระโดดขึ้นสุดแรง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-5700c5f3-4874-467e-9c7d-d09f13399849.png
+WO28,Jump Lunge,ก้าวขากระโดดสลับ,Legs,Hard,Bodyweight,ทำท่า Lunge แล้วกระโดดสลับขาซ้ายขวา,[URL] https://cdn.phototourl.com/uploads/2026-02-04-6a180531-405a-471c-a25a-eb7f803b1f18.jpg
+WO29,Pike Push-up,วิดพื้นยกก้นสูง (ไหล่),Shoulder,Hard,Bodyweight,ทำตัว V คว่ำ กดหัวลงพื้น เน้นหัวไหล่,[URL] https://cdn.phototourl.com/uploads/2026-02-04-a60a5233-8512-4aaa-aa03-1b2c098968fe.jpg
+WO30,Burpees,เบอร์พี (ลุกนั่งวิดพื้น),Full Body,Hard,Bodyweight,ยืน->หมอบ->ดีดขาไปหลัง->วิดพื้น->กระโดด,[URL] https://cdn.phototourl.com/uploads/2026-02-04-88577975-6097-4273-8283-457e74544d2d.jpg
+WO31,Mountain Climber,ปีนเขา (วิ่งท่านอน),Abs,Hard,Bodyweight,ท่าเตรียมวิดพื้น วิ่งสลับขาเข้าหาอกเร็วๆ,[URL] https://cdn.phototourl.com/uploads/2026-02-04-425d286d-9655-4338-90ab-089a32589107.jpg
+WO32,Chair Dips,ดิปหลังแขนกับเก้าอี้,Arms,Medium,Bodyweight,เอามือยันขอบเก้าอี้ เหยียดขา หย่อนก้นลง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-8e8e5571-1004-4984-8d40-998ed0ac4415.png
+WO33,Bodyweight Lunge,ก้าวขาตัวเปล่า,Legs,Medium,Bodyweight,ยืนตัวตรง ก้าวขาไปข้างหน้า ย่อตัวลง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-478fdb71-a55a-4503-992c-174e19d27a9d.jpg
+WO34,Glute Bridge,สะพานโค้ง (ยกก้น),Legs,Medium,Bodyweight,นอนหงาย ชันเข่า ยกก้นขึ้นสูงๆ,[URL] https://cdn.phototourl.com/uploads/2026-02-04-07e6702c-1616-48a7-9066-8e504b899cfb.jpg
+WO35,Standing Calf Raise,ยืนเขย่งตัวเปล่า,Legs,Medium,Bodyweight,ยืนตรง เขย่งปลายเท้าขึ้นลง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-b29974e8-f221-4837-b8be-51895b3028c0.png
+WO36,Dumbbell Lunge,ถือดัมเบลก้าวขา,Legs,Medium,Gym,ถือดัมเบลข้างตัว ก้าวขาไปข้างหน้า ย่อตัวลง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-84b22009-6efc-4c3b-bfc8-700ff41206e6.jpg
+WO37,Romanian Deadlift,เดดลิฟท์ขาตึง,Legs,Medium,Gym,ถือดัมเบล พับตัวลงโดยขาตึง(งอเข่านิดเดียว),[URL] https://cdn.phototourl.com/uploads/2026-02-04-f38804a5-f7d8-413e-982d-45d5efc533ee.jpg
+WO38,Weighted Calf Raise,ถือดัมเบลเขย่ง,Legs,Medium,Gym,ถือดัมเบล ยืนเขย่งปลายเท้า,[URL] https://cdn.phototourl.com/uploads/2026-02-04-0826d12d-a967-4340-8fa9-3ae2fb9b570f.jpg
+WO39,Lying Leg Raise,นอนยกขา,Abs,Medium,Bodyweight,นอนหงาย ยกขาคู่ขึ้นชี้ฟ้า,[URL] https://cdn.phototourl.com/uploads/2026-02-04-10193534-6c50-4356-b849-e93e0fc70c0c.png
+WO40,Air Squat,สควอทตัวเปล่า,Legs,Medium,Bodyweight,ยืนกางขา ย่อตัวลงเหมือนนั่งเก้าอี้ (ไม่ต้องแบกน้ำหนัก),[URL] https://cdn.phototourl.com/uploads/2026-02-04-aab641a2-c971-4edb-af5c-3207a7a6c6eb.jpg
+WO41,Dumbbell Squat,แบกดัมเบลสควอท,Legs,Medium,Gym,ถือดัมเบลวางบ่าหรือถือข้างตัว แล้วย่อตัวลง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-9374783a-cf8d-4da7-b1fe-cd0d3db75b1f.png
+WO42,Superman Hold,ซุปเปอร์แมน (เกร็งค้าง),Back,Hard,Bodyweight,นอนคว่ำ ยกแขนขาค้างไว้ 2-3 วินาที,[URL] https://cdn.phototourl.com/uploads/2026-02-04-a55b66b7-bbb7-4391-9aa8-684b3be16ec6.jpg
+WO43,Leg Press,เลกเพรส (ถีบขา),Legs,Medium,Gym,นั่งบนเครื่อง วางเท้าบนแท่นแล้วถีบออกไป,[URL] https://cdn.phototourl.com/uploads/2026-02-04-2ab47627-0f0a-4a69-a812-0d5261506062.jpg
+WO44,Leg Extension,เลกเอ็กซ์เทนชัน (เตะขา),Legs,Medium,Gym,นั่งบนเครื่อง สอดขาใต้เบาะ แล้วเตะขาขึ้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-6b3d915f-27f3-4c74-ac44-76321e6cc935.jpg
+WO45,Leg Curl,เลกเคิร์ล (พับขา),Legs,Medium,Gym,นอนคว่ำบนเครื่อง เอาข้อเท้าเกี่ยวเบาะ แล้วพับขาเข้ามา,[URL] https://cdn.phototourl.com/uploads/2026-02-04-de41b30e-00d0-47f3-afb3-b4405ddb307c.png
+WO46,Face Pull,เฟซพูล (ดึงเข้าหน้า),Shoulder,Hard,Gym,ยืนจับเชือกเคเบิล ดึงเข้าหาหน้าผาก กางศอกออก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-4781bfbe-e7ec-4245-a7c5-1b15364e93e5.png
+WO47,Hammer Curl,แฮมเมอร์เคิร์ล (ค้อนทุบ),Arms,Medium,Gym,ยืนถือดัมเบลหันฝ่ามือเข้าหาตัว พับแขนขึ้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-26e8eef4-7347-45ba-9f77-a944dbf8c8f7.jpg
+WO48,Skull Crushers,สคัลครัชเชอร์ (นอนงอศอก),Arms,Hard,Gym,นอนหงาย ชูบาร์เบล งอศอกเอาน้ำหนักลงมาที่หน้าผาก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-7215aa7c-22a2-40f5-94fe-80e49a60a920.jpg
+WO49,Cable Fly,เคเบิลฟลาย,Chest,Hard,Gym,ยืนตรงกลางเครื่องเคเบิล ดึงสายมารวมกันที่หน้าอก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-f65fb2d9-28e1-4930-95e5-399e28e4644d.jpg
+WO50,Seated Cable Row,ซีทเต็ดโรว์ (นั่งดึง),Back,Medium,Gym,นั่งดึงบาร์เข้าหาท้อง หลังตรง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-94595818-d558-4645-8eb1-e30d7457cda4.jpg
+WO51,Dumbbell Shrug,ยักไหล่ถือดัมเบล,Shoulder,Medium,Gym,ยืนถือดัมเบลข้างตัว ยักไหล่ขึ้นหาหู,[URL] https://cdn.phototourl.com/uploads/2026-02-04-c874309d-5463-44e1-9f90-584162ba2082.jpg
+WO52,Preacher Curl,พรีเชอร์เคิร์ล,Arms,Hard,Gym,นั่งเอาแขนวางบนเบาะรอง แล้วพับแขนยกน้ำหนัก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-b23fd926-2faf-46ca-9141-bcf71ed93281.jpg
+WO53,Hip Thrust,ฮิปทรัสต์ (สะพานโค้งบาร์เบล),Legs,Hard,Gym,เอานั่งพิงเบาะ วางบาร์เบลบนตัก แล้วดันสะโพกขึ้น,[URL] https://cdn.phototourl.com/uploads/2026-02-04-1fc89948-cd2a-43d1-a2d5-31a9e5ed0a47.jpg
+WO54,Chin-up,ชินอัพ (ดึงข้อหงายมือ),Back,Hard,Gym,ดึงข้อโดยหันฝ่ามือเข้าหาหน้า (เน้นหน้าแขนและหลัง),[URL] https://cdn.phototourl.com/uploads/2026-02-04-f8de8063-d4fa-440d-acd7-c9a17dc77809.png
+WO55,Front Raise,ยกดัมเบลหน้า,Shoulder,Medium,Gym,ยืนถือดัมเบลหน้าขา ยกแขนขึ้นมาด้านหน้าเสมอไหล่,[URL] https://cdn.phototourl.com/uploads/2026-02-04-900427b3-2953-4669-95c7-c157cdfbb2c5.jpg
+WO56,Sumo Squat,ซูโม่สควอท (ขาใน/ก้น),Legs,Medium,Bodyweight,ยืนกางขากว้างกว่าหัวไหล่ ปลายเท้าชี้ออก ย่อตัวลง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-0bd1e077-5eba-4615-bfc7-4d262c346793.jpg
+WO57,Donkey Kicks,ดองกี้คิก (ถีบหลัง),Legs,Easy,Bodyweight,ท่าคลาน สลับเตะขาไปด้านหลังขึ้นบนเพดาน,[URL] https://cdn.phototourl.com/uploads/2026-02-04-79ea927e-c61d-46d9-a892-a9b34299362b.png
+WO58,Fire Hydrants,ท่าหมาฉี่ (เปิดสะโพก),Legs,Easy,Bodyweight,ท่าคลาน ยกเข่ากางออกด้านข้าง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-0b03b20b-135a-435e-82b9-2890ad2b2ffd.png
+WO59,Curtsy Lunge,เคอร์ซี่ลันจ์ (ไขว้ขา),Legs,Medium,Bodyweight,ยืนตรง ถอยขาไขว้ไปด้านหลังเฉียงๆ แล้วย่อตัว,[URL] https://cdn.phototourl.com/uploads/2026-02-04-eadfcf8e-251d-49ee-9a0f-4511b1a92b5a.jpg
+WO60,Clamshells,แคลมเชลล์ (หอยมุก),Legs,Easy,Bodyweight,นอนตะแคง งอเข่า อ้าขาออกเหมือนหอยเปิดเปลือก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-4f3121b2-05ac-4214-b9c6-cad027259cad.png
+WO61,Russian Twist,รัชเชียนทวิสต์ (บิดเอว),Abs,Medium,Bodyweight,นั่งยกขา ลอยตัวเป็นตัว V แล้วบิดเอวซ้ายขวา,[URL] https://cdn.phototourl.com/uploads/2026-02-04-62ec0079-12c3-4d92-aedb-b8b80c709b8d.jpg
+WO62,Bicycle Crunch,จักรยานอากาศ,Abs,Medium,Bodyweight,นอนหงาย เอามือแตะหู บิดศอกซ้ายไปแตะเข่าขวา สลับกัน,[URL] https://cdn.phototourl.com/uploads/2026-02-04-f19f6c8b-7f82-48c2-8667-a3f1f2680f7e.jpg
+WO63,Tricep Kickback,คิกแบ็ค (แก้ท้องแขน),Arms,Easy,Gym,มือยันโต๊ะ ถือดัมเบล เหยียดแขนไปด้านหลังจนตึง,[URL] https://cdn.phototourl.com/uploads/2026-02-04-b3b2b760-71e3-4f3f-88af-d0170bd77909.png
+WO64,Side Lying Leg Lift,นอนตะแคงยกขา,Legs,Easy,Bodyweight,นอนตะแคงตัวตรง ยกขาข้างบนขึ้นลงช้าๆ,[URL] https://cdn.phototourl.com/uploads/2026-02-04-0c3b487b-7693-4020-8960-aee7cf4c2e1c.jpg
+WO65,Hip Abduction,นั่งกางขา (เครื่อง/ยางยืด),Legs,Medium,Gym,นั่งบนเครื่องแล้วกางขาออกต้านน้ำหนัก,[URL] https://cdn.phototourl.com/uploads/2026-02-04-d369a63c-48bd-4e5a-9223-93fdb87e9c39.jpg

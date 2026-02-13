@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitLife Easy — Login</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Page CSS (แยกจาก style.css ของแอป เพื่อไม่ชนกัน) -->
+  <link rel="stylesheet" href="login_new.css" />
+</head>
+
+<body class="login-body">
+
+  <!-- Animated background blobs -->
+  <div class="bg">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div class="grid-noise"></div>
+  </div>
+
+  <main class="auth-shell">
+    <!-- Left: Branding / Hero -->
+    <section class="hero">
+      <div class="brand">
+        <div class="brand-mark">
+          <i class="fa-solid fa-heart-pulse"></i>
+        </div>
+        <div class="brand-text">
+          <h1>FitLife Easy</h1>
+          <p>Dashboard สวย • โภชนาการ • วัดผล • Streak</p>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <h2>เริ่มวันนี้ ให้สุขภาพ “ชัดขึ้น”</h2>
+        <ul class="feature">
+          <li><i class="fa-solid fa-chart-line"></i> สรุปแคล/มาโครแบบเรียลไทม์</li>
+          <li><i class="fa-solid fa-dumbbell"></i> จับเวลาออกกำลังกาย + บันทึกสำเร็จ</li>
+          <li><i class="fa-solid fa-calendar-check"></i> Calendar + Streak ต่อเนื่อง</li>
+          <li><i class="fa-solid fa-droplet"></i> Water tracker แบบเห็นภาพ</li>
+        </ul>
+
+        <div class="hero-note">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>เดโม่: ใส่อะไรก็ได้ (ยังไม่ต่อฐานข้อมูลจริง)</span>
+        </div>
+      </div>
+
+      <div class="hero-footer">
+        <span class="pill"><i class="fa-solid fa-shield-heart"></i> Local-first</span>
+        <span class="pill"><i class="fa-solid fa-wand-magic-sparkles"></i> Smooth UI</span>
+        <span class="pill"><i class="fa-solid fa-bolt"></i> Fast</span>
+      </div>
+    </section>
+
+    <!-- Right: Login card -->
+    <section class="panel">
+
+      <div class="card">
+        <div class="card-head">
+          <h3 id="authTitle">เข้าสู่ระบบ</h3>
+          <p class="muted" id="authSub">เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน</p>
+        </div>
+
+        <div class="auth-tabs" role="tablist" aria-label="Auth tabs">
+          <button class="tab active" type="button" data-tab="login">Login</button>
+          <button class="tab" type="button" data-tab="register">Register</button>
+          <button class="tab" type="button" data-tab="forgot">Forgot</button>
+        </div>
+
+        <!-- LOGIN -->
+        <form id="loginForm" class="auth-form" data-pane="login" novalidate>
+          <label class="field">
+            <span>อีเมล</span>
+            <div class="input">
+              <i class="fa-solid fa-envelope"></i>
+              <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="username" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>รหัสผ่าน</span>
+            <div class="input">
+              <i class="fa-solid fa-lock"></i>
+              <input id="loginPassword" type="password" placeholder="อย่างน้อย 4 ตัวอักษร" autocomplete="current-password" />
+              <button class="pw-toggle" type="button" aria-label="แสดง/ซ่อนรหัสผ่าน" id="pwToggle">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </label>
+
+          <div class="row">
+            <label class="check">
+              <input type="checkbox" id="remember" checked />
+              <span>จำฉันไว้ (8 ชม.)</span>
+            </label>
+            <button class="link" type="button" id="goForgot">ลืมรหัสผ่าน</button>
+          </div>
+
+          <button class="btn" type="submit">
+            <span>เข้าใช้งาน</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+
+          <div class="hint">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>เดโม่: ใช้ localStorage + session หมดอายุอัตโนมัติ</span>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="link" type="button" id="clearBtn">ล้างข้อมูลเดโม่</button>
+          </div>
+        </form>
+
+        <!-- REGISTER -->
+        <form id="registerForm" class="auth-form hidden" data-pane="register" novalidate>
+          <label class="field">
+            <span>ชื่อเล่น</span>
+            <div class="input">
+              <i class="fa-solid fa-user"></i>
+              <input id="regName" type="text" placeholder="เช่น Ne Logan" autocomplete="name" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>อีเมล</span>
+            <div class="input">
+              <i class="fa-solid fa-envelope"></i>
+              <input id="regEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>รหัสผ่าน</span>
+            <div class="input">
+              <i class="fa-solid fa-lock"></i>
+              <input id="regPassword" type="password" placeholder="อย่างน้อย 4 ตัวอักษร" autocomplete="new-password" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>ยืนยันรหัสผ่าน</span>
+            <div class="input">
+              <i class="fa-solid fa-lock"></i>
+              <input id="regPassword2" type="password" placeholder="พิมพ์ซ้ำอีกครั้ง" autocomplete="new-password" />
+            </div>
+          </label>
+
+          <button class="btn" type="submit">
+            <span>สร้างบัญชี</span>
+            <i class="fa-solid fa-user-plus"></i>
+          </button>
+
+          <div class="hint">
+            <i class="fa-solid fa-envelope-circle-check"></i>
+            <span>เดโม่: มี “โค้ดยืนยันอีเมล” โชว์บนหน้าจอ</span>
+          </div>
+        </form>
+
+        <!-- VERIFY EMAIL (shown after register) -->
+        <form id="verifyForm" class="auth-form hidden" data-pane="verify" novalidate>
+          <label class="field">
+            <span>อีเมล</span>
+            <div class="input">
+              <i class="fa-solid fa-envelope"></i>
+              <input id="verifyEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>โค้ดยืนยัน (6 หลัก)</span>
+            <div class="input">
+              <i class="fa-solid fa-key"></i>
+              <input id="verifyCode" type="text" placeholder="เช่น 123456" inputmode="numeric" />
+            </div>
+          </label>
+
+          <button class="btn" type="submit">
+            <span>ยืนยันอีเมล</span>
+            <i class="fa-solid fa-circle-check"></i>
+          </button>
+
+          <div class="hint">
+            <i class="fa-solid fa-circle-info"></i>
+            <span id="verifyHint">ถ้ายังไม่เห็นโค้ด ให้สมัครใหม่อีกครั้ง</span>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="link" type="button" id="backToLogin1">กลับไป Login</button>
+          </div>
+        </form>
+
+        <!-- FORGOT -->
+        <form id="forgotForm" class="auth-form hidden" data-pane="forgot" novalidate>
+          <label class="field">
+            <span>อีเมล</span>
+            <div class="input">
+              <i class="fa-solid fa-envelope"></i>
+              <input id="forgotEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+          </label>
+
+          <button class="btn" type="submit">
+            <span>ขอโค้ดรีเซ็ต</span>
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+
+          <div class="hint">
+            <i class="fa-solid fa-circle-info"></i>
+            <span id="resetHint">เดโม่: โค้ดรีเซ็ตจะแสดงบนหน้าจอ (แทนการส่งอีเมล)</span>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="link" type="button" id="goReset">มีโค้ดแล้ว รีเซ็ตเลย</button>
+            <button class="link" type="button" id="backToLogin2">กลับไป Login</button>
+          </div>
+        </form>
+
+        <!-- RESET PASSWORD -->
+        <form id="resetForm" class="auth-form hidden" data-pane="reset" novalidate>
+          <label class="field">
+            <span>อีเมล</span>
+            <div class="input">
+              <i class="fa-solid fa-envelope"></i>
+              <input id="resetEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>โค้ดรีเซ็ต (6 หลัก)</span>
+            <div class="input">
+              <i class="fa-solid fa-key"></i>
+              <input id="resetCode" type="text" placeholder="เช่น 123456" inputmode="numeric" />
+            </div>
+          </label>
+
+          <label class="field">
+            <span>รหัสผ่านใหม่</span>
+            <div class="input">
+              <i class="fa-solid fa-lock"></i>
+              <input id="resetPassword" type="password" placeholder="อย่างน้อย 4 ตัวอักษร" autocomplete="new-password" />
+            </div>
+          </label>
+
+          <button class="btn" type="submit">
+            <span>เปลี่ยนรหัสผ่าน</span>
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+
+          <div class="row" style="margin-top:10px">
+            <button class="link" type="button" id="backToLogin3">กลับไป Login</button>
+          </div>
+        </form>
+
+      </div>
+
+      <footer class="footer">
+        <span>© FitLife Easy</span>
+        <span class="dot">•</span>
+        <span>Made for practice</span>
+      </footer>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  
+  <script src="auth.js"></script>
+  <script src="login_new.js"></script>
+  
+</body>
+</html>

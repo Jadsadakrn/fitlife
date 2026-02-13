@@ -1,0 +1,29 @@
+program_id,day_number,day_title,focus_area,description
+PG01,1,Full Body A,Whole Body,บริหารทั่วร่างกาย เน้นท่าวิดพื้นและสควอท
+PG01,3,Full Body B,Whole Body,บริหารทั่วร่างกาย เปลี่ยนมุมโฟกัส
+PG01,5,Full Body C,Whole Body,บริหารทั่วร่างกาย เก็บตกทุกสัดส่วน
+PG02,1,Upper Body A,Chest & Back,เน้นกล้ามเนื้อส่วนบน อกและหลัง
+PG02,2,Lower Body A,Legs & Abs,เน้นช่วงล่าง ขาและหน้าท้อง
+PG02,4,Upper Body B,Shoulder & Arms,เน้นไหล่และแขนให้กระชับ
+PG02,5,Lower Body B,Glutes & Calves,เน้นก้นและน่อง
+PG03,1,Chest & Triceps,Chest,วันเล่นอกและหลังแขน
+PG03,2,Back & Biceps,Back,วันเล่นหลังและหน้าแขน
+PG03,3,Legs & Abs,Legs,วันเล่นขาและหน้าท้อง
+PG03,5,Shoulders,Shoulder,วันเน้นหัวไหล่
+PG03,6,Weak Point,Full Body,วันเก็บตกจุดด้อย
+PG04,1,Full Body Power A,Whole Body,เน้นสร้างกล้ามเนื้อทั่วตัว (หนัก)
+PG04,3,Full Body Power B,Whole Body,เน้นสร้างกล้ามเนื้อทั่วตัว (หนัก)
+PG04,5,Full Body Power C,Whole Body,เน้นสร้างกล้ามเนื้อทั่วตัว (หนัก)
+PG05,1,Upper Hypertrophy,Upper Body,เน้นสร้างขนาดกล้ามเนื้อส่วนบน
+PG05,2,Lower Hypertrophy,Lower Body,เน้นสร้างขนาดกล้ามเนื้อขา
+PG05,4,Upper Strength,Upper Body,เน้นความแข็งแรงส่วนบน
+PG05,5,Lower Strength,Lower Body,เน้นความแข็งแรงขา
+PG06,1,Chest Day,Chest,เน้นอกล้วนๆ
+PG06,2,Back Day,Back,เน้นหลังล้วนๆ
+PG06,3,Leg Day,Legs,เน้นขาล้วนๆ
+PG06,5,Shoulder Day,Shoulder,เน้นไหล่ล้วนๆ
+PG06,6,Arm Day,Arms,เน้นแขนล้วนๆ
+PG07,1,Glute Focus A,Glutes,เน้นปั้นก้นและสะโพก
+PG07,2,Upper Body Tone,Upper Body,กระชับแขนและไหล่
+PG07,4,Legs & Hips,Legs,เน้นขาเรียวและสะโพกผาย
+PG07,5,Full Body Burn,Whole Body,เบิร์นไขมันทั่วร่าง

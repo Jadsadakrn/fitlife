@@ -1,0 +1,84 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Exercise {
+  id           String  @id
+  nameEn       String
+  nameTh       String
+  bodyPart     String
+  level        String
+  equipment    String
+  description  String
+  imageUrl     String
+
+  gymWorkouts  ProgramWorkout[] @relation("GymWorkout")
+  homeWorkouts ProgramWorkout[] @relation("HomeWorkout")
+}
+
+
+model Food {
+  id          String @id @default(uuid())
+  nameTh      String
+  calories    Int
+  protein     Int
+  carbs       Int
+  fat         Int
+  imageUrl    String
+}
+
+model Program {
+  id    String @id
+  name  String
+
+  days      ProgramDay[]
+  workouts  ProgramWorkout[]   // 👈 เพิ่มบรรทัดนี้
+}
+
+
+model ProgramDay {
+  id         String @id @default(uuid())
+  programId  String
+  dayNumber  Int
+  dayTitle   String
+  focusArea  String
+  description String
+
+  program    Program @relation(fields: [programId], references: [id])
+}
+
+model ProgramWorkout {
+  id            String   @id @default(uuid())
+  programId     String
+  dayNumber     Int
+  sequence      Int
+  gymWorkoutId  String?
+  homeWorkoutId String?
+  repsInfo      String?
+
+  program       Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  gymWorkout    Exercise? @relation("GymWorkout", fields: [gymWorkoutId], references: [id])
+  homeWorkout   Exercise? @relation("HomeWorkout", fields: [homeWorkoutId], references: [id])
+}
+
+model Focus {
+  id          String  @id
+  nameEn      String
+  nameTh      String
+  targetGender String
+  workoutIds  String
+  repsInfo    String
+}

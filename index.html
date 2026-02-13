@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitLife Easy - Super App</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Kanit:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script>
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    window.location.href = "login_new.html";
+  }
+
+  async function loadUser() {
+    const res = await fetch("http://localhost:3000/api/me", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    if (!res.ok) {
+      localStorage.removeItem("token");
+      window.location.href = "login_new.html";
+      return;
+    }
+
+    const user = await res.json();
+    console.log("Logged in user:", user);
+  }
+
+  loadUser();
+</script>
+
+
+  <style>
+    /* =========================================
+       ✨ STYLE SETTINGS (PREMIUM UI + GLASS)
+       ========================================= */
+    :root {
+      --glass: rgba(255, 255, 255, 0.9);
+      --primary: #FF6B6B;
+    }
+
+    body {
+      background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+      font-family: 'Kanit', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Glassmorphism Classes */
+    .dashboard-section,
+    .workout-card,
+    .sidebar,
+    .modal-content-timer,
+    .modal-content-calendar,
+    .food-log-section,
+    .nutrition-hero {
+      background: var(--glass) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+      border-radius: 20px;
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+
+    /* =========================================
+   ✨ ENHANCED WORKOUT MISSION SECTION
+   ========================================= */
+
+    /* Gradient Progress Button */
+    .workout-plan-header {
+      background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+      border-radius: 16px;
+      padding: 15px 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+
+    .workout-plan-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .workout-progress-text {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      font-weight: 500;
+    }
+
+    /* Tab Selector */
+    .mission-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 10px;
+    }
+
+    .mission-tab {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      color: #999;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s;
+      font-family: 'Kanit', sans-serif;
+    }
+
+    .mission-tab.active {
+      color: #FF6B6B;
+      background: #FFF5F5;
+      font-weight: 600;
+    }
+
+    .mission-tab:hover {
+      background: #FAFAFA;
+    }
+
+    /* Workout Set Groups */
+    .workout-set-container {
+      background: #F9FAFB;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .workout-set-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #E5E7EB;
+    }
+
+    .set-badge {
+      background: #FF6B6B;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .set-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111;
+      flex: 1;
+    }
+
+    /* Exercise Pills */
+    .exercise-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .exercise-pill {
+      background: white;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      color: #374151;
+      font-weight: 500;
+      transition: all 0.3s;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .exercise-pill:hover {
+      border-color: #FF6B6B;
+      background: #FFF5F5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(255, 107, 107, 0.15);
+    }
+
+    .exercise-pill.completed {
+      background: #D1FAE5;
+      border-color: #10B981;
+      color: #065F46;
+    }
+
+    .exercise-pill .check-icon {
+      display: none;
+      color: #10B981;
+    }
+
+    .exercise-pill.completed .check-icon {
+      display: inline;
+    }
+
+    /* Completion Status */
+    .set-completion {
+      margin-top: 12px;
+      padding: 10px 15px;
+      background: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #6B7280;
+    }
+
+    .completion-checkmark {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #D1D5DB;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: transparent;
+      transition: all 0.3s;
+    }
+
+    .set-completion.done .completion-checkmark {
+      background: #10B981;
+      border-color: #10B981;
+      color: white;
+    }
+
+    /* Start Button ใหม่ */
+    .start-workout-btn-new {
+      background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+      color: white;
+      border: none;
+      padding: 16px 30px;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      box-shadow: 0 6px 20px rgba(31, 41, 55, 0.3);
+      transition: all 0.3s;
+      font-family: 'Kanit', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .start-workout-btn-new:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(31, 41, 55, 0.4);
+      background: linear-gradient(135deg, #111827 0%, #1F2937 100%);
+    }
+
+    .start-workout-btn-new i {
+      font-size: 1.2rem;
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.4s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Meal Plan Section */
+    .meal-plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .meal-card {
+      background: white;
+      border-radius: 16px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .meal-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      border-color: #FF6B6B;
+    }
+
+    /* Exercise Cards Grid */
+    .exercise-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .exercise-card {
+      background: white;
+      border: 2px solid #E5E7EB;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .exercise-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.2);
+      border-color: #FF6B6B;
+    }
+
+    .exercise-card.completed {
+      border-color: #10B981;
+      background: linear-gradient(135deg, #D1FAE5 0%, #FFFFFF 100%);
+    }
+
+    .exercise-card.completed::after {
+      content: '✓';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #10B981;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .exercise-image {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .exercise-info {
+      padding: 12px;
+    }
+
+    .exercise-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 6px;
+    }
+
+    .exercise-meta {
+      font-size: 0.8rem;
+      color: #6B7280;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .difficulty-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .difficulty-badge.beginner {
+      background: #DBEAFE;
+      color: #1E40AF;
+    }
+
+    .difficulty-badge.intermediate {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .difficulty-badge.advanced {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .difficulty-badge.cardio {
+      background: #FCE7F3;
+      color: #9F1239;
+    }
+
+    .meal-img {
+      width: 70px;
+      height: 70px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #F3F4F6;
+    }
+
+    .meal-info {
+      flex: 1;
+    }
+
+    .meal-name {
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .meal-meta {
+      font-size: 0.8rem;
+      color: #6B7280;
+    }
+
+    /* Water Tracker Style */
+    .water-tracker-card {
+      background: linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%) !important;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #BBDEFB;
+      padding: 20px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 20px rgba(33, 150, 243, 0.15);
+    }
+
+    .water-visual {
+      width: 60px;
+      height: 80px;
+      border: 4px solid #42A5F5;
+      border-top: none;
+      border-radius: 0 0 15px 15px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.5);
+      overflow: hidden;
+    }
+
+    .water-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30%;
+      background: linear-gradient(to top, #2196F3, #64B5F6);
+      transition: height 0.5s;
+      opacity: 0.9;
+    }
+
+    .water-btn {
+      background: #2196F3;
+      color: white;
+      border: none;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .water-btn:hover {
+      transform: scale(1.1);
+      background: #1976D2;
+    }
+
+    /* Macro Bars & Nutrition */
+    .macro-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .nutrient-row {
+      width: 100%;
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .macro-track {
+      width: 100%;
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .macro-fill {
+      height: 100%;
+      border-radius: 10px;
+      width: 0%;
+      transition: width 1s ease-in-out;
+    }
+
+    /* สีหลอดสารอาหาร (Gradient) */
+    .fill-protein {
+      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .fill-carbs {
+      background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+    }
+
+    .fill-fat {
+      background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    /* Donut Chart */
+    .cal-circle-outer {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: conic-gradient(#4facfe 0% 65%, #f0f2f5 65% 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .cal-circle-inner {
+      width: 130px;
+      height: 130px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      z-index: 2;
+    }
+
+    /* Workout Mini List (Dashboard) */
+    .workout-playlist-mini {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .wp-item {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .wp-info {
+      flex: 1;
+      margin-left: 10px;
+      text-align: left;
+    }
+
+    .wp-status {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      background: #eee;
+      border-radius: 20px;
+      color: #666;
+    }
+
+    /* Food Log List */
+    .food-playlist {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .food-header-group {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+      margin-top: 10px;
+      border-left: 4px solid var(--primary);
+      padding-left: 10px;
+    }
+
+    .food-card-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 12px 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    }
+
+    .f-icon {
+      font-size: 1.5rem;
+      margin-right: 15px;
+      width: 40px;
+      text-align: center;
+    }
+
+    .f-info h4 {
+      margin: 0;
+      font-size: 1rem;
+      color: #333;
+    }
+
+    .f-info small {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .f-cal {
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 0.95rem;
+    }
+
+    /* Modals */
+    .modal-wrapper {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-content-timer {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+      position: relative;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .modal-content-calendar {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px;
+      border-radius: 15px;
+      width: 95%;
+      max-width: 400px;
+      position: relative;
+      animation: slideDown 0.3s ease-out;
+      text-align: center;
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .close-modal-timer,
+    .close-calendar {
+      color: #aaa;
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .timer-display {
+      font-size: 4rem;
+      font-weight: 700;
+      color: #333;
+      margin: 20px 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .timer-btn {
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    /* ===== Nutrition Hub (Food) additions ===== */
+    .nutrition-meals {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .meal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 6px 4px 10px;
+    }
+
+    .meal-head h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .meal-sum {
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .food-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+
+    .detail-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .detail-card strong {
+      display: block;
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+  </style>
+  <link rel="stylesheet" href="modern.css">
+</head>
+
+<body>
+
+  <nav class="sidebar">
+    <!-- LEFT -->
+    <div class="nav-left">
+      <div class="brand-logo"><i class="fas fa-cubes"></i></div>
+    </div>
+
+    <!-- CENTER (เมนูหลัก) -->
+    <div class="nav-center">
+      <button class="nav-btn active" onclick="navigateTo('home')" data-page="home">
+        <i class="fas fa-home"></i>
+        <span class="tooltip">หน้าแรก</span>
+      </button>
+
+      <button class="nav-btn" onclick="navigateTo('dashboard')" data-page="dashboard">
+        <i class="fas fa-th-large"></i>
+        <span class="tooltip">Dashboard</span>
+      </button>
+
+      <button class="nav-btn" onclick="navigateTo('food')" data-page="food">
+        <i class="fas fa-utensils"></i>
+        <span class="tooltip">โภชนาการ</span>
+      </button>
+
+      <button class="nav-btn" onclick="navigateTo('exercise')" data-page="exercise">
+        <i class="fas fa-dumbbell"></i>
+        <span class="tooltip">ออกกำลังกาย</span>
+      </button>
+    </div>
+
+    <!-- RIGHT (โปรไฟล์ + Logout ไปขวาสุดบน) -->
+    <div class="nav-right">
+      <button class="nav-btn" onclick="navigateTo('profile')" data-page="profile">
+        <i class="fas fa-user-cog"></i>
+        <span class="tooltip">โปรไฟล์</span>
+      </button>
+
+      <button class="nav-btn" onclick="logout()" title="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+        <span class="tooltip">ออกจากระบบ</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+
+    <section class="page active" id="home">
+      <div class="landing-hero">
+        <div class="hero-text">
+          <h1>เปลี่ยนคุณเป็นคนใหม่ในเวอร์ชันที่ดีที่สุด</h1>
+          <p>FitLife Easy
+            ระบบอัจฉริยะที่จะช่วยวางแผนการกินและออกกำลังกาย<br>คำนวณจากร่างกายและเป้าหมายของคุณโดยเฉพาะ</p>
+          <button class="cta-btn" onclick="startOnboarding()">เริ่มต้นใช้งานฟรี (Setup Profile)</button>
+        </div>
+        <div class="hero-image">
+          <i class="fas fa-running" style="font-size: 150px; color: #FF6B6B; opacity: 0.8; margin-left: 50px;"></i>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="dashboard">
+      <div class="dashboard-header">
+        <div class="date-display">
+          <h2>Dashboard</h2>
+          <span id="current-date"><i class="far fa-calendar-alt"></i> วันนี้</span>
+        </div>
+        <div class="user-badge">
+          <i class="fas fa-user-circle"></i> <span id="user-name-display">Guest</span>
+        </div>
+      </div>
+      <div class="dashboard-section">
+        <h3><i class="fas fa-weight"></i> สุขภาพร่างกาย (Body Stats)</h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+          <div
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+            <span style="font-size:0.9rem;">BMI Score</span>
+            <span id="bmi-val" style="font-size: 2.2rem; font-weight: bold;">--.--</span>
+            <span id="bmi-status" style="font-size: 0.85rem; opacity: 0.9;">ปกติ</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div
+              style="background: #fff; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+              <small style="color:#888;">น้ำหนัก (kg)</small><br>
+              <b style="font-size:1.1rem;" id="dash-weight">--</b>
+            </div>
+            <div
+              style="background: #fff; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+              <small style="color:#888;">ส่วนสูง (cm)</small><br>
+              <b style="font-size:1.1rem;" id="dash-height">--</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <div style="display:flex; align-items:center; gap: 10px;">
+              <h3 style="margin:0;"><i class="fas fa-history" style="color:#FF6B6B;"></i> ประวัติการฝึก
+              </h3>
+
+              <div id="streak-badge" class="streak-badge" style="display:none;">
+                <i class="fas fa-fire streak-fire"></i>
+                <span id="streak-count">0</span> วันติด!
+              </div>
+            </div>
+            <small style="color:#fd0c0c; font-size:0.8rem;">ความต่อเนื่องของคุณ</small>
+          </div>
+
+          <div class="segment-control" style="width: 180px;">
+          </div>
+
+          <div class="segment-control" style="width: 180px;">
+            <input type="radio" name="history-mode" id="mode-chart" checked onclick="switchHistoryMode('chart')">
+            <label for="mode-chart"><i class="fas fa-chart-bar"></i> กราฟ</label>
+
+            <input type="radio" name="history-mode" id="mode-calendar" onclick="switchHistoryMode('calendar')">
+            <label for="mode-calendar"><i class="far fa-calendar-alt"></i> ปฏิทิน</label>
+
+            <div class="segment-glider" style="width: calc(50% - 4px);"></div>
+          </div>
+        </div>
+        <div id="view-chart" class="modern-chart-container">
+          <div class="chart-col">
+            <div class="chart-bar" style="height: 40%; --h:40%;" data-val="20 min"></div>
+            <span class="day-label">จันทร์</span>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar active" style="height: 80%; --h:80%;" data-val="45 min"></div>
+            <span class="day-label">อังคาร</span>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar" style="height: 0%; --h:0%;" data-val="0 min"></div>
+            <span class="day-label">พุธ</span>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar active" style="height: 60%; --h:60%;" data-val="30 min"></div>
+            <span class="day-label">พฤหัสบดี</span>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar" style="height: 30%; --h:30%;" data-val="15 min"></div>
+            <span class="day-label">ศุกร์</span>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar active high" style="height: 100%; --h:100%;" data-val="60 min"></div>
+            <span class="day-label">เสาร์</span>
+          </div>
+          <div class="chart-col">
+            <div class="chart-bar" style="height: 20%; --h:20%;" data-val="10 min"></div>
+            <span class="day-label">อาทิตย์</span>
+          </div>
+        </div>
+        <div id="view-calendar" style="display:none; animation: fadeIn 0.5s;">
+          <div class="mini-calendar-header">
+            <strong id="mini-cal-month">กุมภาพันธ์ 2026</strong>
+          </div>
+          <div class="mini-calendar-grid" id="mini-calendar-days">
+          </div>
+          <div style="margin-top:10px; display:flex; gap:15px; font-size:0.75rem; color:#888; justify-content:center;">
+            <span style="display:flex; align-items:center; gap:5px;">
+              <div style="width:8px; height:8px; background:#4facfe; border-radius:50%;"></div>
+              ออกกำลังกาย
+            </span>
+            <span style="display:flex; align-items:center; gap:5px;">
+              <div style="width:8px; height:8px; background:#eee; border-radius:50%;"></div> พัก
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="water-tracker-card">
+        <div style="display:flex; align-items:center; gap:20px;">
+          <div class="water-visual">
+            <div class="water-fill" id="water-fill-level"></div>
+          </div>
+          <div class="water-info">
+            <h4>ดื่มน้ำวันนี้</h4>
+            <span id="water-count" style="font-size:1.5rem; font-weight:bold; color:#1565C0;">750</span>
+            <small>ml</small>
+            <br><small>เป้าหมาย 2,000 ml</small>
+          </div>
+        </div>
+        <button class="water-btn" onclick="addWater()"><i class="fas fa-plus"></i></button>
+      </div>
+
+      <div class="dashboard-section">
+        <h3><i class="fas fa-chart-pie"></i> เป้าหมายโภชนาการวันนี้</h3>
+
+
+        <div class="nutrition-overview" style="display:flex; align-items:center; gap:30px; flex-wrap:wrap;">
+
+          <div class="cal-ring-card">
+            <div class="cal-circle-outer" id="dash-cal-circle">
+              <div class="cal-circle-inner">
+                <span class="cal-big" id="dash-cal-val">1,250</span>
+                <span class="cal-unit">kcal</span>
+                <small class="cal-goal" id="dash-cal-target">เป้าหมาย 1,800</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="macro-container" style="flex:1; min-width:250px;">
+
+            <div class="nutrient-row">
+              <div class="flex-between">
+                <span><i class="fas fa-drumstick-bite" style="color:#4facfe;"></i> Protein</span>
+                <span>84g / 120g</span>
+              </div>
+              <div class="macro-track">
+                <div id="bar-protein" class="macro-fill fill-protein" style="width: 70%;"></div>
+              </div>
+            </div>
+
+            <div class="nutrient-row">
+              <div class="flex-between">
+                <span><i class="fas fa-bread-slice" style="color:#ff9a9e;"></i> Carbs</span>
+                <span>100g / 200g</span>
+              </div>
+              <div class="macro-track">
+                <div id="bar-carbs" class="macro-fill fill-carbs" style="width: 50%;"></div>
+              </div>
+            </div>
+
+            <div class="nutrient-row">
+              <div class="flex-between">
+                <span><i class="fas fa-cheese" style="color:#f5576c;"></i> Fat</span>
+                <span>45g / 60g</span>
+              </div>
+              <div class="macro-track">
+                <div id="bar-fat" class="macro-fill fill-fat" style="width: 75%;"></div>
+              </div>
+              <div style="text-align: center; margin-top: 20px; margin-bottom: 10px;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-section">
+
+        <!-- Header with Progress -->
+        <div class="workout-plan-header">
+          <div class="workout-plan-title">
+            <i class="fas fa-fire"></i>
+            <span> ท่าออกกำลังกายแนะนำสำหรับวันนี้และอาหาร </span>
+
+          </div>
+          <div class="workout-progress-text">
+            Focus: <strong>Full Body</strong> • เบิร์นแล้ว <strong>240 kcal</strong>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mission-tabs">
+          <button class="mission-tab active" onclick="switchMissionTab('workout')">
+            <i class="fas fa-dumbbell"></i> ท่าออกกำลังกาย
+          </button>
+          <button class="mission-tab" onclick="switchMissionTab('meal')">
+            <i class="fas fa-utensils"></i> มื้ออาหาร
+          </button>
+        </div>
+
+        <!-- Tab 1: Workout Plan -->
+        <div id="tab-workout" class="tab-content active">
+
+          <!-- รวมเป็น "ท่าแนะนำ" เรียงยาว -->
+          <div class="exercise-grid">
+
+            <div class="exercise-card completed" onclick="openWorkoutModal('Squat','do')">
+              <img src="https://images.unsplash.com/photo-1574680096141-1cddd32e04ca?w=500&auto=format&fit=crop"
+                alt="Squat" class="exercise-image">
+              <div class="exercise-info">
+                <div class="exercise-name">Squat</div>
+                <div class="exercise-meta">
+                  <i class="fas fa-running"></i> ขา / สะโพก
+                </div>
+                <span class="difficulty-badge beginner">Beginner</span>
+              </div>
+            </div>
+
+            <div class="exercise-card completed" onclick="openWorkoutModal('Lunges','do')">
+              <img src="https://images.unsplash.com/photo-1434608519344-49d77a699ded?w=500&auto=format&fit=crop"
+                alt="Lunges" class="exercise-image">
+              <div class="exercise-info">
+                <div class="exercise-name">Lunges</div>
+                <div class="exercise-meta">
+                  <i class="fas fa-walking"></i> ต้นขา / ก้น
+                </div>
+                <span class="difficulty-badge intermediate">Intermediate</span>
+              </div>
+            </div>
+
+            <div class="exercise-card" onclick="openWorkoutModal('Push-up','do')">
+              <img src="https://images.unsplash.com/photo-1598971639058-211a74a96aea?w=500&auto=format&fit=crop"
+                alt="Push-up" class="exercise-image">
+              <div class="exercise-info">
+                <div class="exercise-name">Push-up</div>
+                <div class="exercise-meta">
+                  <i class="fas fa-fist-raised"></i> อก / แขน
+                </div>
+                <span class="difficulty-badge intermediate">Intermediate</span>
+              </div>
+            </div>
+
+            <div class="exercise-card" onclick="openWorkoutModal('Plank','do')">
+              <img src="https://plus.unsplash.com/premium_photo-1672044893708-56dfd4304859?w=500&auto=format&fit=crop"
+                alt="Plank" class="exercise-image">
+              <div class="exercise-info">
+                <div class="exercise-name">Plank</div>
+                <div class="exercise-meta">
+                  <i class="fas fa-child"></i> แกนกลาง (Core)
+                </div>
+                <span class="difficulty-badge beginner">Beginner</span>
+              </div>
+            </div>
+
+            <div class="exercise-card" onclick="openWorkoutModal('Mountain Climber','do')">
+              <img src="https://images.unsplash.com/photo-1434596922112-19c563067271?w=500&auto=format&fit=crop"
+                alt="Mountain Climber" class="exercise-image">
+              <div class="exercise-info">
+                <div class="exercise-name">Mountain Climber</div>
+                <div class="exercise-meta">
+                  <i class="fas fa-mountain"></i> หน้าท้อง / เบิร์น
+                </div>
+                <span class="difficulty-badge cardio">Cardio</span>
+              </div>
+            </div>
+
+            <div class="exercise-card" onclick="openWorkoutModal('Crunches','do')">
+              <img src="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=500&auto=format&fit=crop"
+                alt="Crunches" class="exercise-image">
+              <div class="exercise-info">
+                <div class="exercise-name">Crunches</div>
+                <div class="exercise-meta">
+                  <i class="fas fa-cube"></i> หน้าท้องบน
+                </div>
+                <span class="difficulty-badge beginner">Beginner</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Start Button -->
+          <button class="start-workout-btn-new" onclick="navigateTo('exercise')">
+            <i class="fas fa-play-circle"></i>
+            <span>ท่าออกกําลังกาย เพิ่มเติม</span>
+          </button>
+
+        </div>
+
+        <!-- Tab 2: Meal Plan -->
+        <div id="tab-meal" class="tab-content">
+          <div class="meal-dashboard-grid">
+
+            <div class="meal-section-mini" data-meal="breakfast">
+              <div class="meal-section-head">
+                <h4>🍳 อาหารเช้า</h4>
+                <span class="meal-kcal">320 kcal</span>
+              </div>
+              <div class="meal-card"
+                onclick='openDashMealDetail({"meal":"🍳 อาหารเช้า","title":"คาร์โบลีน","kcal":320,"protein":12,"carbs":55,"fat":8,"img":"https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=120&q=80"})'>
+                <img src="https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=120&q=80"
+                  class="meal-img" alt="Breakfast">
+                <div class="meal-info">
+                  <div class="meal-name">คาร์โบวลีน</div>
+                  <div class="meal-meta">แนะนำ • 320 kcal</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="meal-section-mini" data-meal="lunch">
+              <div class="meal-section-head">
+                <h4>🥪 อาหารกลางวัน</h4>
+                <span class="meal-kcal">450 kcal</span>
+              </div>
+              <div class="meal-card"
+                onclick='openDashMealDetail({"meal":"🥪 อาหารกลางวัน","title":"โปรตีนสลัด + ผักสด","kcal":450,"protein":35,"carbs":40,"fat":15,"img":"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=120&q=80"})'>
+                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=120&q=80"
+                  class="meal-img" alt="Lunch">
+                <div class="meal-info">
+                  <div class="meal-name">🥗 โปรตีนสลัด + ผักสด</div>
+                  <div class="meal-meta">แนะนำ • 450 kcal</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="meal-section-mini" data-meal="dinner">
+              <div class="meal-section-head">
+                <h4>🌙 อาหารเย็น</h4>
+                <span class="meal-kcal">380 kcal</span>
+              </div>
+              <div class="meal-card"
+                onclick='openDashMealDetail({"meal":"🌙 อาหารเย็น","title":"ปลา + ผักโบรคโคลี่","kcal":380,"protein":40,"carbs":20,"fat":12,"img":"https://images.unsplash.com/photo-1467003909585-2f8a7270028d?auto=format&fit=crop&w=120&q=80"})'>
+                <img src="https://images.unsplash.com/photo-1467003909585-2f8a7270028d?auto=format&fit=crop&w=120&q=80"
+                  class="meal-img" alt="Dinner">
+                <div class="meal-info">
+                  <div class="meal-name">🐟 ปลา + ผักโบรคโคลี่</div>
+                  <div class="meal-meta">แนะนำ • 380 kcal</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <button class="btn-primary" style="width:100%; margin-top:14px;"
+            onclick="navigateTo('food'); setTimeout(()=>{ if (typeof openFoodLibrary==='function') openFoodLibrary(); }, 80);">
+            ดูรายการอาหารเพิ่มเติม
+          </button>
+
+        </div>
+
+        <script src="script_new.js"></script>
+        <script>
+          // Switch Mission Tab
+          function switchMissionTab(tab) {
+            const tabs = document.querySelectorAll('.mission-tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            if (tab === 'workout') {
+              tabs[0].classList.add('active');
+              document.getElementById('tab-workout').classList.add('active');
+            } else {
+              tabs[1].classList.add('active');
+              document.getElementById('tab-meal').classList.add('active');
+            }
+          }
+        </script>
+      </div>
+
+    </section>
+
+    <section class="page" id="food">
+      <style>
+        /* --- CSS หลัก --- */
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+
+        .food-log-container {
+          font-family: 'Kanit', sans-serif;
+          color: #374151;
+          background: #FAFAFA;
+          padding-bottom: 40px;
+        }
+
+        .food-header h1 {
+          margin: 0;
+          color: #111;
+          font-size: 1.8rem;
+        }
+
+        .food-header p {
+          margin: 5px 0 20px;
+          color: #666;
+          font-size: 0.9rem;
+        }
+
+        /* --- Dashboard --- */
+        .nutrition-hero {
+          background: white;
+          border-radius: 24px;
+          padding: 20px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+          margin-bottom: 25px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          position: relative;
+        }
+
+        .edit-target-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          font-size: 0.8rem;
+          color: #3B82F6;
+          background: #EFF6FF;
+          padding: 6px 12px;
+          border-radius: 20px;
+          cursor: pointer;
+          border: 1px solid #DBEAFE;
+        }
+
+        .cal-ring-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .cal-circle-outer {
+          width: 140px;
+          height: 140px;
+          border-radius: 50%;
+          background: conic-gradient(#3B82F6 0% 83%, #F3F4F6 83% 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .cal-circle-inner {
+          width: 88%;
+          height: 88%;
+          background: white;
+          border-radius: 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .cal-big {
+          font-size: 2rem;
+          font-weight: bold;
+          line-height: 1;
+          color: #1F2937;
+        }
+
+        .cal-unit {
+          font-size: 0.8rem;
+          color: #9CA3AF;
+        }
+
+        .cal-remain {
+          font-size: 0.75rem;
+          color: #EF4444;
+          background: #FEF2F2;
+          padding: 2px 10px;
+          border-radius: 12px;
+          margin-top: 5px;
+          font-weight: 600;
+        }
+
+        /* Macros */
+        .macro-container {
+          width: 100%;
+        }
+
+        .nutrient-row {
+          margin-bottom: 12px;
+        }
+
+        .flex-between {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.85rem;
+          color: #555;
+          margin-bottom: 4px;
+        }
+
+        .macro-track {
+          width: 100%;
+          height: 8px;
+          background: #F3F4F6;
+          border-radius: 10px;
+          overflow: hidden;
+        }
+
+        .macro-fill {
+          height: 100%;
+          border-radius: 10px;
+        }
+
+        .fill-protein {
+          background: #0EA5E9;
+          width: 70%;
+        }
+
+        .fill-carbs {
+          background: #F472B6;
+          width: 50%;
+        }
+
+        .fill-fat {
+          background: #F59E0B;
+          width: 75%;
+        }
+
+        /* --- รายการอาหาร --- */
+        .list-head-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+        }
+
+        .btn-add-main {
+          background-color: #1F2937;
+          color: white;
+          border: none;
+          padding: 8px 18px;
+          border-radius: 30px;
+          font-size: 0.9rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-playlist {
+          margin-bottom: 30px;
+        }
+
+        .food-header-group {
+          font-size: 0.95rem;
+          color: #4B5563;
+          margin: 25px 0 10px;
+          font-weight: 600;
+          padding-left: 5px;
+          border-left: 4px solid #3B82F6;
+          line-height: 1.2;
+        }
+
+        .food-card-item {
+          background: white;
+          border-radius: 16px;
+          padding: 10px;
+          margin-bottom: 10px;
+          display: flex;
+          align-items: center;
+          border: 1px solid #F3F4F6;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        }
+
+        .f-img {
+          width: 60px;
+          height: 60px;
+          border-radius: 12px;
+          object-fit: cover;
+          margin-right: 15px;
+          background: #EEE;
+          border: 1px solid #F0F0F0;
+        }
+
+        .f-info {
+          flex: 1;
+        }
+
+        .f-info h4 {
+          margin: 0;
+          font-size: 0.95rem;
+          color: #333;
+          font-weight: 500;
+        }
+
+        .f-info small {
+          color: #888;
+          font-size: 0.75rem;
+          display: block;
+          margin-top: 3px;
+        }
+
+        /* แก้ไขส่วนแคลอรี่ให้กว้างขึ้น */
+        .f-cal {
+          font-weight: bold;
+          color: #10B981;
+          font-size: 0.9rem;
+          margin-right: 15px;
+          min-width: 80px;
+          text-align: right;
+          /* ปรับความกว้างให้พอดีคำว่า kcal */
+        }
+
+        .delete-btn {
+          background: none;
+          border: none;
+          color: #E5E7EB;
+          cursor: pointer;
+          font-size: 1.1rem;
+        }
+
+        .delete-btn:hover {
+          color: #EF4444;
+        }
+
+        /* Tags */
+        .tag {
+          font-size: 0.6rem;
+          padding: 2px 6px;
+          border-radius: 4px;
+          margin-left: 5px;
+          vertical-align: middle;
+        }
+
+        .tag-p {
+          background: #DBEAFE;
+          color: #1E40AF;
+        }
+
+        .tag-c {
+          background: #D1FAE5;
+          color: #065F46;
+        }
+
+        .tag-f {
+          background: #FEF3C7;
+          color: #92400E;
+        }
+
+        /* --- Modals --- */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          z-index: 9999;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(3px);
+          justify-content: center;
+          align-items: center;
+        }
+
+        .modal-box {
+          background: #FFF;
+          width: 90%;
+          max-width: 450px;
+          border-radius: 24px;
+          padding: 24px;
+          animation: slideUp 0.3s;
+          max-height: 85vh;
+          overflow-y: auto;
+        }
+
+        .close-modal {
+          position: absolute;
+          right: 20px;
+          top: 20px;
+          cursor: pointer;
+          font-size: 1.4rem;
+          color: #999;
+        }
+
+        .rec-item {
+          display: flex;
+          align-items: center;
+          background: white;
+          border: 1px solid #EEE;
+          border-radius: 16px;
+          padding: 10px;
+          margin-bottom: 10px;
+        }
+
+        .rec-img {
+          width: 50px;
+          height: 50px;
+          border-radius: 10px;
+          object-fit: cover;
+          margin-right: 12px;
+          background: #eee;
+        }
+
+        .rec-info {
+          flex: 1;
+        }
+
+        .rec-name {
+          font-weight: 600;
+          color: #374151;
+          font-size: 0.95rem;
+        }
+
+        .rec-meta {
+          font-size: 0.75rem;
+          color: #6B7280;
+        }
+
+        .btn-add-circle {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: #3B82F6;
+          color: white;
+          border: none;
+          font-size: 1.2rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .manual-input {
+          width: 100%;
+          padding: 10px;
+          border-radius: 10px;
+          border: 1px solid #EEE;
+          background: #F9FAFB;
+          margin-bottom: 10px;
+          box-sizing: border-box;
+        }
+
+        .grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+
+        .btn-save {
+          background: #10B981;
+          color: white;
+          width: 100%;
+          padding: 12px;
+          border: none;
+          border-radius: 12px;
+          margin-top: 15px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+
+        @keyframes slideUp {
+          from {
+            transform: translateY(30px);
+            opacity: 0;
+          }
+
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        /* ===== NEW: meal lists + cards (แก้ UI เว้นวรรค/รูปใหญ่เกิน) ===== */
+        .nutrition-meals {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .meal-block {
+          background: #fff;
+          border: 1px solid #F3F4F6;
+          border-radius: 20px;
+          padding: 14px;
+          box-shadow: 0 6px 18px rgba(0, 0, 0, .04);
+        }
+
+        .meal-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin: 4px 6px 12px;
+        }
+
+        .meal-head h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 700;
+          color: #111;
+        }
+
+        .meal-sum {
+          font-weight: 700;
+          color: #64748b;
+          font-size: 14px;
+        }
+
+        .recommend-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .food-item {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 12px 14px;
+          background: #fff;
+          border: 1px solid #F3F4F6;
+          border-radius: 16px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, .03);
+        }
+
+        .food-item img {
+          width: 64px;
+          height: 64px;
+          border-radius: 14px;
+          object-fit: cover;
+          flex: 0 0 64px;
+          background: #f3f4f6;
+        }
+
+        .food-info {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .food-title {
+          font-weight: 700;
+          font-size: 15px;
+          color: #111;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .food-meta {
+          margin-top: 4px;
+          font-size: 12px;
+          color: #6B7280;
+        }
+
+        .food-delete {
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          font-size: 16px;
+          color: #94a3b8;
+          flex: 0 0 auto;
+        }
+
+        .food-delete:hover {
+          color: #ef4444;
+        }
+
+        /* Summary card */
+        .progress-food {
+          border-left: 4px solid #3B82F6;
+        }
+      </style>
+
+      <div class="food-log-container">
+
+        <div class="food-header">
+          <h1>Nutrition Hub</h1>
+          <p>บันทึกและวิเคราะห์สารอาหารประจำวัน</p>
+        </div>
+
+        <div class="list-head-row">
+          <h3 style="margin:0; font-size: 1.2rem; color: #111;">บันทึกมื้ออาหารวันนี้ 🥗</h3>
+          <button onclick="openFoodLibrary()" class="btn-add-main">
+            <i class="fas fa-list"></i> ดูอาหารทั้งหมด
+          </button>
+        </div>
+
+        <div class="food-playlist">
+          <div class="food-item progress-food">
+            <div class="food-info">
+              <div class="food-title">📌 สรุปวันนี้</div>
+              <div class="food-meta" id="food-day-summary">แคลอรี่รวม 0 kcal • โปรตีน 0g • คาร์บ 0g • ไขมัน 0g</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nutrition-meals">
+          <div class="meal-block">
+            <div class="meal-head">
+              <h3>🍳 Breakfast</h3>
+              <span class="meal-sum" id="sum-breakfast">0 kcal</span>
+            </div>
+            <div class="recommend-list" id="food-breakfast-list"></div>
+          </div>
+
+          <div class="meal-block">
+            <div class="meal-head">
+              <h3>🥪 Lunch</h3>
+              <span class="meal-sum" id="sum-lunch">0 kcal</span>
+            </div>
+            <div class="recommend-list" id="food-lunch-list"></div>
+          </div>
+
+          <div class="meal-block">
+            <div class="meal-head">
+              <h3>🌙 Dinner</h3>
+              <span class="meal-sum" id="sum-dinner">0 kcal</span>
+            </div>
+            <div class="recommend-list" id="food-dinner-list"></div>
+          </div>
+        </div>
+
+        <div class="food-actions">
+          <button class="btn-primary" onclick="openFoodLibrary()">รายการอาหารเพิ่มเติม</button>
+          <button class="btn-secondary" onclick="openFoodCustom()">เพิ่มเมนูเอง</button>
+        </div>
+
+        <!-- Food Detail Modal -->
+        <div id="food-detail-modal" class="modal-overlay" style="display:none;">
+          <div class="modal-content">
+            <button class="modal-close" onclick="closeFoodDetail()">✖</button>
+            <div class="modal-header">
+              <h2 id="food-detail-title">รายละเอียดอาหาร</h2>
+              <p id="food-detail-sub">—</p>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-card"><strong>Calories</strong>
+                <div id="fd-cal">0</div>
+              </div>
+              <div class="detail-card"><strong>Protein</strong>
+                <div id="fd-p">0 g</div>
+              </div>
+              <div class="detail-card"><strong>Carbs</strong>
+                <div id="fd-c">0 g</div>
+              </div>
+              <div class="detail-card"><strong>Fat</strong>
+                <div id="fd-f">0 g</div>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button class="btn-danger" id="food-detail-remove" onclick="removeFoodFromDetail()">ลบรายการนี้</button>
+              <button class="btn-primary" onclick="closeFoodDetail()">ปิด</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="modal-search" class="modal-overlay" style="display:none;">
+          <div class="modal-box">
+            <div class="modal-top">
+              <h3>📚 รายการอาหารทั้งหมด (Nutrition Hub)</h3>
+              <button class="close-btn" onclick="closeAllModals()">✖</button>
+            </div>
+
+            <div class="modal-section">
+              <label style="display:block; margin-bottom:8px;">เพิ่มไปที่มื้อ</label>
+              <select id="lib-meal-select" class="manual-input" style="width:100%; margin-bottom:12px;">
+                <option value="breakfast">🍳 Breakfast</option>
+                <option value="lunch">🥪 Lunch</option>
+                <option value="dinner">🌙 Dinner</option>
+              </select>
+
+              <div class="recommend-list" id="food-library-list"></div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-primary" onclick="openFoodCustom()">➕ เพิ่มเมนูเอง</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="modal-manual" class="modal-overlay" style="display:none;">
+          <div class="modal-box">
+            <div class="modal-top">
+              <h3>➕ เพิ่มเมนูเอง</h3>
+              <button class="close-btn" onclick="closeAllModals()">✖</button>
+            </div>
+
+            <div class="manual-form">
+              <label>เพิ่มไปที่มื้อ</label>
+              <select id="food-meal" class="manual-input">
+                <option value="breakfast">🍳 Breakfast</option>
+                <option value="lunch">🥪 Lunch</option>
+                <option value="dinner">🌙 Dinner</option>
+              </select>
+
+              <label>ชื่อเมนู</label>
+              <input id="food-name" class="manual-input" placeholder="เช่น ข้าวต้มหมู" />
+
+              <div class="grid-2">
+                <div>
+                  <label>แคลอรี่ (kcal)</label>
+                  <input id="food-cal" type="number" class="manual-input" placeholder="250" />
+                </div>
+                <div>
+                  <label>โปรตีน (g)</label>
+                  <input id="food-p" type="number" class="manual-input" placeholder="15" />
+                </div>
+                <div>
+                  <label>คาร์บ (g)</label>
+                  <input id="food-c" type="number" class="manual-input" placeholder="35" />
+                </div>
+                <div>
+                  <label>ไขมัน (g)</label>
+                  <input id="food-f" type="number" class="manual-input" placeholder="8" />
+                </div>
+              </div>
+
+              <label>รูป (URL)</label>
+              <input id="food-img" class="manual-input" placeholder="วางลิงก์รูป (ไม่ใส่ก็ได้)" />
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-primary" onclick="saveCustomFood()">บันทึกเมนู</button>
+            </div>
+          </div>
+        </div>
+
+    </section>
+
+    <section class="page" id="exercise">
+      <div class="exercise-header">
+        <h1>Workout Arena</h1>
+        <p>ท้าทายขีดจำกัด สร้างร่างกายที่แข็งแกร่ง</p>
+      </div>
+      <div class="workout-grid">
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Squat">
+            <span class="difficulty-badge beginner">Beginner</span>
+          </div>
+          <div class="workout-content">
+            <h3>Squat</h3>
+            <p><i class="fas fa-running"></i> ขา / สะโพก</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Push-up">
+            <span class="difficulty-badge intermediate">Intermediate</span>
+          </div>
+          <div class="workout-content">
+            <h3>Push-up</h3>
+            <p><i class="fas fa-fist-raised"></i> อก / แขน</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Plank">
+            <span class="difficulty-badge beginner">Beginner</span>
+          </div>
+          <div class="workout-content">
+            <h3>Plank</h3>
+            <p><i class="fas fa-child"></i> แกนกลาง (Core)</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Jumping Jack">
+            <span class="difficulty-badge cardio">Cardio</span>
+          </div>
+          <div class="workout-content">
+            <h3>Jumping Jack</h3>
+            <p><i class="fas fa-fire-alt"></i> เบิร์นไขมัน</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Lunges">
+            <span class="difficulty-badge intermediate">Intermediate</span>
+          </div>
+          <div class="workout-content">
+            <h3>Lunges</h3>
+            <p><i class="fas fa-walking"></i> ต้นขา / ก้น</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Mountain Climber">
+            <span class="difficulty-badge cardio">Cardio + Core</span>
+          </div>
+          <div class="workout-content">
+            <h3>Mountain Climber</h3>
+            <p><i class="fas fa-mountain"></i> หน้าท้อง / เบิร์น</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Burpees">
+            <span class="difficulty-badge advanced">Advanced</span>
+          </div>
+          <div class="workout-content">
+            <h3>Burpees</h3>
+            <p><i class="fas fa-fire"></i> ทั่วร่างกาย (HIIT)</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Crunches">
+            <span class="difficulty-badge beginner">Beginner</span>
+          </div>
+          <div class="workout-content">
+            <h3>Crunches</h3>
+            <p><i class="fas fa-cube"></i> หน้าท้องบน</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Leg Raise">
+            <span class="difficulty-badge intermediate">Intermediate</span>
+          </div>
+          <div class="workout-content">
+            <h3>Leg Raise</h3>
+            <p><i class="fas fa-arrow-up"></i> หน้าท้องล่าง</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Tricep Dips">
+            <span class="difficulty-badge beginner">Beginner</span>
+          </div>
+          <div class="workout-content">
+            <h3>Tricep Dips</h3>
+            <p><i class="fas fa-dumbbell"></i> หลังแขน</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="High Knees">
+            <span class="difficulty-badge cardio">Cardio</span>
+          </div>
+          <div class="workout-content">
+            <h3>High Knees</h3>
+            <p><i class="fas fa-tachometer-alt"></i> หัวใจ / ปอด</p>
+          </div>
+        </div>
+        <div class="workout-card">
+          <div class="workout-img">
+            <img src="" alt="Russian Twist">
+            <span class="difficulty-badge intermediate">Intermediate</span>
+          </div>
+          <div class="workout-content">
+            <h3>Russian Twist</h3>
+            <p><i class="fas fa-sync-alt"></i> เอว / ท้องข้าง</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="page" id="profile">
+      <div class="profile-container">
+
+        <div class="profile-header-card">
+          <div class="profile-cover"></div>
+          <div class="profile-info-content">
+            <div class="avatar-wrapper">
+              <div class="avatar-circle">
+                <i class="fas fa-user"></i>
+              </div>
+              <button class="btn-edit-pic"><i class="fas fa-camera"></i></button>
+            </div>
+
+            <h2 class="user-name">Guest User</h2>
+            <span class="user-badge">Level: Beginner 🐣</span>
+
+            <div class="stats-grid">
+              <div class="stat-box">
+                <small>น้ำหนักปัจจุบัน</small>
+                <div class="stat-value">70 <span class="unit">kg</span></div>
+              </div>
+              <div class="stat-box">
+                <small>เป้าหมาย</small>
+                <div class="stat-value">65 <span class="unit">kg</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3 class="section-title"><i class="fas fa-sliders-h"></i> ปรับเป้าหมาย</h3>
+
+          <form id="profileForm" onsubmit="return false;">
+            <div class="form-group">
+              <label>เป้าหมายหลัก</label>
+              <div class="select-wrapper">
+                <select id="goalSelect">
+                  <option value="lose">🔥 ลดไขมัน (Lose Fat)</option>
+                  <option value="muscle">💪 สร้างกล้ามเนื้อ (Build Muscle)</option>
+                  <option value="maintain">🧘 รักษารูปร่าง (Maintain)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>ระดับกิจกรรม</label>
+              <div class="select-wrapper">
+                <select id="activitySelect">
+                  <option value="low">น้อยมาก (นั่งทำงานออฟฟิศ)</option>
+                  <option value="medium" selected>ปานกลาง (ออกกำลังกาย 3-4 วัน)</option>
+                  <option value="high">หนัก (นักกีฬา / ใช้แรงงาน)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn-save-profile" onclick="saveProfile()">
+              บันทึกข้อมูล
+            </button>
+            <div class="logout-link" onclick="logout()">ออกจากระบบ</div>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+  <div id="food-modal" class="modal-wrapper" style="display: none;">
+    <div class="modal-content-timer" style="text-align: left; max-width: 400px;">
+      <span class="close-modal-timer" onclick="closeFoodModal()">&times;</span>
+
+      <h3 style="text-align: center; margin-bottom: 20px; color: #333;">🍱 บันทึกอาหาร</h3>
+
+      <div class="input-group">
+        <label>ชื่อเมนู</label>
+        <input type="text" id="food-name" placeholder="เช่น ข้าวมันไก่" class="form-input">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+        <div class="input-group">
+          <label>แคลอรี่ (kcal)</label>
+          <input type="number" id="food-cal" placeholder="0" class="form-input">
+        </div>
+        <div class="input-group">
+          <label>โปรตีน (g)</label>
+          <input type="number" id="food-p" placeholder="0" class="form-input">
+        </div>
+        <div class="input-group">
+          <label>คาร์บ (g)</label>
+          <input type="number" id="food-c" placeholder="0" class="form-input">
+        </div>
+        <div class="input-group">
+          <label>ไขมัน (g)</label>
+          <input type="number" id="food-f" placeholder="0" class="form-input">
+        </div>
+      </div>
+
+      <div style="margin-top: 25px; display: flex; gap: 10px;">
+        <button onclick="closeFoodModal()"
+          style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #eee; color: #555; cursor: pointer;">ยกเลิก</button>
+        <button onclick="saveFoodFromModal()"
+          style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%); color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(67, 206, 162, 0.4);">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="onboarding-modal" class="wizard-modal">
+    <div class="wizard-container">
+      <div class="wizard-header">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="wizard-progress"></div>
+        </div>
+        <h2 id="wizard-title">Step 1: ข้อมูลพื้นฐาน</h2>
+      </div>
+
+      <form id="wizard-form" onsubmit="return false;">
+
+        <!-- STEP 1 -->
+        <div class="wizard-step active" id="step-1">
+          <div class="input-group-wizard">
+            <label>ชื่อเล่นของคุณ</label>
+            <input type="text" id="inp-name" placeholder="เช่น แบงค์">
+          </div>
+
+          <div class="grid-2">
+            <div class="input-group-wizard">
+              <label>อายุ (ปี)</label>
+              <input type="number" id="inp-age" placeholder="25">
+            </div>
+
+            <div class="input-group-wizard">
+              <label>เพศ</label>
+              <select id="inp-gender">
+                <option value="male">ชาย</option>
+                <option value="female">หญิง</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="input-group-wizard">
+              <label>น้ำหนัก (kg)</label>
+              <input type="number" id="inp-weight" placeholder="70">
+            </div>
+
+            <div class="input-group-wizard">
+              <label>ส่วนสูง (cm)</label>
+              <input type="number" id="inp-height" placeholder="175">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="wizard-step" id="step-2">
+          <label class="wizard-label">เป้าหมายของคุณคือ?</label>
+          <div class="selection-grid">
+            <div class="select-card" onclick="selectOption(this, 'goal', 'lose-fat')"><i class="fas fa-fire"></i>
+              ลดไขมัน</div>
+            <div class="select-card" onclick="selectOption(this, 'goal', 'build-muscle')"><i
+                class="fas fa-dumbbell"></i> เพิ่มกล้ามเนื้อ</div>
+            <div class="select-card" onclick="selectOption(this, 'goal', 'maintain')"><i
+                class="fas fa-balance-scale"></i> รักษารูปร่าง</div>
+          </div>
+
+          <label class="wizard-label mt-20">ส่วนที่อยากเน้น?</label>
+          <div class="selection-grid">
+            <div class="select-card" onclick="selectOption(this, 'focus', 'chest-arms')">อก & แขน</div>
+            <div class="select-card" onclick="selectOption(this, 'focus', 'legs-core')">ขา & แกนกลาง</div>
+            <div class="select-card" onclick="selectOption(this, 'focus', 'full-body')">ทั่วร่าง</div>
+          </div>
+
+          <label class="wizard-label mt-20">กำหนดวันออกกำลังกาย (แบบรายเดือน)</label>
+
+          <div class="month-row">
+            <input type="month" id="workout-month">
+            <div class="month-hint" id="month-hint"></div>
+          </div>
+
+          <div class="month-calendar" id="month-calendar"></div>
+
+          <input type="hidden" id="selected-dates" value="">
+
+
+          <input type="hidden" id="selected-goal">
+          <input type="hidden" id="selected-focus">
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="wizard-step" id="step-3">
+          <label class="wizard-label">ระดับความยาก</label>
+          <div class="range-selector">
+            <input type="range" min="1" max="3" value="1" id="inp-level" oninput="updateLevelText(this.value)">
+            <p id="level-text">ง่าย</p>
+          </div>
+
+          <label class="wizard-label mt-20">อาการบาดเจ็บ (ถ้ามี)</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="knee"> เข่า</label>
+            <label><input type="checkbox" value="back"> หลัง</label>
+            <label><input type="checkbox" value="shoulder"> ไหล่</label>
+            <label><input type="checkbox" value="none" checked> ไม่มี</label>
+          </div>
+        </div>
+
+        <!-- FOOTER (ต้องอยู่นอก step เพื่อให้มีทุกหน้า) -->
+        <div class="wizard-footer">
+          <button type="button" class="btn-secondary" id="prev-btn" onclick="changeStep(-1)" disabled>ย้อนกลับ</button>
+          <button type="button" class="btn-primary" id="next-btn" onclick="changeStep(1)">ถัดไป</button>
+          <button type="button" class="btn-success" id="finish-btn" onclick="finishWizard()"
+            style="display:none;">ประมวลผล & เริ่มต้น</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <div id="timer-modal" class="modal-wrapper">
+    <div class="modal-content-timer">
+      <span class="close-modal-timer" onclick="closeTimerModal()">&times;</span>
+      <img id="modal-image" src="" alt=""
+        style="width:100%; max-height:220px; object-fit:contain; border-radius:16px; background:#f7f7f7; margin-bottom:12px; display:none;">
+      <h2 id="modal-title">Workout</h2>
+
+      <div class="instruction-box-timer">
+        <p><strong>คำแนะนำ:</strong> <span id="instruction-text">...</span></p>
+      </div>
+
+      <div id="modal-plan-text"
+        style="margin-top:10px; padding:10px 12px; border-radius:12px; background:#f2f2f2; text-align:center; font-weight:700; color:#ff6b6b;">
+        15 ครั้ง x 3 เซ็ต</div>
+
+      <div class="xmodal-log" style="margin-top:16px; text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div style="font-weight:700;">บันทึกเซ็ต</div>
+          <div style="font-size:0.95rem; color:#666;">
+            <span id="set-current">1</span>/<span id="set-target">3</span> เซ็ต
+          </div>
+        </div>
+
+        <label style="display:block; font-size:0.9rem; color:#666; margin-bottom:6px;">
+          จำนวนครั้ง (หรือวินาที)
+        </label>
+        <input id="reps-input" type="number" min="1" placeholder="เช่น 12"
+          style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; background:#fff; box-sizing:border-box;" />
+
+        <label style="display:block; font-size:0.9rem; color:#666; margin:12px 0 6px;">
+          โน้ต (ไม่ใส่ก็ได้)
+        </label>
+        <input id="note-input" type="text" placeholder="เช่น ฟอร์มดี / หนักไป"
+          style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; background:#fff; box-sizing:border-box;" />
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button id="log-set-btn" class="timer-btn" style="flex:1;">บันทึกเซ็ต ✅</button>
+        <button id="finish-workout-btn" class="timer-btn" style="flex:1; background:#333;">จบวันนี้</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="full-calendar-modal" class="modal-wrapper">
+    <div class="modal-content-calendar">
+      <span class="close-calendar" onclick="closeCalendarModal()">&times;</span>
+      <div class="calendar-header-control">
+        <button onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+        <h2 id="current-month-year">Month Year</h2>
+        <button onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+      </div>
+
+      <div class="calendar-grid" id="full-calendar-grid"></div>
+    </div>
+  </div>
+
+  <div id="add-food-modal" class="modal-wrapper">
+    <div class="modal-content-calendar" style="max-width: 500px; text-align: left; padding: 0;">
+
+      <div
+        style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;">บันทึกมื้ออาหาร 🍽️</h3>
+        <span style="font-size: 24px; cursor: pointer; color: #999;"
+          onclick="document.getElementById('add-food-modal').style.display='none'">&times;</span>
+      </div>
+
+      <div style="padding: 20px;">
+        <div style="position: relative; margin-bottom: 20px;">
+          <i class="fas fa-search" style="position: absolute; left: 15px; top: 13px; color: #aaa;"></i>
+          <input type="text" placeholder="ค้นหาเมนู (เช่น ข้าวมันไก่...)"
+            style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 25px; border: 1px solid #eee; background: #f5f7fa; outline: none; box-sizing: border-box;">
+        </div>
+
+        <h4 style="font-size: 0.95rem; color: #666; margin-bottom: 10px;">เมนูแนะนำ</h4>
+        <div style="display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto;">
+
+          <div
+            style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid #f0f0f0; border-radius: 12px;">
+            <div style="display: flex; align-items: center;">
+              <div style="font-size: 1.5rem; margin-right: 15px;">🍗</div>
+              <div>
+                <div style="font-weight: 600;">อกไก่ต้ม (100g)</div>
+                <div style="font-size: 0.8rem; color: #888;">120 kcal • P:23 F:1</div>
+              </div>
+            </div>
+            <button
+              style="background: var(--primary); color: #fff; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"><i
+                class="fas fa-plus"></i></button>
+          </div>
+
+          <div
+            style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid #f0f0f0; border-radius: 12px;">
+            <div style="display: flex; align-items: center;">
+              <div style="font-size: 1.5rem; margin-right: 15px;">🍳</div>
+              <div>
+                <div style="font-weight: 600;">ไข่เจียว (1 ฟอง)</div>
+                <div style="font-size: 0.8rem; color: #888;">250 kcal • P:6 F:20</div>
+              </div>
+            </div>
+            <button
+              style="background: var(--primary); color: #fff; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"><i
+                class="fas fa-plus"></i></button>
+          </div>
+
+          <div
+            style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid #f0f0f0; border-radius: 12px;">
+            <div style="display: flex; align-items: center;">
+              <div style="font-size: 1.5rem; margin-right: 15px;">🍎</div>
+              <div>
+                <div style="font-weight: 600;">แอปเปิ้ล (1 ลูก)</div>
+                <div style="font-size: 0.8rem; color: #888;">52 kcal • C:14</div>
+              </div>
+            </div>
+            <button
+              style="background: var(--primary); color: #fff; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;"><i
+                class="fas fa-plus"></i></button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Dashboard Meal Detail Modal -->
+  <div id="dash-meal-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box dash-meal-box">
+      <div class="modal-top">
+        <h3 id="dash-meal-title" style="margin:0;">รายละเอียดอาหาร</h3>
+        <button class="close-btn" onclick="closeDashMealDetail()">✖</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <img id="dash-meal-img" src="" alt=""
+          style="width:100%; max-height:220px; object-fit:cover; border-radius:16px; background:#f3f4f6;">
+      </div>
+
+      <p id="dash-meal-sub" style="margin:12px 0 0; color:#64748b; font-size:0.9rem;">—</p>
+
+      <div class="detail-grid" style="margin-top:14px;">
+        <div class="detail-card"><strong>Calories</strong>
+          <div id="dash-kcal">0 kcal</div>
+        </div>
+        <div class="detail-card"><strong>Protein</strong>
+          <div id="dash-p">0 g</div>
+        </div>
+        <div class="detail-card"><strong>Carbs</strong>
+          <div id="dash-c">0 g</div>
+        </div>
+        <div class="detail-card"><strong>Fat</strong>
+          <div id="dash-f">0 g</div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="margin-top:14px;">
+        <button class="btn-primary"
+          onclick="navigateTo('food'); setTimeout(()=>{ if (typeof openFoodLibrary==='function') openFoodLibrary(); }, 80); closeDashMealDetail();">ดูรายการอาหารเพิ่มเติม</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
