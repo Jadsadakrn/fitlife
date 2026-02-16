@@ -1,10 +1,9 @@
 /* =========================================
-   FitLife Easy - FIXED & OPTIMIZED VERSION
-   แก้ไข: 
-   - รวม event listeners ไม่ให้ซ้ำซ้อน
-   - เพิ่ม null checks ป้องกัน error
-   - ปรับปรุง modal mode logic
-   - เพิ่ม data validation
+   const API_BASE =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    เว็บdyploy
+    : "https://fitlife-dlfz.onrender.com";
    ========================================= */
 
 // ===== Auth/User scope =====
@@ -12,6 +11,32 @@ const __session = (window.Auth && Auth.getSession) ? Auth.getSession() : null;
 const __user = (window.Auth && Auth.getCurrentUser) ? Auth.getCurrentUser() : null;
 const __userId = (__user && __user.id) ? __user.id : "guest";
 const ukey = (k) => `${k}_${__userId}`;
+const API_BASE = "http://localhost:3000";
+
+
+window.navigateTo = function (pageId) {
+  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+  const targetPage = document.getElementById(pageId);
+  if (targetPage) targetPage.classList.add('active');
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('data-page') === pageId) btn.classList.add('active');
+  });
+};
+
+let currentStep = 1;
+const totalSteps = 3;
+
+let waterIntake = 750;
+const waterGoal = 2000;
+
+// ============================
+// Global Data Store
+// ============================
+
+let workoutData = [];
+let foodLibrary = [];
 
 // ถ้า session หมดอายุ ให้เด้งกลับไปหน้า Login
 if (window.Auth && !__session) {
@@ -19,215 +44,131 @@ if (window.Auth && !__session) {
 }
 
 /* =========================================
-   1. WORKOUT & MEAL DATA (รวมจากทั้งสองไฟล์)
+   1. WORKOUT 
    ========================================= */
-const workoutData = [
-  { id: "chair_squat", title: "สควอทบนนเก้าอี้", sub: "15 ครั้ง x 3 เซ็ต", img: "https://images.unsplash.com/photo-1574680096141-1cddd32e04ca?w=200&auto=format&fit=crop", modalName: "Squat" },
-  { id: "wall_push", title: "วิดพื้นกับกำแพง", sub: "15 ครั้ง x 3 เซ็ต", img: "https://images.unsplash.com/photo-1598971639058-211a74a96aea?w=200&auto=format&fit=crop", modalName: "Push-up" },
-  { id: "door_row", title: "ยืนดึงขอบประตู", sub: "15 ครั้ง x 3 เซ็ต", img: "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=200&auto=format&fit=crop", modalName: "Row" },
-  { id: "knee_push", title: "วิดพื้นยกกัน (งอเข่า)", sub: "15 ครั้ง x 3 เซ็ต", img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&auto=format&fit=crop", modalName: "Knee Push-up" },
-  { id: "plank", title: "แพลงก์", sub: "30 วินาที", img: "https://images.unsplash.com/photo-1518611012118-f0c5d9d7d65b?w=200&auto=format&fit=crop", modalName: "Plank" },
-  { id: "fast_walk", title: "เดินเร็ว", sub: "30 นาที", img: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=200&auto=format&fit=crop", modalName: "Walk" },
-];
+async function loadExercisesFromAPI() {
+  try {
+    const res = await fetch(`${API_BASE}/api/exercises`);
+    const data = await res.json();
 
-// เติมรูปให้การ์ดใน Workout Arena (ถ้า <img src> ว่าง)
+    window.workoutData = data.map(ex => ({
+      id: ex.id,
+      title: ex.nameEn,
+      sub: ex.bodyPart + " • " + ex.level,
+      img: ex.imageUrl?.replace('[URL]', '').trim(),
+      instruction: ex.instruction,
+      sets: ex.sets,
+      repsGuide: ex.repsGuide,
+      defaultReps: ex.defaultReps
+    }));
+
+    console.log("workoutData =", window.workoutData);
+
+    renderWorkoutCards("workout-list", window.workoutData);
+
+  } catch (err) {
+    console.error("Failed to load exercises:", err);
+  }
+}
+
+
+
+function getDifficultyClass(text) {
+  if (text.toLowerCase().includes("easy")) return "beginner";
+  if (text.toLowerCase().includes("medium")) return "intermediate";
+  if (text.toLowerCase().includes("hard")) return "advanced";
+  return "beginner";
+}
+
+function renderFoodLibrary() {
+  const el = document.getElementById("food-library-list");
+  if (!el) return;
+
+  if (!Array.isArray(foodLibrary) || foodLibrary.length === 0) {
+    el.innerHTML = "<p>ยังไม่มีข้อมูลอาหาร</p>";
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="food-grid">
+      ${foodLibrary.map(x => `
+        <div class="food-card">
+          <img src="${x.img || ''}" alt="${x.name}">
+          <div class="food-card-body">
+            <h3>${x.name}</h3>
+            <p>${x.kcal} kcal</p>
+            <small>P:${x.protein} • C:${x.carbs} • F:${x.fat}</small>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 function hydrateArenaImages() {
   const arena = document.getElementById('exercise');
-  if (!arena) return;
+  if (!arena) return;   // 🔥 กัน error
 
-  const map = new Map(workoutData.map(w => [w.title.trim().toLowerCase(), w.img]));
+  if (!window.workoutData || !Array.isArray(window.workoutData)) return;
+
+  const map = new Map(
+    window.workoutData.map(w => [
+      w.title.trim().toLowerCase(),
+      w.img
+    ])
+  );
+
   arena.querySelectorAll('.workout-card').forEach(card => {
     const titleEl = card.querySelector('h3');
     const imgEl = card.querySelector('img');
     if (!titleEl || !imgEl) return;
+
     const title = titleEl.innerText.trim().toLowerCase();
     const current = imgEl.getAttribute('src') || '';
     if (current.trim()) return;
+
     const url = map.get(title);
     if (url) imgEl.setAttribute('src', url);
   });
 }
 
-const mealData = [
-  { id: "salad", title: "🥗 โปรตีนสลัด + ผักสด", sub: "มื้อกลางวัน • 450 kcal", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop" },
-  { id: "oat", title: "🍳 คาร์โบวลีน", sub: "มื้อเช้า • 320 kcal", img: "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=200&auto=format&fit=crop" },
-  { id: "fish", title: "🐟 ปลา + ผักโบรคโคลี่", sub: "มื้อเย็น • 380 kcal", img: "https://images.unsplash.com/photo-1467003909585-2f8a7270028d?w=200&auto=format&fit=crop" },
-];
 
+// render each meal list
+const renderMeal = (meal, containerId, sumId) => {
+  const el = document.getElementById(containerId);
+  const sumEl = document.getElementById(sumId);
+  if (!el) return;
 
-/* =========================================
-   1.1 NUTRITION HUB (Food Library + Daily Log)
-   - แยกหมวด Breakfast/Lunch/Dinner
-   - เพิ่มเมนูเองได้
-   - กดการ์ดดูสารอาหาร (P/C/F) + ลบรายการ
-   ========================================= */
+  const list = day[meal] || [];
+  const t = calcMealTotals(list);
+  if (sumEl) sumEl.innerText = `${t.cal} kcal`;
 
-const FOOD_MEALS = ["breakfast", "lunch", "dinner"];
-const FOOD_MEAL_LABEL = {
-  breakfast: "🍳 Breakfast",
-  lunch: "🥪 Lunch",
-  dinner: "🌙 Dinner",
+  // events (open detail / delete)
+  el.querySelectorAll(".food-item").forEach(row => {
+    const del = row.querySelector(".food-delete");
+    const meal2 = row.dataset.meal;
+    const idx2 = Number(row.dataset.idx);
+
+    row.addEventListener("click", (e) => {
+      if (e.target === del) return; // let delete handler do it
+      openFoodDetail(meal2, idx2);
+    });
+
+    if (del) {
+      del.addEventListener("click", (e) => {
+        e.stopPropagation();
+        removeFoodItem(meal2, idx2);
+      });
+    }
+  });
 };
 
-const foodLibrary = [
-  { id: "coffee_black", name: "กาแฟดำ (ไม่หวาน)", cal: 15, p: 0, c: 3, f: 0, img: "https://images.unsplash.com/photo-1459755486867-b55449bb39ff?w=500&auto=format&fit=crop" },
-  { id: "boiled_egg", name: "ไข่ต้ม (1 ฟอง)", cal: 75, p: 7, c: 1, f: 5, img: "https://images.unsplash.com/photo-1551892374-ecf8754cf8f0?w=500&auto=format&fit=crop" },
-  { id: "greek_yogurt", name: "กรีกโยเกิร์ต + เบอร์รี่", cal: 150, p: 12, c: 15, f: 4, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500&auto=format&fit=crop" },
-  { id: "oatmeal", name: "ข้าวโอ๊ต + นม", cal: 320, p: 14, c: 52, f: 8, img: "https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=500&auto=format&fit=crop" },
-  { id: "banana", name: "กล้วยหอม (1 ลูก)", cal: 105, p: 1, c: 27, f: 0, img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500&auto=format&fit=crop" },
+renderMeal("breakfast", "food-breakfast-list", "sum-breakfast");
+renderMeal("lunch", "food-lunch-list", "sum-lunch");
+renderMeal("dinner", "food-dinner-list", "sum-dinner");
 
-  { id: "tuna_sandwich", name: "แซนด์วิชทูน่าโฮลวีต", cal: 280, p: 18, c: 30, f: 10, img: "https://images.unsplash.com/photo-1550317138-10000687a72b?w=500&auto=format&fit=crop" },
-  { id: "chicken_salad", name: "สลัดอกไก่", cal: 350, p: 32, c: 20, f: 12, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop" },
-  { id: "rice_basil_chicken", name: "ข้าวกะเพราไก่ไข่ดาว", cal: 550, p: 35, c: 65, f: 18, img: "https://images.unsplash.com/photo-1604908176997-125f25cc500b?w=500&auto=format&fit=crop" },
-  { id: "sukiyaki_chicken", name: "สุกี้น้ำอกไก่", cal: 320, p: 30, c: 40, f: 5, img: "https://images.unsplash.com/photo-1604908554119-26c2b2b2991e?w=500&auto=format&fit=crop" },
-  { id: "somtam_chicken", name: "ส้มตำ + ไก่ย่าง", cal: 420, p: 28, c: 45, f: 15, img: "https://images.unsplash.com/photo-1625937325382-2b8c9f264f3c?w=500&auto=format&fit=crop" },
 
-  { id: "salmon_broccoli", name: "ปลาแซลมอน + บรอกโคลี", cal: 380, p: 32, c: 12, f: 20, img: "https://images.unsplash.com/photo-1467003909585-2f8a7270028d?w=500&auto=format&fit=crop" },
-  { id: "grilled_fish", name: "ปลาย่าง + ผักนึ่ง", cal: 330, p: 28, c: 18, f: 12, img: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop" },
-  { id: "chicken_rice", name: "ข้าวมันไก่ (ธรรมดา)", cal: 620, p: 32, c: 78, f: 22, img: "https://images.unsplash.com/photo-1625938145974-6d9891e0b1c9?w=500&auto=format&fit=crop" },
-  { id: "tomyum", name: "ต้มยำกุ้ง", cal: 200, p: 18, c: 10, f: 9, img: "https://images.unsplash.com/photo-1548940740-204726a19be3?w=500&auto=format&fit=crop" },
-  { id: "stirfry_veg", name: "ผัดผักรวม", cal: 180, p: 6, c: 20, f: 8, img: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&auto=format&fit=crop" },
-
-  { id: "almonds", name: "อัลมอนด์อบ (10 เม็ด)", cal: 80, p: 3, c: 3, f: 7, img: "https://images.unsplash.com/photo-1505576391880-b3f9d713dc0c?w=500&auto=format&fit=crop" },
-  { id: "apple", name: "แอปเปิล (1 ผล)", cal: 95, p: 0, c: 25, f: 0, img: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=500&auto=format&fit=crop" },
-  { id: "guava", name: "ฝรั่ง (ครึ่งลูก)", cal: 60, p: 1, c: 14, f: 0, img: "https://images.unsplash.com/photo-1603046891796-1d0d64c1b94d?w=500&auto=format&fit=crop" },
-  { id: "milk_lowfat", name: "นมจืดไขมันต่ำ (1 แก้ว)", cal: 120, p: 8, c: 12, f: 4, img: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&auto=format&fit=crop" },
-  { id: "protein_shake", name: "โปรตีนเชค (1 เสิร์ฟ)", cal: 180, p: 25, c: 8, f: 4, img: "https://images.unsplash.com/photo-1542444256-2913c3f6b77c?w=500&auto=format&fit=crop" },
-];
-
-const foodLogKey = ukey("fit_food_log"); // v2 structure (แยกมื้อ)
-let __foodDetailCtx = null; // { meal, idx }
-
-function getFoodLogRaw() {
-  try { return JSON.parse(localStorage.getItem(foodLogKey) || "null"); }
-  catch { return null; }
-}
-
-function normalizeFoodEntry(x) {
-  return {
-    name: String(x?.name || x?.title || "เมนู"),
-    cal: Number(x?.cal ?? 0),
-    p: Number(x?.p ?? 0),
-    c: Number(x?.c ?? 0),
-    f: Number(x?.f ?? 0),
-    img: x?.img || "",
-    ts: Number(x?.ts ?? Date.now()),
-  };
-}
-
-// โครงสร้าง v2: { "YYYY-MM-DD": { breakfast:[], lunch:[], dinner:[] } }
-function getFoodLog() {
-  const raw = getFoodLogRaw();
-
-  // ยังไม่เคยมี -> seed วันนี้ให้สวยๆ
-  if (!raw) {
-    const today = getTodayKey();
-    const seeded = {
-      [today]: {
-        breakfast: [normalizeFoodEntry(foodLibrary.find(x => x.id === "oatmeal") || { name: "ข้าวโอ๊ต + นม", cal: 320, p: 14, c: 52, f: 8 })],
-        lunch: [normalizeFoodEntry(foodLibrary.find(x => x.id === "chicken_salad") || { name: "สลัดอกไก่", cal: 350, p: 32, c: 20, f: 12 })],
-        dinner: [normalizeFoodEntry(foodLibrary.find(x => x.id === "salmon_broccoli") || { name: "ปลาแซลมอน + บรอกโคลี", cal: 380, p: 32, c: 12, f: 20 })],
-      }
-    };
-    localStorage.setItem(foodLogKey, JSON.stringify(seeded));
-    return seeded;
-  }
-
-  // v1 (array) -> migrate ให้เป็น v2
-  if (Array.isArray(raw)) {
-    const today = getTodayKey();
-    const migrated = { [today]: { breakfast: [], lunch: [], dinner: [] } };
-    raw.forEach(item => {
-      const meal = String(item?.meal || item?.mealType || '').toLowerCase();
-      const targetMeal = (meal === 'breakfast' || meal === 'lunch' || meal === 'dinner') ? meal : 'lunch';
-      migrated[today][targetMeal].push(normalizeFoodEntry(item));
-    });
-    localStorage.setItem(foodLogKey, JSON.stringify(migrated));
-    return migrated;
-  }
-
-  // ensure day & meals exist
-  const today = getTodayKey();
-  if (!raw[today]) raw[today] = { breakfast: [], lunch: [], dinner: [] };
-  FOOD_MEALS.forEach(m => { if (!Array.isArray(raw[today][m])) raw[today][m] = []; });
-  return raw;
-}
-
-function saveFoodLog(obj) {
-  localStorage.setItem(foodLogKey, JSON.stringify(obj));
-}
-
-function calcMealTotals(list) {
-  return list.reduce((acc, x) => {
-    acc.cal += (x.cal || 0);
-    acc.p += (x.p || 0);
-    acc.c += (x.c || 0);
-    acc.f += (x.f || 0);
-    return acc;
-  }, { cal: 0, p: 0, c: 0, f: 0 });
-}
-
-function renderFoodPage() {
-  const page = document.getElementById("food");
-  if (!page) return;
-
-  const log = getFoodLog();
-  const today = getTodayKey();
-  const day = log[today] || { breakfast: [], lunch: [], dinner: [] };
-
-  // render each meal list
-  const renderMeal = (meal, containerId, sumId) => {
-    const el = document.getElementById(containerId);
-    const sumEl = document.getElementById(sumId);
-    if (!el) return;
-
-    const list = day[meal] || [];
-    const t = calcMealTotals(list);
-    if (sumEl) sumEl.innerText = `${t.cal} kcal`;
-
-    el.innerHTML = list.map((x, idx) => `
-      <div class="food-item" data-meal="${meal}" data-idx="${idx}">
-        <img src="${x.img || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop"}" alt="${x.name}">
-        <div class="food-info">
-          <div class="food-title">${x.name}</div>
-          <div class="food-meta">${FOOD_MEAL_LABEL[meal]} • ${x.cal} kcal</div>
-        </div>
-        <button class="food-delete" title="ลบ">🗑</button>
-      </div>
-    `).join("");
-
-    // events (open detail / delete)
-    el.querySelectorAll(".food-item").forEach(row => {
-      const del = row.querySelector(".food-delete");
-      const meal2 = row.dataset.meal;
-      const idx2 = Number(row.dataset.idx);
-
-      row.addEventListener("click", (e) => {
-        if (e.target === del) return; // let delete handler do it
-        openFoodDetail(meal2, idx2);
-      });
-
-      if (del) {
-        del.addEventListener("click", (e) => {
-          e.stopPropagation();
-          removeFoodItem(meal2, idx2);
-        });
-      }
-    });
-  };
-
-  renderMeal("breakfast", "food-breakfast-list", "sum-breakfast");
-  renderMeal("lunch", "food-lunch-list", "sum-lunch");
-  renderMeal("dinner", "food-dinner-list", "sum-dinner");
-
-  // day summary
-  const all = [...(day.breakfast||[]), ...(day.lunch||[]), ...(day.dinner||[])];
-  const t = calcMealTotals(all);
-  const summary = document.getElementById("food-day-summary");
-  if (summary) summary.innerText = `แคลอรี่รวม ${t.cal} kcal • โปรตีน ${t.p}g • คาร์บ ${t.c}g • ไขมัน ${t.f}g`;
-}
-
-function openFoodDetail(meal, idx) {
+/* 
   const log = getFoodLog();
   const today = getTodayKey();
   const item = log?.[today]?.[meal]?.[idx];
@@ -246,117 +187,12 @@ function openFoodDetail(meal, idx) {
   setText("fd-f", `${item.f} g`);
 
   modal.style.display = "flex";
-}
+} */
 
-function closeFoodDetail() {
-  const modal = document.getElementById("food-detail-modal");
-  if (modal) modal.style.display = "none";
-  __foodDetailCtx = null;
-}
 
-function removeFoodFromDetail() {
-  if (!__foodDetailCtx) return;
-  removeFoodItem(__foodDetailCtx.meal, __foodDetailCtx.idx);
-  closeFoodDetail();
-}
 
-function removeFoodItem(meal, idx) {
-  const log = getFoodLog();
-  const today = getTodayKey();
-  const list = log?.[today]?.[meal];
-  if (!Array.isArray(list)) return;
 
-  list.splice(idx, 1);
-  saveFoodLog(log);
-  renderFoodPage();
-  loadUserData(); // refresh dashboard totals
-  showToast("ลบรายการอาหารแล้ว", "info");
-}
 
-function openFoodLibrary() {
-  // ใช้ modal-search เดิมเป็น Food Library
-  openSearchModal();
-  renderFoodLibrary();
-}
-
-function openFoodCustom() {
-  switchToManual();
-  // sync meal default from library select (ถ้ามี)
-  const libSel = document.getElementById("lib-meal-select");
-  const mealSel = document.getElementById("food-meal");
-  if (libSel && mealSel) mealSel.value = libSel.value || "breakfast";
-}
-
-function renderFoodLibrary() {
-  const el = document.getElementById("food-library-list");
-  if (!el) return;
-
-  el.innerHTML = foodLibrary.map(x => `
-    <div class="food-item" data-food-id="${x.id}">
-      <img src="${x.img || ""}" alt="${x.name}">
-      <div class="food-info">
-        <div class="food-title">${x.name}</div>
-        <div class="food-meta">${x.cal} kcal • P${x.p} C${x.c} F${x.f}</div>
-      </div>
-      <button class="btn-primary" style="padding:8px 12px; border-radius:12px;" data-add>เพิ่ม</button>
-    </div>
-  `).join("");
-
-  el.querySelectorAll('[data-add]').forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const row = e.target.closest('[data-food-id]');
-      const id = row?.dataset.foodId;
-      const food = foodLibrary.find(f => f.id === id);
-      const mealSel = document.getElementById("lib-meal-select");
-      const meal = mealSel?.value || "breakfast";
-      if (food) addFoodToMeal(meal, food);
-    });
-  });
-}
-
-function addFoodToMeal(meal, food) {
-  if (!FOOD_MEALS.includes(meal)) meal = "breakfast";
-
-  const log = getFoodLog();
-  const today = getTodayKey();
-  const entry = normalizeFoodEntry(food);
-
-  log[today][meal].push(entry);
-  saveFoodLog(log);
-
-  renderFoodPage();
-  loadUserData();
-  showToast(`เพิ่ม "${entry.name}" ไปที่ ${FOOD_MEAL_LABEL[meal]} แล้ว`, "success");
-}
-
-// ใช้กับปุ่ม "บันทึกเมนู" ใน modal-manual
-function saveCustomFood() {
-  const meal = document.getElementById("food-meal")?.value || "breakfast";
-  const name = document.getElementById("food-name")?.value?.trim();
-  const cal = Number(document.getElementById("food-cal")?.value || 0);
-  const p = Number(document.getElementById("food-p")?.value || 0);
-  const c = Number(document.getElementById("food-c")?.value || 0);
-  const f = Number(document.getElementById("food-f")?.value || 0);
-  const img = document.getElementById("food-img")?.value?.trim() || "";
-
-  if (!name) {
-    showToast("⚠️ กรุณาใส่ชื่อเมนู", "warning");
-    return;
-  }
-  if (!cal || cal < 0) {
-    showToast("⚠️ ใส่แคลอรี่ให้ถูกต้อง", "warning");
-    return;
-  }
-
-  addFoodToMeal(meal, { name, cal, p, c, f, img });
-
-  // clear inputs
-  const ids = ["food-name", "food-cal", "food-p", "food-c", "food-f", "food-img"];
-  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-
-  closeAllModals();
-}
 
 
 const workoutDB = {
@@ -433,6 +269,68 @@ function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.innerText = text;
 }
+
+function renderList(containerId, items, storageKey, onPick) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  const selected = localStorage.getItem(storageKey) || "";
+
+  el.innerHTML = items.map(x => `
+    <div class="list-item ${selected === x.id ? "selected" : ""}" data-id="${x.id}">
+      <div class="li-left">
+        <div class="li-icon">${x.img ? `<img src="${x.img}" alt="${x.title}">` : ""}</div>
+        <div class="li-text">
+          <div class="li-title">${x.title}</div>
+          <div class="li-sub">${x.sub}</div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  el.querySelectorAll(".list-item").forEach(row => {
+    row.addEventListener("click", () => {
+      const id = row.dataset.id;
+      localStorage.setItem(storageKey, id);
+
+      el.querySelectorAll(".list-item").forEach(r => r.classList.remove("selected"));
+      row.classList.add("selected");
+
+      const item = items.find(i => i.id === id);
+      if (onPick && item) onPick(item);
+    });
+  });
+}
+
+function renderWorkoutCards(containerId, items) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  el.innerHTML = items.map(item => `
+    <div class="workout-card" data-id="${item.id}">
+      <div class="workout-img">
+        <img src="${item.img}" alt="${item.title}">
+        <span class="difficulty-badge beginner">
+          ${item.sub}
+        </span>
+      </div>
+      <div class="workout-content">
+        <h3>${item.title}</h3>
+        <p>${item.sub}</p>
+      </div>
+    </div>
+  `).join("");
+
+  el.querySelectorAll(".workout-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.id;
+      const item = items.find(i => i.id == id);
+      if (item) openWorkoutModal(item, "do");
+    });
+  });
+}
+
+
 
 // [Sound System]
 let audioCtx = null;
@@ -530,51 +428,45 @@ function saveSet(dateKey, title, setNo, reps, note) {
 /* =========================================
    4. WORKOUT MODAL SYSTEM (ปรับปรุงแล้ว)
    ========================================= */
-function openWorkoutModal(title, mode = "do", imgUrl = "") {
-  const data = workoutDB[title];
-  const timerModal = document.getElementById('timer-modal');
+function openWorkoutModal(item, mode = "do") {
+  if (!item) return;
 
-  if (!data || !timerModal) {
-    console.warn('ไม่พบข้อมูลท่า:', title);
-    showToast("⚠️ ไม่พบข้อมูลท่านี้", "warning");
-    return;
-  }
-
-  activeTitle = title;
+  activeTitle = item.title;
   activeSetIndex = 0;
-  activeMode = mode; // เก็บ mode ไว้
-  activeImgUrl = imgUrl || "";
+  activeMode = mode;
+  activeImgUrl = item.img || "";
 
-  setText('modal-title', title);
-  setText('instruction-text', `${data.instruction} (แนะนำ ${data.sets} เซ็ต • ${data.repsGuide})`);
-  // แผนสั้นๆ (ใช้แสดงเหมือนการ์ดในรูป)
+  setText('modal-title', item.title);
+  setText(
+    'instruction-text',
+    `${item.instruction} (แนะนำ ${item.sets} เซ็ต • ${item.repsGuide})`
+  );
+
   const planEl = document.getElementById('modal-plan-text');
   if (planEl) {
-    const planText = (data.sets && data.sets > 1)
-      ? `${data.repsGuide} x ${data.sets} เซ็ต`
-      : `${data.repsGuide}`;
-    planEl.innerText = planText;
+    planEl.innerText =
+      item.sets > 1
+        ? `${item.repsGuide} x ${item.sets} เซ็ต`
+        : `${item.repsGuide}`;
   }
 
-  // รูปท่า (ถ้ามี)
   const imgEl = document.getElementById('modal-image');
   if (imgEl) {
-    if (activeImgUrl) {
-      imgEl.src = activeImgUrl;
-      imgEl.style.display = '';
+    if (item.img) {
+      imgEl.src = item.img;
+      imgEl.style.display = "";
     } else {
-      imgEl.removeAttribute('src');
-      imgEl.style.display = 'none';
+      imgEl.style.display = "none";
     }
   }
 
-  setText('set-target', data.sets);
+  setText('set-target', item.sets);
   setText('set-current', 1);
 
   // ตั้งค่า input fields
   const repsInput = document.getElementById('reps-input');
   const noteInput = document.getElementById('note-input');
-  if (repsInput) repsInput.value = (data.defaultReps ?? "");
+  if (repsInput) repsInput.value = (item.defaultReps ?? "");
   if (noteInput) noteInput.value = "";
 
   // สลับโหมด UI พร้อม null checks
@@ -635,40 +527,6 @@ window.closeTimerModal = function () {
   if (imgEl) { imgEl.removeAttribute("src"); imgEl.style.display = "none"; }
 };
 
-/* =========================================
-   5. LIST RENDERING FUNCTIONS
-   ========================================= */
-function renderList(containerId, items, storageKey, onPick) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-
-  const selected = localStorage.getItem(storageKey) || "";
-  el.innerHTML = items.map(x => `
-    <div class="list-item ${selected === x.id ? "selected" : ""}" data-id="${x.id}">
-      <div class="li-left">
-        <div class="li-icon">${x.img ? `<img src="${x.img}" alt="${x.title}">` : ""}</div>
-        <div class="li-text">
-          <div class="li-title">${x.title}</div>
-          <div class="li-sub">${x.sub}</div>
-        </div>
-      </div>
-      <div class="li-pick"></div>
-    </div>
-  `).join("");
-
-  el.querySelectorAll(".list-item").forEach(row => {
-    row.addEventListener("click", () => {
-      const id = row.dataset.id;
-      localStorage.setItem(storageKey, id);
-
-      el.querySelectorAll(".list-item").forEach(r => r.classList.remove("selected"));
-      row.classList.add("selected");
-
-      const item = items.find(i => i.id === id);
-      if (onPick && item) onPick(item);
-    });
-  });
-}
 
 function setupListTabs() {
   const btns = document.querySelectorAll(".mission-tabs-2 .tab-btn");
@@ -836,245 +694,251 @@ function updateStreakDisplay() {
   }
 }
 
+async function loadFoodLibrary() {
+
+  foodLibrary = []; // 🔥 รีเซ็ตก่อนทุกครั้ง
+
+  try {
+    const res = await fetch(`${API_BASE}/api/foods`);
+    const data = await res.json();
+
+    foodLibrary = data.map(f => ({
+      id: f.id,
+      name: f.nameTh,
+      kcal: f.calories,
+      protein: f.protein,
+      carbs: f.carbs,
+      fat: f.fat,
+      img: f.imageUrl
+    }));
+
+    console.log("Mapped foodLibrary:", foodLibrary);
+
+    renderFoodLibrary();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+
 /* =========================================
    7. DOM CONTENT LOADED (ปรับปรุงแล้ว)
-   ========================================= */
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 FitLife Easy Fixed Version กำลังโหลด...');
+   ========================================= */ 
+document.addEventListener("DOMContentLoaded", async () => {
 
-  // เช็ค User
+  await loadFoodLibrary();   // โหลด DB ก่อน
+  await loadExercisesFromAPI();
+
   if (!localStorage.getItem(ukey("fit_user"))) {
-    const wizard = document.getElementById('onboarding-modal');
+    const wizard = document.getElementById("onboarding-modal");
     if (wizard) {
-      wizard.style.display = 'flex';
+      wizard.style.display = "flex";
       showStep(1);
     }
-  } else {
-    loadUserData();
   }
 
-  // Set Date
-  const dateElem = document.getElementById('current-date');
-  if (dateElem) {
-    dateElem.innerText = new Date().toLocaleDateString('th-TH', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  // Month calendar init
-  const monthInp = document.getElementById('workout-month');
-  const hiddenDates = document.getElementById('selected-dates');
-
-  if (monthInp && hiddenDates) {
-    if (!monthInp.value) monthInp.value = getTodayMonthValue();
-    buildMonthCalendar(monthInp.value);
-
-    monthInp.addEventListener('change', () => {
-      buildMonthCalendar(monthInp.value);
-    });
-  }
-
-  // Streak & Level
-  renderWeeklyStreak();
-  updateStreakDisplay();
-
-  const levelInput = document.getElementById("inp-level");
-  if (levelInput) updateLevelText(levelInput.value);
-
-  // Health checkboxes
-  const checks = document.querySelectorAll('#step-3 .checkbox-group input[type="checkbox"]');
-  const none = document.querySelector('#step-3 .checkbox-group input[value="none"]');
-
-  checks.forEach(chk => {
-    chk.addEventListener("change", () => {
-      if (!none) return;
-
-      if (chk.value === "none" && chk.checked) {
-        checks.forEach(c => { if (c.value !== "none") c.checked = false; });
-      }
-
-      if (chk.value !== "none" && chk.checked) {
-        none.checked = false;
-      }
-
-      const anyOther = Array.from(checks).some(c => c.value !== "none" && c.checked);
-      if (!anyOther) none.checked = true;
-    });
-  });
-
-  // ✅ Setup List Tabs (Workout/Meal selection)
-  setupListTabs();
-
-  // ✅ Render Workout & Meal Lists
-  renderList("workout-list", workoutData, ukey("selectedWorkout"), (item) => {
-    if (workoutDB[item.modalName]) {
-      openWorkoutModal(item.modalName, "do");
-    }
-  });
-
-  renderList("meal-list", mealData, ukey("selectedMeal"), (item) => {
-    if (typeof navigateTo === "function") {
-      navigateTo("food");
-    }
-  });
-
-  // ✅ UNIFIED EVENT DELEGATION (ไม่ซ้ำซ้อน)
-  setTimeout(() => {
-    // Dashboard - โหมดทำจริง
-    const dashboardPage = document.getElementById('dashboard');
-    if (dashboardPage) {
-      dashboardPage.addEventListener('click', (e) => {
-        const card = e.target.closest('.workout-card');
-        if (card) {
-          const titleElem = card.querySelector('.workout-content h3');
-          if (!titleElem) return;
-
-          const title = titleElem.innerText.trim();
-          if (workoutDB[title]) {
-            openWorkoutModal(title, "do");
-          } else {
-            showToast(`ไม่พบข้อมูลท่า "${title}"`, 'warning');
-          }
-          return;
-        }
-
-        const wpItem = e.target.closest('.wp-item');
-        if (wpItem) {
-          const titleElem = wpItem.querySelector('.wp-info strong');
-          if (!titleElem) return;
-
-          const title = titleElem.innerText.trim();
-          if (workoutDB[title]) {
-            openWorkoutModal(title, "do");
-          }
-        }
-      });
-
-      console.log('✅ Dashboard Event Delegation ติดตั้งแล้ว');
-    }
-
-    // Workout Arena - โหมดดูเฉยๆ
-    const arenaPage = document.getElementById('exercise');
-    if (arenaPage) {
-      hydrateArenaImages();
-      arenaPage.addEventListener('click', (e) => {
-        const listItem = e.target.closest('.list-item[data-workout]');
-        if (listItem) {
-          const workoutTitle = listItem.dataset.workout;
-
-          if (workoutTitle && workoutDB[workoutTitle]) {
-            openWorkoutModal(workoutTitle, "view");
-          } else {
-            showToast(`ไม่พบข้อมูลท่า "${workoutTitle}"`, 'warning');
-          }
-          return;
-        }
-
-        const card = e.target.closest('.workout-card, .arena-card, [data-workout]');
-        if (card) {
-          let title = card.dataset.workout || card.dataset.title;
-
-          if (!title) {
-            const titleElem = card.querySelector('h3, .workout-title, .title, strong');
-            if (titleElem) title = titleElem.innerText.trim();
-          }
-
-          if (title && workoutDB[title]) {
-            const img = card.querySelector("img");
-            const imgUrl = img && img.getAttribute("src") ? img.getAttribute("src") : "";
-            openWorkoutModal(title, "view", imgUrl);
-          }
-        }
-      });
-
-      console.log('✅ Arena Event Delegation ติดตั้งแล้ว');
-    }
-  }, 300);
-
-  // ✅ Modal Buttons
-  const logBtn = document.getElementById('log-set-btn');
-  const finishBtn = document.getElementById('finish-workout-btn');
-
-  if (logBtn) {
-    logBtn.addEventListener('click', () => {
-      // โหมดดูเฉยๆ: แค่เปิดดูเพิ่ม (ไม่บันทึก)
-      if (activeMode === "view") {
-        if (activeImgUrl) window.open(activeImgUrl, "_blank");
-        else showToast("ℹ️ โหมดดูเฉยๆ: ไม่มีรายละเอียดเพิ่ม", "info");
-        return;
-      }
-
-      if (!activeTitle) return;
-
-      const repsInput = document.getElementById('reps-input');
-      const noteInput = document.getElementById('note-input');
-      const data = workoutDB[activeTitle];
-
-      const reps = parseInt(repsInput?.value || "", 10);
-      if (!reps || reps <= 0) {
-        showToast("⚠️ ใส่จำนวนครั้ง/วินาที ก่อนบันทึก", "warning");
-        return;
-      }
-
-      const dateKey = getTodayKey();
-      const note = noteInput?.value || "";
-      const setNo = activeSetIndex + 1;
-
-      saveSet(dateKey, activeTitle, setNo, reps, note);
-      activeSetIndex++;
-
-      if (activeSetIndex >= data.sets) {
-        showToast(`✅ ครบ ${data.sets} เซ็ตแล้ว!`, "success");
-        markTodayAsDone();
-        closeTimerModal();
-      } else {
-        setText('set-current', activeSetIndex + 1);
-        showToast(`บันทึกเซ็ต ${setNo}/${data.sets} แล้ว ✅`, "success");
-        playSound('beep');
-      }
-    });
-  }
-
-  if (finishBtn) {
-    finishBtn.addEventListener('click', () => {
-      // โหมดดูเฉยๆ: แค่ปิดโมดอล
-      if (activeMode === "view") {
-        closeTimerModal();
-        return;
-      }
-
-      markTodayAsDone();
-      showToast("✅ จบวันนี้แล้ว!", "success");
-      playSound('finish');
-      closeTimerModal();
-    });
-  }
-
-  // Modal close on backdrop click
-  window.onclick = function (e) {
-    if (e.target === document.getElementById('timer-modal')) closeTimerModal();
-    if (e.target === document.getElementById('full-calendar-modal')) closeCalendarModal();
-  };
-
-  console.log('✅ FitLife Easy Fixed Version โหลดเสร็จสมบูรณ์');
 });
 
-/* =========================================
-   8. NAVIGATION
-   ========================================= */
-window.navigateTo = function (pageId) {
-  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-  const targetPage = document.getElementById(pageId);
-  if (targetPage) targetPage.classList.add('active');
 
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.getAttribute('data-page') === pageId) btn.classList.add('active');
+
+// Set Date
+const dateElem = document.getElementById('current-date');
+if (dateElem) {
+  dateElem.innerText = new Date().toLocaleDateString('th-TH', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
+}
+
+// Month calendar init
+const monthInp = document.getElementById('workout-month');
+const hiddenDates = document.getElementById('selected-dates');
+
+if (monthInp && hiddenDates) {
+  if (!monthInp.value) monthInp.value = getTodayMonthValue();
+  buildMonthCalendar(monthInp.value);
+
+  monthInp.addEventListener('change', () => {
+    buildMonthCalendar(monthInp.value);
+  });
+}
+
+// Streak & Level
+renderWeeklyStreak();
+updateStreakDisplay();
+
+const levelInput = document.getElementById("inp-level");
+if (levelInput) updateLevelText(levelInput.value);
+
+// Health checkboxes
+const checks = document.querySelectorAll('#step-3 .checkbox-group input[type="checkbox"]');
+const none = document.querySelector('#step-3 .checkbox-group input[value="none"]');
+
+checks.forEach(chk => {
+  chk.addEventListener("change", () => {
+    if (!none) return;
+
+    if (chk.value === "none" && chk.checked) {
+      checks.forEach(c => { if (c.value !== "none") c.checked = false; });
+    }
+
+    if (chk.value !== "none" && chk.checked) {
+      none.checked = false;
+    }
+
+    const anyOther = Array.from(checks).some(c => c.value !== "none" && c.checked);
+    if (!anyOther) none.checked = true;
+  });
+});
+
+// ✅ Setup List Tabs (Workout/Meal selection)
+setupListTabs();
+
+
+
+// ✅ UNIFIED EVENT DELEGATION (ไม่ซ้ำซ้อน)
+setTimeout(() => {
+  // Dashboard - โหมดทำจริง
+  const dashboardPage = document.getElementById('dashboard');
+  if (dashboardPage) {
+    dashboardPage.addEventListener('click', (e) => {
+      const card = e.target.closest('.workout-card');
+      if (card) {
+        const titleElem = card.querySelector('.workout-content h3');
+        if (!titleElem) return;
+
+        const item = window.workoutData.find(w => w.title === title);
+        if (item) {
+          openWorkoutModal(item, "do");
+        } else {
+          showToast(`ไม่พบข้อมูลท่า "${title}"`, "warning");
+        }
+
+        return;
+      }
+
+      const wpItem = e.target.closest('.wp-item');
+      if (wpItem) {
+        const titleElem = wpItem.querySelector('.wp-info strong');
+        if (!titleElem) return;
+
+        const title = titleElem.innerText.trim();
+        if (workoutDB[title]) {
+          openWorkoutModal(title, "do");
+        }
+      }
+    });
+
+    console.log('✅ Dashboard Event Delegation ติดตั้งแล้ว');
+  }
+
+  // Workout Arena - โหมดดูเฉยๆ
+  const arenaPage = document.getElementById('exercise');
+  if (arenaPage) {
+
+    arenaPage.addEventListener('click', (e) => {
+      const listItem = e.target.closest('.list-item[data-workout]');
+      if (listItem) {
+        const workoutTitle = listItem.dataset.workout;
+
+        if (workoutTitle && workoutDB[workoutTitle]) {
+          openWorkoutModal(workoutTitle, "view");
+        } else {
+          showToast(`ไม่พบข้อมูลท่า "${workoutTitle}"`, 'warning');
+        }
+        return;
+      }
+
+      const card = e.target.closest('.workout-card, .arena-card, [data-workout]');
+      if (card) {
+        let title = card.dataset.workout || card.dataset.title;
+
+        if (!title) {
+          const titleElem = card.querySelector('h3, .workout-title, .title, strong');
+          if (titleElem) title = titleElem.innerText.trim();
+        }
+
+        if (title && workoutDB[title]) {
+          const img = card.querySelector("img");
+          const imgUrl = img && img.getAttribute("src") ? img.getAttribute("src") : "";
+          openWorkoutModal(title, "view", imgUrl);
+        }
+      }
+    });
+
+    console.log('✅ Arena Event Delegation ติดตั้งแล้ว');
+  }
+}, 300);
+
+// ✅ Modal Buttons
+const logBtn = document.getElementById('log-set-btn');
+const finishBtn = document.getElementById('finish-workout-btn');
+
+if (logBtn) {
+  logBtn.addEventListener('click', () => {
+    // โหมดดูเฉยๆ: แค่เปิดดูเพิ่ม (ไม่บันทึก)
+    if (activeMode === "view") {
+      if (activeImgUrl) window.open(activeImgUrl, "_blank");
+      else showToast("ℹ️ โหมดดูเฉยๆ: ไม่มีรายละเอียดเพิ่ม", "info");
+      return;
+    }
+
+    if (!activeTitle) return;
+
+    const repsInput = document.getElementById('reps-input');
+    const noteInput = document.getElementById('note-input');
+    const data = workoutDB[activeTitle];
+
+    const reps = parseInt(repsInput?.value || "", 10);
+    if (!reps || reps <= 0) {
+      showToast("⚠️ ใส่จำนวนครั้ง/วินาที ก่อนบันทึก", "warning");
+      return;
+    }
+
+    const dateKey = getTodayKey();
+    const note = noteInput?.value || "";
+    const setNo = activeSetIndex + 1;
+
+    saveSet(dateKey, activeTitle, setNo, reps, note);
+    activeSetIndex++;
+
+    if (activeSetIndex >= data.sets) {
+      showToast(`✅ ครบ ${data.sets} เซ็ตแล้ว!`, "success");
+      markTodayAsDone();
+      closeTimerModal();
+    } else {
+      setText('set-current', activeSetIndex + 1);
+      showToast(`บันทึกเซ็ต ${setNo}/${data.sets} แล้ว ✅`, "success");
+      playSound('beep');
+    }
+  });
+}
+
+if (finishBtn) {
+  finishBtn.addEventListener('click', () => {
+    // โหมดดูเฉยๆ: แค่ปิดโมดอล
+    if (activeMode === "view") {
+      closeTimerModal();
+      return;
+    }
+
+    markTodayAsDone();
+    showToast("✅ จบวันนี้แล้ว!", "success");
+    playSound('finish');
+    closeTimerModal();
+  });
+}
+
+// Modal close on backdrop click
+window.onclick = function (e) {
+  if (e.target === document.getElementById('timer-modal')) closeTimerModal();
+  if (e.target === document.getElementById('full-calendar-modal')) closeCalendarModal();
 };
+
+console.log('✅ FitLife Easy Fixed Version โหลดเสร็จสมบูรณ์');
+
 
 /* =========================================
    9. CALENDAR MODAL
@@ -1191,12 +1055,6 @@ function renderMiniCalendar() {
   }
 }
 
-/* =========================================
-   10. WIZARD & USER DATA
-   ========================================= */
-let currentStep = 1;
-const totalSteps = 3;
-
 function startOnboarding() {
   const modal = document.getElementById('onboarding-modal');
   if (modal) {
@@ -1293,6 +1151,13 @@ function finishWizard() {
   navigateTo('dashboard');
 }
 
+function openFoodLibrary() {
+  navigateTo("food");
+
+}
+
+
+
 /* =========================================
    11. LOAD USER DATA
    ========================================= */
@@ -1319,29 +1184,21 @@ function loadUserData() {
   }
 
 
-// ===== Food (Nutrition Hub) =====
-const foodLog = getFoodLog();
-const todayKey = getTodayKey();
-const dayFood = foodLog[todayKey] || { breakfast: [], lunch: [], dinner: [] };
-const allFood = [...(dayFood.breakfast || []), ...(dayFood.lunch || []), ...(dayFood.dinner || [])];
+  // ===== Food (Nutrition Hub) =====
 
-let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
-allFood.forEach(food => {
-  totalCal += Number(food.cal || 0);
-  totalP += Number(food.p || 0);
-  totalC += Number(food.c || 0);
-  totalF += Number(food.f || 0);
-});
+  const todayKey = getTodayKey();
+  const allFood = [...(dayFood.breakfast || []), ...(dayFood.lunch || []), ...(dayFood.dinner || [])];
 
-// render food page (ถ้ามีอยู่)
-renderFoodPage();
-
-(food => {
-    totalCal += food.cal;
-    totalP += food.p;
-    totalC += food.c;
-    totalF += food.f;
+  let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
+  allFood.forEach(food => {
+    totalCal += Number(food.cal || 0);
+    totalP += Number(food.p || 0);
+    totalC += Number(food.c || 0);
+    totalF += Number(food.f || 0);
   });
+
+  // render food page (ถ้ามีอยู่)
+  renderFoodPage();
 
   const tdee = data.tdee;
   setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()}`);
@@ -1364,21 +1221,10 @@ renderFoodPage();
   updateStreakDisplay();
 }
 
-function addFoodItem(name, cal, p, c, f) {
-  let currentLog = JSON.parse(localStorage.getItem(ukey("fit_food_log"))) || [];
-  currentLog.push({ name, cal, p, c, f });
-  localStorage.setItem(ukey("fit_food_log"), JSON.stringify(currentLog));
-  loadUserData();
-  showToast(`เพิ่มเมนู "${name}" แล้ว!`, "success");
-}
 
 /* =========================================
    12. FOOD MODAL
    ========================================= */
-function openFoodModal() {
-  const modal = document.getElementById('food-modal');
-  if (modal) modal.style.display = 'flex';
-}
 
 function closeFoodModal() {
   const modal = document.getElementById('food-modal');
@@ -1432,11 +1278,6 @@ function closeAllModals() {
   if (manualModal) manualModal.style.display = 'none';
 }
 
-/* =========================================
-   13. WATER TRACKER
-   ========================================= */
-let waterIntake = 750;
-const waterGoal = 2000;
 
 function addWater() {
   waterIntake = Math.min(waterIntake + 250, waterGoal);
@@ -1489,39 +1330,40 @@ function logout() {
 console.log('✅ FitLife Easy - Fixed & Optimized Version โหลดสมบูรณ์');
 
 // ===== Dashboard Meal Detail (Quick View) =====
-function openDashMealDetail(data){
+function openDashMealDetail(data) {
   const modal = document.getElementById('dash-meal-modal');
-  if(!modal) return;
+  if (!modal) return;
 
   const titleEl = document.getElementById('dash-meal-title');
-  const subEl   = document.getElementById('dash-meal-sub');
-  const imgEl   = document.getElementById('dash-meal-img');
+  const subEl = document.getElementById('dash-meal-sub');
+  const imgEl = document.getElementById('dash-meal-img');
 
   const kcalEl = document.getElementById('dash-kcal');
-  const pEl    = document.getElementById('dash-p');
-  const cEl    = document.getElementById('dash-c');
-  const fEl    = document.getElementById('dash-f');
+  const pEl = document.getElementById('dash-p');
+  const cEl = document.getElementById('dash-c');
+  const fEl = document.getElementById('dash-f');
 
   titleEl.textContent = data?.title || 'รายละเอียดอาหาร';
-  subEl.textContent   = (data?.meal ? `${data.meal} • ` : '') + (data?.kcal != null ? `${data.kcal} kcal` : '');
+  subEl.textContent = (data?.meal ? `${data.meal} • ` : '') + (data?.kcal != null ? `${data.kcal} kcal` : '');
 
-  if(imgEl){
+  if (imgEl) {
     imgEl.src = data?.img || '';
     imgEl.style.display = data?.img ? 'block' : 'none';
   }
 
-  if(kcalEl) kcalEl.textContent = `${data?.kcal ?? 0} kcal`;
-  if(pEl)    pEl.textContent    = `${data?.protein ?? 0} g`;
-  if(cEl)    cEl.textContent    = `${data?.carbs ?? 0} g`;
-  if(fEl)    fEl.textContent    = `${data?.fat ?? 0} g`;
+  if (kcalEl) kcalEl.textContent = `${data?.kcal ?? 0} kcal`;
+  if (pEl) pEl.textContent = `${data?.protein ?? 0} g`;
+  if (cEl) cEl.textContent = `${data?.carbs ?? 0} g`;
+  if (fEl) fEl.textContent = `${data?.fat ?? 0} g`;
 
   modal.style.display = 'flex';
   // close when click backdrop
-  modal.onclick = (e)=>{ if(e.target === modal) closeDashMealDetail(); };
+  modal.onclick = (e) => { if (e.target === modal) closeDashMealDetail(); };
 }
 
-function closeDashMealDetail(){
+function closeDashMealDetail() {
   const modal = document.getElementById('dash-meal-modal');
-  if(!modal) return;
+  if (!modal) return;
   modal.style.display = 'none';
 }
+

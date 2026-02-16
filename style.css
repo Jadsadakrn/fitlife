@@ -2908,3 +2908,46 @@ p {
 .difficulty-badge { pointer-events: none; }
 .workout-card * { user-select: none; }
 .workout-img img { display:block; }
+
+
+/* ===== FOOD LIBRARY GRID ===== */
+
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.food-card {
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  transition: 0.25s ease;
+}
+
+.food-card:hover {
+  transform: translateY(-6px);
+}
+
+.food-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.food-card-body {
+  padding: 16px;
+}
+
+.food-card-body h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.food-card-body p {
+  margin: 0;
+  font-weight: 600;
+}

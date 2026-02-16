@@ -136,71 +136,74 @@ async function seedProgramWorkouts() {
 }
 
 async function seedFoods() {
-  const results = [];
+    const results = [];
 
-  return new Promise((resolve, reject) => {
-    fs.createReadStream("prisma/food.csv")
-      .pipe(csv())
-      .on("data", (data) => results.push(data))
-      .on("end", async () => {
-        try {
+    return new Promise((resolve, reject) => {
+        fs.createReadStream("prisma/food.csv")
+            .pipe(csv())
+            .on("data", (data) => results.push(data))
+            .on("end", async () => {
+                try {
 
-          console.log("Seeding Food...");
+                    console.log("Seeding Food...");
 
-          await prisma.food.createMany({
-            data: results.map(row => ({
-              nameTh: row.name_th?.trim(),
-              calories: parseInt(row.calories_kcal) || 0,
-              protein: parseInt(row.protein_g) || 0,
-              carbs: parseInt(row.carbs_g) || 0,
-              fat: parseInt(row.fat_g) || 0,
-              imageUrl: row.image_url?.trim() || "",
-            })),
-            skipDuplicates: true,
-          });
+                    // 🔥 เพิ่มบรรทัดนี้
+                    await prisma.food.deleteMany();
 
-          console.log("✅ Food seeded");
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      });
-  });
+                    await prisma.food.createMany({
+                        data: results.map(row => ({
+                            nameTh: row.name_th.trim(),
+                            calories: parseInt(row.calories_kcal) || 0,
+                            protein: parseInt(row.protein_g) || 0,
+                            carbs: parseInt(row.carbs_g) || 0,
+                            fat: parseInt(row.fat_g) || 0,
+                            imageUrl: row.image_url.trim() || "",
+                        })),
+                    });
+
+
+                    console.log("✅ Food seeded");
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            });
+    });
 }
 
 
 
 async function seedFocus() {
-  const results = [];
+    const results = [];
 
-  return new Promise((resolve, reject) => {
-    fs.createReadStream("prisma/focus_program.csv")  // ✅ แก้ตรงนี้
-      .pipe(csv())
-      .on("data", (data) => results.push(data))
-      .on("end", async () => {
-        try {
+    return new Promise((resolve, reject) => {
+        fs.createReadStream("prisma/focus_program.csv")  // ✅ แก้ตรงนี้
+            .pipe(csv())
+            .on("data", (data) => results.push(data))
+            .on("end", async () => {
+                try {
 
-          console.log("Seeding Focus...");
+                    console.log("Seeding Focus...");
 
-          await prisma.focus.createMany({
-            data: results.map(row => ({
-              id: row.focus_id?.trim(),
-              nameEn: row.focus_name_en?.trim(),
-              nameTh: row.focus_name_th?.trim(),
-              targetGender: row.target_gender?.trim(),
-              workoutIds: row.workout_ids?.trim(),
-              repsInfo: row.reps_info?.trim(),
-            })),
-            skipDuplicates: true,
-          });
+                    await prisma.focus.createMany({
+                        data: results.map(row => ({
+                            id: row.focus_id?.trim(),
+                            nameEn: row.focus_name_en?.trim(),
+                            nameTh: row.focus_name_th?.trim(),
+                            targetGender: row.target_gender?.trim(),
+                            workoutIds: row.workout_ids?.trim(),
+                            repsInfo: row.reps_info?.trim(),
+                        })),
+                        skipDuplicates: true,
+                    });
 
-          console.log("✅ Focus seeded");
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      });
-  });
+                    console.log("✅ Focus seeded");
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            });
+    });
 }
 
 
