@@ -1046,29 +1046,40 @@
           <button class="mission-tab active" onclick="switchMissionTab('workout')">
             <i class="fas fa-dumbbell"></i> ท่าออกกำลังกาย
           </button>
+
           <button class="mission-tab" onclick="switchMissionTab('meal')">
             <i class="fas fa-utensils"></i> มื้ออาหาร
           </button>
         </div>
 
-        <!-- Tab 1: Workout Plan -->
+        <!-- Tab 1: Workout -->
         <div id="tab-workout" class="tab-content active">
 
-         
+          <div id="dashboard-workout-list"></div>
+            <h2 id="day-title"></h2>
+            <p id="day-description"></p>
 
-          <!-- Start Button -->
+          <!-- ปุ่ม START อยู่ในนี้ -->
           <button class="start-workout-btn-new" onclick="navigateTo('exercise')">
             <i class="fas fa-play-circle"></i>
-            <span>ท่าออกกําลังกาย เพิ่มเติม</span>
+            <span>ท่าออกกำลังกาย เพิ่มเติม</span>
           </button>
 
         </div>
 
-       
+        <!-- Tab 2: Meal -->
+        <div id="tab-meal" class="tab-content">
+
+          <!-- ตรงนี้เอารายการมื้ออาหารมาใส่ -->
+          <div id="dashboard-meal-list"></div>
+
+        </div>
+
+
+
 
         <script src="script_new.js"></script>
         <script>
-          // Switch Mission Tab
           function switchMissionTab(tab) {
             const tabs = document.querySelectorAll('.mission-tab');
             const contents = document.querySelectorAll('.tab-content');
@@ -1076,28 +1087,29 @@
             tabs.forEach(t => t.classList.remove('active'));
             contents.forEach(c => c.classList.remove('active'));
 
-            if (tab === 'workout') {
-              tabs[0].classList.add('active');
-              document.getElementById('tab-workout').classList.add('active');
+            if (tab === "workout") {
+              tabs[0]?.classList.add('active');
+              document.getElementById('tab-workout')?.classList.add('active');
             } else {
-              tabs[1].classList.add('active');
-              document.getElementById('tab-meal').classList.add('active');
+              tabs[1]?.classList.add('active');
+              document.getElementById('tab-meal')?.classList.add('active');
             }
           }
         </script>
+
       </div>
 
     </section>
 
     <section class="page" id="food">
       <div class="exercise-header">
-    <h1>Food Library</h1>
-    <p>คลังข้อมูลอาหาร</p>
-  </div>
-  <div id="food-library-list" class="list-container"></div>
+        <h1>Food Library</h1>
+        <p>คลังข้อมูลอาหาร</p>
+      </div>
+      <div id="food-library-list" class="list-container"></div>
     </section>
 
-  
+
 
     <section class="page" id="exercise">
       <div class="exercise-header">
@@ -1176,7 +1188,7 @@
     </section>
 
   </main>
- 
+
 
   <div id="onboarding-modal" class="wizard-modal">
     <div class="wizard-container">
@@ -1304,29 +1316,7 @@
         style="margin-top:10px; padding:10px 12px; border-radius:12px; background:#f2f2f2; text-align:center; font-weight:700; color:#ff6b6b;">
         15 ครั้ง x 3 เซ็ต</div>
 
-      <div class="xmodal-log" style="margin-top:16px; text-align:left;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div style="font-weight:700;">บันทึกเซ็ต</div>
-          <div style="font-size:0.95rem; color:#666;">
-            <span id="set-current">1</span>/<span id="set-target">3</span> เซ็ต
-          </div>
-        </div>
-
-        <label style="display:block; font-size:0.9rem; color:#666; margin-bottom:6px;">
-          จำนวนครั้ง (หรือวินาที)
-        </label>
-        <input id="reps-input" type="number" min="1" placeholder="เช่น 12"
-          style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; background:#fff; box-sizing:border-box;" />
-
-        <label style="display:block; font-size:0.9rem; color:#666; margin:12px 0 6px;">
-          โน้ต (ไม่ใส่ก็ได้)
-        </label>
-        <input id="note-input" type="text" placeholder="เช่น ฟอร์มดี / หนักไป"
-          style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid #eee; background:#fff; box-sizing:border-box;" />
-      </div>
-
       <div style="display:flex; gap:10px; margin-top:16px;">
-        <button id="log-set-btn" class="timer-btn" style="flex:1;">บันทึกเซ็ต ✅</button>
         <button id="finish-workout-btn" class="timer-btn" style="flex:1; background:#333;">จบวันนี้</button>
       </div>
     </div>
@@ -1344,12 +1334,49 @@
       <div class="calendar-grid" id="full-calendar-grid"></div>
     </div>
   </div>
-      </div>
-    </div>
+  </div>
+  </div>
   </div>
 
+  </div>
+  </div>
+
+  <!-- ===== Meal Popup ===== -->
+<div id="meal-popup" class="meal-popup">
+  <div class="meal-popup-card">
+    <span class="close-popup" onclick="closeMealPopup()">×</span>
+
+    <img id="popup-img" class="popup-img" />
+
+    <h3 id="popup-title"></h3>
+    <p id="popup-meal-label"></p>
+
+    <div class="popup-macro">
+      <span id="popup-kcal"></span>
+      <span id="popup-p"></span>
+      <span id="popup-c"></span>
+      <span id="popup-f"></span>
+    </div>
+
+    <div class="popup-actions">
+      <button onclick="changeMeal()">🔄 เปลี่ยนเมนู</button>
+      <button class="primary" onclick="confirmMeal()">✅ บันทึก</button>
     </div>
   </div>
+</div>
+
+<div id="workout-modal" class="modal hidden">
+  <div class="modal-content">
+    <span id="close-modal" class="close-btn">&times;</span>
+    
+    <img id="modal-img" class="modal-img" />
+    <h2 id="modal-title"></h2>
+    <p id="modal-reps"></p>
+    <p id="modal-desc"></p>
+
+    <button id="start-btn" class="start-btn">เริ่มทำ</button>
+  </div>
+</div>
 
 </body>
 

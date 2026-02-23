@@ -117,19 +117,42 @@ app.get("/api/programs", async (req, res) => {
   }
 });
 
-app.get("/api/programs/:id/days", async (req, res) => {
+app.get("/api/programs/:id/days/:day", async (req, res) => {
   try {
     const programId = req.params.id;
+    const dayNumber = parseInt(req.params.day);
 
-    const days = await prisma.programDay.findMany({
-      where: { programId },
-      orderBy: { dayNumber: "asc" }
+    // 1️⃣ ดึงข้อมูลวัน
+    const dayInfo = await prisma.programDay.findFirst({
+      where: {
+        programId,
+        dayNumber
+      }
     });
 
-    res.json(days);
+    // 2️⃣ ดึง workout พร้อม join exercise
+    const workouts = await prisma.programWorkout.findMany({
+      where: {
+        programId,
+        dayNumber
+      },
+      orderBy: {
+        sequence: "asc"
+      },
+      include: {
+        gymWorkout: true,
+        homeWorkout: true
+      }
+    });
+
+    res.json({
+      dayInfo,
+      workouts
+    });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch program days" });
+    res.status(500).json({ error: "Failed to load program day" });
   }
 });
 
@@ -215,6 +238,32 @@ app.get("/api/my-activities", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch activities" });
+  }
+});
+
+app.post("/api/workout-log", async (req, res) => {
+  const { date, title } = req.body;
+
+  if (!date || !title) {
+    return res.status(400).json({ error: "Missing data" });
+  }
+
+  try {
+    const log = await prisma.workoutLog.create({
+      data: { date, title }
+    });
+
+    res.json({ success: true, log });
+
+  } catch (err) {
+
+    // 👇 ตรงนี้สำคัญ
+    if (err.code === "P2002") {
+      return res.json({ success: true, message: "Already logged" });
+    }
+
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 });
 

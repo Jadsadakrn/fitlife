@@ -94,3 +94,12 @@ model Activity {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+model WorkoutLog {
+  id Int  @id @default(autoincrement())
+  date String
+  title String
+  createdAt DateTime @default(now())
+
+  @@unique([date, title])
+}

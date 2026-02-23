@@ -2,7 +2,7 @@
    const API_BASE =
   window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    เว็บdyploy
+    เว็บdeploy
     : "https://fitlife-dlfz.onrender.com";
    ========================================= */
 
@@ -37,6 +37,8 @@ const waterGoal = 2000;
 
 let workoutData = [];
 let foodLibrary = [];
+let programSchedule = [];
+window.todayWorkout = [];
 
 // ถ้า session หมดอายุ ให้เด้งกลับไปหน้า Login
 if (window.Auth && !__session) {
@@ -245,6 +247,47 @@ function animateValue(id, start, end, duration) {
   window.requestAnimationFrame(step);
 }
 
+function calculateCalories(profile) {
+  const { age, gender, weight, height, goal, level } = profile;
+
+  // 1. BMR (Mifflin-St Jeor)
+  let bmr;
+  if (gender === "male") {
+    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+  } else {
+    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+  }
+
+  // 2. Activity multiplier
+  const activityMap = {
+    easy: 1.375,
+    medium: 1.55,
+    hard: 1.725
+  };
+
+  const tdee = bmr * (activityMap[level] || 1.55);
+
+  // 3. ปรับตามเป้าหมาย
+  let finalCal = tdee;
+  if (goal === "lose") finalCal -= 300;
+  if (goal === "gain") finalCal += 300;
+
+  // 4. Macro
+  const protein = weight * 2; // 2g/kg
+  const fat = weight * 0.8;   // 0.8g/kg
+  const carbs = (finalCal - (protein * 4 + fat * 9)) / 4;
+
+  return {
+    bmr: Math.round(bmr),
+    tdee: Math.round(tdee),
+    calories: Math.round(finalCal),
+    protein: Math.round(protein),
+    fat: Math.round(fat),
+    carbs: Math.round(carbs)
+  };
+}
+
+
 function updateCircleGraph(current, target) {
   const circle = document.getElementById("dash-cal-circle");
   if (!circle) return;
@@ -401,12 +444,9 @@ function showToast(message, type = 'success') {
    3. DATA & STORAGE
    ========================================= */
 let workoutHistory = JSON.parse(localStorage.getItem(ukey("fit_workout_history"))) || {};
-const workoutLogKey = ukey("fit_workout_log");
-let workoutLog = JSON.parse(localStorage.getItem(workoutLogKey)) || {};
 
 let currentCalDate = new Date();
 let activeTitle = null;
-let activeSetIndex = 0;
 let activeMode = "do"; // เพิ่มตัวแปรเก็บ mode ปัจจุบัน
 let activeImgUrl = ""; // รูป/ภาพท่าใน Modal (สำหรับโหมดดูเฉยๆ)
 
@@ -415,15 +455,7 @@ function getTodayKey() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-function saveSet(dateKey, title, setNo, reps, note) {
-  if (!workoutLog[dateKey]) workoutLog[dateKey] = {};
-  if (!workoutLog[dateKey][title]) {
-    const d = workoutDB[title];
-    workoutLog[dateKey][title] = { targetSets: d.sets, repsGuide: d.repsGuide, sets: [] };
-  }
-  workoutLog[dateKey][title].sets.push({ setNo, reps, note: note || "", ts: Date.now() });
-  localStorage.setItem(workoutLogKey, JSON.stringify(workoutLog));
-}
+
 
 /* =========================================
    4. WORKOUT MODAL SYSTEM (ปรับปรุงแล้ว)
@@ -463,42 +495,41 @@ function openWorkoutModal(item, mode = "do") {
   setText('set-target', item.sets);
   setText('set-current', 1);
 
-  // ตั้งค่า input fields
-  const repsInput = document.getElementById('reps-input');
-  const noteInput = document.getElementById('note-input');
-  if (repsInput) repsInput.value = (item.defaultReps ?? "");
-  if (noteInput) noteInput.value = "";
+  const finishBtn = document.getElementById("finish-workout-btn");
 
-  // สลับโหมด UI พร้อม null checks
-  const logBtn = document.getElementById('log-set-btn');
-  const finishBtn = document.getElementById('finish-workout-btn');
-  const setCounter = document.getElementById('set-counter');
-  const repsLabel = document.querySelector('label[for="reps-input"]');
-  const noteLabel = document.querySelector('label[for="note-input"]');
+if (finishBtn) {
+    finishBtn.onclick = async () => {
+
+        console.log("BUTTON CLICKED");
+
+        if (!activeTitle) return;
+
+        const today = getTodayKey();
+
+        try {
+            await fetch("http://localhost:3000/api/workout-log", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    date: today,
+                    title: activeTitle
+                })
+            });
+
+            console.log("FETCH SENT");
+            showToast("บันทึกเรียบร้อย 💪", "success");
+            closeTimerModal();
+
+        } catch (err) {
+            console.error(err);
+        }
+    };
+}
 
   if (mode === "view") {
-    // โหมดดูเฉยๆ (Workout Arena) - ไม่ให้บันทึก แต่ยังเปิดดูคำแนะนำได้
-    const logSection = document.querySelector('#timer-modal .xmodal-log');
-    if (logSection) logSection.style.display = "none";
-
-    if (logBtn) {
-      logBtn.style.display = "";
-      logBtn.innerText = "🔍 ดูท่าเพิ่ม";
-    }
-    if (finishBtn) {
-      finishBtn.style.display = "";
-      finishBtn.innerText = "✅ เสร็จ";
-      finishBtn.style.background = "#10B981";
-    }
-  } else {
-    // โหมดทำจริง (ภารกิจวันนี้) - บันทึกเซ็ตได้ตามปกติ
-    const logSection = document.querySelector('#timer-modal .xmodal-log');
-    if (logSection) logSection.style.display = "";
-
-    if (logBtn) {
-      logBtn.style.display = "";
-      logBtn.innerText = "บันทึกเซ็ต ✅";
-    }
+    
     if (finishBtn) {
       finishBtn.style.display = "";
       finishBtn.innerText = "จบวันนี้";
@@ -506,13 +537,16 @@ function openWorkoutModal(item, mode = "do") {
     }
   }
 
-  timerModal.style.display = 'flex';
+  const timerModal = document.getElementById("timer-modal");
+  if (timerModal) {
+    timerModal.style.display = "flex";
+  }
   playSound('beep');
 
   if (mode === "view") {
-    showToast(`📖 ดูคำแนะนำ: ${title}`, 'info');
+    showToast(`📖 ดูคำแนะนำ: ${item.title}!`, 'info');
   } else {
-    showToast(`🏋️ เริ่มท่า ${title}!`, 'info');
+    showToast(`🏋️ เริ่มท่า ${item.title}!`, 'info');
   }
 }
 
@@ -723,11 +757,17 @@ async function loadFoodLibrary() {
 
 /* =========================================
    7. DOM CONTENT LOADED (ปรับปรุงแล้ว)
-   ========================================= */ 
+   ========================================= */
 document.addEventListener("DOMContentLoaded", async () => {
 
-  await loadFoodLibrary();   // โหลด DB ก่อน
+  await loadFoodLibrary();
   await loadExercisesFromAPI();
+
+  loadUserData();
+  updateDashboardFromProfile();
+  renderDashboardMeals();
+  updateDashboardNutrition();
+
 
   if (!localStorage.getItem(ukey("fit_user"))) {
     const wizard = document.getElementById("onboarding-modal");
@@ -809,7 +849,9 @@ setTimeout(() => {
         const titleElem = card.querySelector('.workout-content h3');
         if (!titleElem) return;
 
+        const title = titleElem.innerText.trim();
         const item = window.workoutData.find(w => w.title === title);
+
         if (item) {
           openWorkoutModal(item, "do");
         } else {
@@ -1117,6 +1159,7 @@ function finishWizard() {
   const weight = parseFloat(document.getElementById('inp-weight')?.value || "0");
   const height = parseFloat(document.getElementById('inp-height')?.value || "0");
   const age = parseInt(document.getElementById('inp-age')?.value || "25");
+  const gender = document.getElementById("inp-gender")?.value || "male";
 
   if (!name || !weight || !height) {
     showToast("⚠️ กรุณากรอกข้อมูลให้ครบ", "warning");
@@ -1129,32 +1172,102 @@ function finishWizard() {
   const datesStr = document.getElementById('selected-dates')?.value || "";
   const workoutDates = datesStr.split(',').map(s => s.trim()).filter(Boolean);
 
-  const hM = height / 100;
-  const bmi = weight / (hM * hM);
-  let bmiStatus = bmi < 18.5 ? "ผอม" : (bmi < 23 ? "ปกติ" : (bmi < 25 ? "ท้วม" : "อ้วน"));
+  // =========================
+  // 1️⃣ BMI
+  // =========================
+  const hm = height / 100;
+  const bmi = weight / (hm * hm);
+  let bmiStatus = bmi < 18.5 ? "ผอม"
+    : (bmi < 23 ? "ปกติ"
+      : (bmi < 25 ? "ท้วม"
+        : "อ้วน"));
 
-  let tdee = ((10 * weight) + (6.25 * height) - (5 * age) + 5) * 1.35;
-  if (goal === 'lose-fat') tdee -= 400;
-  else if (goal === 'build-muscle') tdee += 300;
+  // =========================
+  // 2️⃣ BMR
+  // =========================
+  let bmr;
+  if (gender === "male") {
+    bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+  } else {
+    bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+  }
 
+  // =========================
+  // 3️⃣ Activity Multiplier
+  // =========================
+  let activityMultiplier = 1.35;
+  const level = document.getElementById("selected-level")?.value || "medium";
+
+  if (level === "easy") activityMultiplier = 1.375;
+  if (level === "medium") activityMultiplier = 1.55;
+  if (level === "hard") activityMultiplier = 1.725;
+
+  let tdee = bmr * activityMultiplier;
+
+  // =========================
+  // 4️⃣ Goal Adjustment
+  // =========================
+  if (goal === "lose-fat") tdee -= 400;
+  else if (goal === "build-muscle") tdee += 300;
+
+  // =========================
+  // 5️⃣ Macro
+  // =========================
+  const protein = weight * 2;        // 2g / kg
+  const fat = weight * 0.8;          // 0.8g / kg
+  const carbs = (tdee - (protein * 4 + fat * 9)) / 4;
+
+  // =========================
+  // 6️⃣ บันทึกข้อมูล
+  // =========================
   localStorage.setItem(ukey("fit_user"), JSON.stringify({
-    name, weight, height, age,
-    goal, focus,
+    name,
+    weight,
+    height,
+    age,
+    gender,
+    goal,
+    focus,
     workoutDates,
-    tdee: Math.round(tdee), bmi, bmiStatus
+    tdee: Math.round(tdee),
+    protein: Math.round(protein),
+    fat: Math.round(fat),
+    carbs: Math.round(carbs),
+    bmi: Number(bmi.toFixed(2)),
+    bmiStatus
   }));
 
   loadUserData();
+
   const modal = document.getElementById('onboarding-modal');
   if (modal) modal.style.display = 'none';
+
   showToast(`ยินดีต้อนรับ ${name}!`, "success");
   navigateTo('dashboard');
 }
+
 
 function openFoodLibrary() {
   navigateTo("food");
 
 }
+
+function updateDashboardFromProfile() {
+  const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  if (!user) return;
+
+  const tdee = user.tdee;
+
+  setText("dash-cal-target", `เป้าหมาย ${tdee.toLocaleString()} kcal`);
+
+  updateCircleGraph(0, tdee);
+  updateMacroBar("bar-protein", 0, user.protein);
+  updateMacroBar("bar-carbs", 0, user.carbs);
+  updateMacroBar("bar-fat", 0, user.fat);
+
+  setText("bmi-val", user.bmi.toFixed(1));
+}
+
 
 
 
@@ -1187,18 +1300,14 @@ function loadUserData() {
   // ===== Food (Nutrition Hub) =====
 
   const todayKey = getTodayKey();
-  const allFood = [...(dayFood.breakfast || []), ...(dayFood.lunch || []), ...(dayFood.dinner || [])];
 
-  let totalCal = 0, totalP = 0, totalC = 0, totalF = 0;
-  allFood.forEach(food => {
-    totalCal += Number(food.cal || 0);
-    totalP += Number(food.p || 0);
-    totalC += Number(food.c || 0);
-    totalF += Number(food.f || 0);
-  });
 
-  // render food page (ถ้ามีอยู่)
-  renderFoodPage();
+  let totalCal = 0;
+  let totalP = 0;
+  let totalC = 0;
+  let totalF = 0;
+
+
 
   const tdee = data.tdee;
   setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()}`);
@@ -1254,6 +1363,7 @@ function saveFoodFromModal() {
     showToast("⚠️ กรุณาใส่ชื่อเมนู", "warning");
     return;
   }
+
 
   addFoodItem(name, cal, p, c, f);
   closeFoodModal();
@@ -1366,4 +1476,376 @@ function closeDashMealDetail() {
   if (!modal) return;
   modal.style.display = 'none';
 }
+
+function generateMealPlan() {
+  const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  if (!user || !foodLibrary.length) return null;
+
+  const totalCal = user.tdee;
+
+  const targets = {
+    breakfast: Math.round(totalCal * 0.3),
+    lunch: Math.round(totalCal * 0.4),
+    dinner: Math.round(totalCal * 0.3),
+  };
+
+  const usedIds = new Set();
+  const plan = {};
+
+  for (let meal in targets) {
+    const target = targets[meal];
+
+    // กรองเมนูที่ยังไม่ถูกใช้
+    const available = foodLibrary.filter(f => !usedIds.has(f.id));
+    if (!available.length) break;
+
+    // หาเมนูใกล้เคียงที่สุด
+    let closest = available.reduce((prev, curr) => {
+      return Math.abs(curr.kcal - target) < Math.abs(prev.kcal - target)
+        ? curr
+        : prev;
+    });
+
+    plan[meal] = closest;
+    usedIds.add(closest.id);
+  }
+
+  return plan;
+}
+
+
+
+function renderDashboardMeals() {
+  const el = document.getElementById("dashboard-meal-list");
+  if (!el) return;
+
+  const plan = generateMealPlan();
+  if (!plan) {
+    el.innerHTML = "<p>ยังไม่มีแผนอาหาร</p>";
+    return;
+  }
+
+  el.innerHTML = `
+  <div class="meal-dashboard-grid">
+    ${["breakfast", "lunch", "dinner"].map(meal => {
+    const f = plan[meal];
+    if (!f) return "";
+
+    const isSaved = selectedMeals[meal];
+
+    return `
+        <div class="meal-dashboard-card ${isSaved ? "saved" : ""}" 
+             data-meal="${meal}" 
+             data-id="${f.id}">
+             
+              ${isSaved ? `<div class="saved-badge">✔</div>` : ""}
+
+          <img src="${f.img}" class="meal-thumb">
+
+          <div class="meal-info">
+            <h4>${mealLabel(meal)}</h4>
+            <p class="meal-name">${f.name}</p>
+            <span class="meal-cal">${f.kcal} kcal</span>
+          </div>
+        </div>
+      `;
+  }).join("")}
+  </div>
+`;
+  attachMealCardEvents();
+}
+
+function attachMealCardEvents() {
+  document.querySelectorAll(".meal-dashboard-card").forEach(card => {
+    card.addEventListener("click", () => {
+      console.log("CARD CLICKED");
+
+      const meal = card.dataset.meal;
+      const id = card.dataset.id;
+
+      console.log("DATA:", meal, id);
+
+      openMealPopup(meal, id);
+    });
+  });
+}
+
+function mealLabel(key) {
+  if (key === "breakfast") return "🍳 มื้อเช้า";
+  if (key === "lunch") return "🍛 มื้อเที่ยง";
+  if (key === "dinner") return "🍽 มื้อเย็น";
+}
+
+function splitCalories(tdee) {
+  return {
+    breakfast: Math.round(tdee * 0.3),
+    lunch: Math.round(tdee * 0.4),
+    dinner: Math.round(tdee * 0.3)
+  };
+}
+
+function findBestMeal(targetKcal, usedIds = []) {
+  if (!foodLibrary.length) return null;
+
+  let best = null;
+  let smallestDiff = Infinity;
+
+  foodLibrary.forEach(food => {
+
+    // ❗ ไม่ให้ซ้ำ
+    if (usedIds.includes(food.id)) return;
+
+    const diff = Math.abs(food.kcal - targetKcal);
+
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      best = food;
+    }
+  });
+
+  return best;
+}
+
+function generateDailyMealPlan() {
+  const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  if (!user || !user.tdee) return null;
+
+  const split = splitCalories(user.tdee);
+  const used = [];
+
+  const breakfast = findBestMeal(split.breakfast, used);
+  if (breakfast) used.push(breakfast.id);
+
+  const lunch = findBestMeal(split.lunch, used);
+  if (lunch) used.push(lunch.id);
+
+  const dinner = findBestMeal(split.dinner, used);
+
+  return {
+    breakfast,
+    lunch,
+    dinner,
+    targets: split
+  };
+}
+
+let currentPopupMeal = null;
+let currentPopupKey = null;
+
+let currentselectedFood = null;
+let selectedMeals = JSON.parse(localStorage.getItem(ukey("selected_meals"))) || {};
+
+function openMealPopup(mealKey, foodId) {
+
+  const food = foodLibrary.find(f => String(f.id) === String(foodId));
+  if (!food) {
+    console.log("❌ ไม่เจออาหาร", foodId);
+    return;
+  }
+
+  currentPopupMeal = mealKey;
+  currentselectedFood = food;
+
+  document.getElementById("popup-img").src = food.img || "";
+  document.getElementById("popup-title").innerText = food.name;
+  document.getElementById("popup-meal-label").innerText = mealLabel(mealKey);
+
+  document.getElementById("popup-kcal").innerText = food.kcal + " kcal";
+  document.getElementById("popup-p").innerText = "P: " + food.protein;
+  document.getElementById("popup-c").innerText = "C: " + food.carbs;
+  document.getElementById("popup-f").innerText = "F: " + food.fat;
+
+  document.getElementById("meal-popup").style.display = "flex";
+}
+
+function closeMealPopup() {
+  document.getElementById("meal-popup").style.display = "none";
+}
+
+function confirmMeal() {
+
+  if (!currentPopupMeal || !currentselectedFood) return;
+  selectedMeals[currentPopupMeal] = currentselectedFood;
+
+  localStorage.setItem(
+    ukey("selected_meals"),
+    JSON.stringify(selectedMeals)
+
+  );
+
+  updateDashboardNutrition();
+
+  showToast("บันทึกเรียบร้อย ", "success")
+  closeMealPopup();
+
+}
+
+function changeMeal() {
+  const card = document.querySelector(".meal-popup-card");
+  if (!card) return;
+
+  if (card.querySelector(".popup-food-list")) return;
+
+  const container = document.createElement("div");
+  container.className = "popup-food-list";
+
+  container.innerHTML = `
+    <h4>เลือกเมนูใหม่</h4>
+    <div class="popup-food-grid">
+      ${foodLibrary.map(f => `
+        <div class="popup-food-item" data-id="${f.id}">
+          <img src="${f.img}">
+          <div>
+            <strong>${f.name}</strong>
+            <small>${f.kcal} kcal</small>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  card.appendChild(container);
+
+  container.querySelectorAll(".popup-food-item").forEach(item => {
+    item.addEventListener("click", () => {
+
+      const id = item.dataset.id;
+      const food = foodLibrary.find(f => String(f.id) === String(id));
+      if (!food) return;
+
+      container.remove(); // ปิดคลัง
+      openMealPopup(currentPopupMeal, food.id);
+    });
+  });
+}
+
+function updateDashboardNutrition() {
+
+  let totalCal = 0;
+  let totalP = 0;
+  let totalC = 0;
+  let totalF = 0;
+
+  Object.values(selectedMeals).forEach(f => {
+    totalCal += f.kcal;
+    totalP += f.protein;
+    totalC += f.carbs;
+    totalF += f.fat;
+  });
+
+  const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  if (!user) return;
+
+  animateValue('dash-cal-val', 0, totalCal, 1000);
+  animateValue('dash-protein', 0, totalP, 1000);
+  animateValue('dash-carbs', 0, totalC, 1000);
+  animateValue('dash-fat', 0, totalF, 1000);
+
+  updateMacroBar("bar-protein", totalP, user.protein);
+  updateMacroBar("bar-carbs", totalC, user.carbs);
+  updateMacroBar("bar-fat", totalF, user.fat);
+  updateCircleGraph(totalCal, user.tdee);
+}
+
+function saveWorkoutToToday(workout) {
+  const today = new Date().toISOString().split("T")[0];
+  const key = "fit_workout_log_guest";
+
+  const data = JSON.parse(localStorage.getItem(key)) || {};
+
+  if (!data[today]) {
+    data[today] = [];
+  }
+  data[today].push(workout);
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function mapProgramWorkoutsToCards(workouts) {
+  const seen = new Set();
+
+  return workouts
+    .map(w => {
+      const workout = w.gymWorkout ?? w.homeWorkout;
+
+      if (!workout) return null;
+
+      // กันซ้ำด้วย id ของ workout จริง
+      if (seen.has(workout.id)) return null;
+      seen.add(workout.id);
+
+      return {
+        id: workout.id,
+        title: workout.nameTh || workout.nameEn || "ไม่มีชื่อ",
+        img: workout.imageUrl?.replace("[URL] ", "") || "",
+        sub: w.repsInfo || "",
+        instruction: workout.description || "",
+        sets: extractSets(w.repsInfo),
+        repsGuide: extractReps(w.repsInfo)
+      };
+    })
+    .filter(Boolean);
+
+  return Object.values(grouped).map(group => group[0]);
+}
+
+function extractSets(text) {
+  if (!text) return 1;
+  const match = text.match(/x\s*(\d+)/);
+  return match ? Number(match[1]) : 1;
+}
+
+function extractReps(text) {
+  if (!text) return "";
+  const match = text.match(/^(\d+)/);
+  return match ? match[1] + " ครั้ง" : text;
+}
+
+async function loadProgramDay(programId, dayNumber) {
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/programs/${programId}/days/${dayNumber}`
+    );
+
+    const data = await res.json();
+
+    if (!data.workouts) {
+      console.error("No workouts found");
+      return;
+    }
+
+    // 🔹 แสดงหัววัน
+    if (data.dayInfo) {
+      document.getElementById("day-title").innerText =
+        data.dayInfo.day_title;
+
+      document.getElementById("day-description").innerText =
+        data.dayInfo.description;
+    }
+
+    const mapped = mapProgramWorkoutsToCards(data.workouts);
+    window.todayWorkout = mapped;
+    renderWorkoutCards("dashboard-workout-list", mapped);
+
+  } catch (error) {
+    console.error("Failed to load program day", error);
+  }
+}
+
+function navigateTo(pageId) {
+  document.querySelectorAll('.page')
+    .forEach(page => page.classList.remove('active'));
+
+  const targetPage = document.getElementById(pageId);
+  if (targetPage) targetPage.classList.add('active');
+
+  // 👇 เพิ่มตรงนี้
+  if (pageId === "dashboard") {
+    loadProgramDay("PG01", 1);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadProgramDay("PG01", 1);
+});
 
