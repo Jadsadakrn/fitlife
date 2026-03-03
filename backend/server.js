@@ -267,4 +267,48 @@ app.post("/api/workout-log", async (req, res) => {
   }
 });
 
+// POST /api/log-meal
+router.post("/log-meal", async (req, res) => {
+  const { foodId, mealType, date } = req.body;
+
+  const userId = req.user.id; // จาก middleware auth
+
+  const log = await prisma.mealLog.create({
+    data: {
+      userId,
+      foodId,
+      mealType,
+      date: new Date(date)
+    }
+  });
+
+  res.json(log);
+});
+
+// GET /api/log-meal/today
+router.get("/log-meal/today", async (req, res) => {
+
+  const userId = req.user.id;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const logs = await prisma.mealLog.findMany({
+    where: {
+      userId,
+      date: {
+        gte: today,
+        lt: tomorrow
+      }
+    },
+    include: {
+      food: true
+    }
+  });
+
+  res.json(logs);
+});
 

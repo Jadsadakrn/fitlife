@@ -13,6 +13,7 @@ model User {
   password  String
   createdAt DateTime @default(now())
   activities Activity[]
+  mealLogs MealLog[]
 
 }
 
@@ -39,6 +40,7 @@ model Food {
   carbs       Int
   fat         Int
   imageUrl    String
+  mealLogs MealLog[]
 }
 
 model Program {
@@ -102,4 +104,15 @@ model WorkoutLog {
   createdAt DateTime @default(now())
 
   @@unique([date, title])
+}
+
+model MealLog {
+  id        String   @id @default(uuid())
+  userId    String
+  foodId    String
+  mealType  String   // breakfast | lunch | dinner
+  date      DateTime
+
+  user      User     @relation(fields: [userId], references: [id])
+  food      Food     @relation(fields: [foodId], references: [id])
 }
