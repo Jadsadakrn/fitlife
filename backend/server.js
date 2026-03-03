@@ -268,10 +268,10 @@ app.post("/api/workout-log", async (req, res) => {
 });
 
 // POST /api/log-meal
-router.post("/log-meal", async (req, res) => {
+app.post("/api/log-meal", authenticateToken, async (req, res) => {
   const { foodId, mealType, date } = req.body;
 
-  const userId = req.user.id; // จาก middleware auth
+  const userId = req.user.userId;
 
   const log = await prisma.mealLog.create({
     data: {
@@ -286,9 +286,9 @@ router.post("/log-meal", async (req, res) => {
 });
 
 // GET /api/log-meal/today
-router.get("/log-meal/today", async (req, res) => {
+app.get("/api/log-meal/today", authenticateToken, async (req, res) => {
 
-  const userId = req.user.id;
+  const userId = req.user.userId;
 
   const today = new Date();
   today.setHours(0,0,0,0);
