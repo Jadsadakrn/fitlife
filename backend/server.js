@@ -286,8 +286,8 @@ app.post("/api/log-meal", authenticateToken, async (req, res) => {
 });
 
 // GET /api/log-meal/today
-app.get("/api/log-meal/today", authenticateToken, async (req, res) => {
-  const userId = req.user.userId;
+app.get("/api/log-meal/today", async (req, res) => {
+  const userId = req.query.userId;
 
   const now = new Date();
 
