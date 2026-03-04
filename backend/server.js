@@ -287,21 +287,22 @@ app.post("/api/log-meal", authenticateToken, async (req, res) => {
 
 // GET /api/log-meal/today
 app.get("/api/log-meal/today", authenticateToken, async (req, res) => {
-
   const userId = req.user.userId;
 
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const now = new Date();
 
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const start = new Date(now);
+  start.setHours(0,0,0,0);
+
+  const end = new Date(now);
+  end.setHours(23,59,59,999);
 
   const logs = await prisma.mealLog.findMany({
     where: {
-      userId,
+      userId: userId,
       date: {
-        gte: today,
-        lt: tomorrow
+        gte: start,
+        lte: end
       }
     },
     include: {
