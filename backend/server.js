@@ -269,47 +269,44 @@ app.post("/api/workout-log", async (req, res) => {
 
 // POST /api/log-meal
 app.post("/api/log-meal", authenticateToken, async (req, res) => {
-  const { foodId, mealType, date } = req.body;
-
+  const { foodId, mealType } = req.body;
   const userId = req.user.userId;
 
-  const log = await prisma.mealLog.create({
-    data: {
-      userId,
-      foodId,
-      mealType,
-      date: new Date(date)
-    }
-  });
-
-  res.json(log);
+  try {
+    const log = await prisma.mealLog.create({
+      data: {
+        userId,
+        foodId,
+        mealType,
+        date: new Date()  // ✅ ใช้วันนี้เลย ไม่ต้องรับจาก frontend
+      }
+    });
+    res.json(log);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });  // ✅ ดู error จริง
+  }
 });
 
 // GET /api/log-meal/today
-app.get("/api/log-meal/today", async (req, res) => {
-  const userId = req.query.userId;
+app.get("/api/log-meal/today", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;  // ✅ ดึงจาก token แทน query
 
   const now = new Date();
+  const start = new Date(now); start.setHours(0,0,0,0);
+  const end = new Date(now); end.setHours(23,59,59,999);
 
-  const start = new Date(now);
-  start.setHours(0,0,0,0);
-
-  const end = new Date(now);
-  end.setHours(23,59,59,999);
-
-  const logs = await prisma.mealLog.findMany({
-    where: {
-      userId: userId,
-      date: {
-        gte: start,
-        lte: end
-      }
-    },
-    include: {
-      food: true
-    }
-  });
-
-  res.json(logs);
+  try {
+    const logs = await prisma.mealLog.findMany({
+      where: {
+        userId,
+        date: { gte: start, lte: end }
+      },
+      include: { food: true }
+    });
+    res.json(logs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
-
