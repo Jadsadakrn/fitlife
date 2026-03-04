@@ -6,13 +6,15 @@
     : "https://fitlife-dlfz.onrender.com";
    ========================================= */
 
-
 // ===== Auth/User scope =====
 const __session = (window.Auth && Auth.getSession) ? Auth.getSession() : null;
 const __user = (window.Auth && Auth.getCurrentUser) ? Auth.getCurrentUser() : null;
 const __userId = (__user && __user.id) ? __user.id : "guest";
 const ukey = (k) => `${k}_${__userId}`;
-const API_BASE = "http://localhost:3000";
+const API_BASE =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://fitlife-dlfz.onrender.com";
 
 
 window.navigateTo = function (pageId) {
@@ -824,6 +826,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadFoodLibrary();
   await loadExercisesFromAPI();
+  await loadTodayMeals();
 
   const todayKey = getTodayKey();
   const history = JSON.parse(localStorage.getItem(ukey("fit_history")) || "{}");
@@ -1741,26 +1744,57 @@ function closeMealPopup() {
   document.getElementById("meal-popup").style.display = "none";
 }
 
-function confirmMeal() {
+ async function confirmMeal() {
   if (!currentPopupMeal || !currentselectedFood) return;
 
-  selectedMeals[currentPopupMeal] = currentselectedFood;
+  // ✅ ดึง token จาก session ก่อน ถ้าไม่มีค่อย fallback localStorage
+  const token = (window.Auth && Auth.getSession?.()?.token)
+    || localStorage.getItem("token");
 
-  localStorage.setItem(
-    ukey("selected_meals"),
-    JSON.stringify(selectedMeals)
-  );
+  if (!token) {
+    showToast("⚠️ กรุณาล็อกอินใหม่", "warning");
+    return;
+  }
 
-  const todayKey = getTodayKey();
-  const history = JSON.parse(localStorage.getItem(ukey("fit_history")) || "{}");
+  try {
+    const res = await fetch(`${API_BASE}/api/log-meal`, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        foodId: currentselectedFood.id,
+        mealType: currentPopupMeal
+      })
+    });
 
-  history[todayKey] = selectedMeals;
+    if (res.status === 401 || res.status === 403) {
+      showToast("⚠️ Session หมดอายุ กรุณาล็อกอินใหม่", "warning");
+      localStorage.removeItem("token");
+      setTimeout(() => window.location.replace("login_new.html"), 1500);
+      return;
+    }
 
-  localStorage.setItem(ukey("fit_history"), JSON.stringify(history));
+    if (!res.ok) {
+      const err = await res.json();
+      showToast("❌ บันทึกไม่สำเร็จ: " + err.error, "warning");
+      return;
+    }
 
-  updateDashboardNutrition();
-  showToast("บันทึกเรียบร้อย", "success");
-  closeMealPopup();
+    // ✅ บันทึกสำเร็จ
+    selectedMeals[currentPopupMeal] = currentselectedFood;
+    localStorage.setItem(ukey("selected_meals"), JSON.stringify(selectedMeals));
+
+    updateDashboardNutrition();
+    renderDashboardMeals();
+    showToast("✅ บันทึกเรียบร้อย", "success");
+    closeMealPopup();
+
+  } catch (err) {
+    console.error(err);
+    showToast("❌ เกิดข้อผิดพลาด", "warning");
+  }
 }
 
 function changeMeal() {
@@ -1951,5 +1985,39 @@ function navigateTo(pageId) {
 
 document.addEventListener("DOMContentLoaded", () => {
   loadProgramDay("PG01", 1);
+  loadTodayMeals();
 });
+
+async function loadTodayMeals() {
+
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_BASE}/api/log-meal/today`, {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json",
+      "x-user-id": localStorage.getItem("userId")
+    }
+  });
+
+  const meals = await res.json();
+
+  meals.forEach(m => {
+
+    selectedMeals[m.mealType] = {
+      id: m.food.id,
+      name: m.food.nameTh,
+      kcal: m.food.calories,
+      protein: m.food.protein,
+      carbs: m.food.carbs,
+      fat: m.food.fat,
+      img: m.food.imageUrl
+    };
+
+  });
+
+  updateDashboardNutrition();
+}
+
 

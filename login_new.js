@@ -1,5 +1,11 @@
 // FitLife Easy — Auth UI Logic (localStorage demo)
 (function () {
+  
+  // ✅ เพิ่มตรงนี้
+  const API_BASE = window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : "https://fitlife-dlfz.onrender.com";
+
   const $ = (id) => document.getElementById(id);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -105,7 +111,7 @@ if (loginForm) {
     if (password.length < 4) return showToast("รหัสผ่านสั้นไป");
 
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
+      const response = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -146,7 +152,7 @@ if (regForm) {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/register", {
+      const response = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
