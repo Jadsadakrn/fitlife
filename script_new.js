@@ -1747,10 +1747,7 @@ function closeMealPopup() {
  async function confirmMeal() {
   if (!currentPopupMeal || !currentselectedFood) return;
 
-  // ✅ ดึง token จาก session ก่อน ถ้าไม่มีค่อย fallback localStorage
-  const token = (window.Auth && Auth.getSession?.()?.token)
-    || localStorage.getItem("token");
-
+  const token = localStorage.getItem("token");
   if (!token) {
     showToast("⚠️ กรุณาล็อกอินใหม่", "warning");
     return;
@@ -1769,20 +1766,11 @@ function closeMealPopup() {
       })
     });
 
-    if (res.status === 401 || res.status === 403) {
-      showToast("⚠️ Session หมดอายุ กรุณาล็อกอินใหม่", "warning");
-      localStorage.removeItem("token");
-      setTimeout(() => window.location.replace("login_new.html"), 1500);
-      return;
-    }
-
     if (!res.ok) {
-      const err = await res.json();
-      showToast("❌ บันทึกไม่สำเร็จ: " + err.error, "warning");
+      showToast("❌ บันทึกไม่สำเร็จ", "warning");
       return;
     }
 
-    // ✅ บันทึกสำเร็จ
     selectedMeals[currentPopupMeal] = currentselectedFood;
     localStorage.setItem(ukey("selected_meals"), JSON.stringify(selectedMeals));
 
@@ -1992,7 +1980,6 @@ async function loadTodayMeals() {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    // ✅ ไม่มี token ใช้ข้อมูลจาก localStorage แทน
     updateDashboardNutrition();
     return;
   }
@@ -2006,7 +1993,6 @@ async function loadTodayMeals() {
       }
     });
 
-    // ✅ ถ้า token หมดอายุ ใช้ localStorage แทน
     if (!res.ok) {
       updateDashboardNutrition();
       return;
@@ -2029,10 +2015,9 @@ async function loadTodayMeals() {
     updateDashboardNutrition();
 
   } catch (err) {
-    console.error(err);
-    // ✅ fallback
     updateDashboardNutrition();
   }
 }
+
 
 
