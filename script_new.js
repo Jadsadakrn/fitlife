@@ -1989,35 +1989,50 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadTodayMeals() {
-
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`${API_BASE}/api/log-meal/today`, {
-    method: "GET",
-    headers: {
-      "Authorization": "Bearer " + token,
-      "Content-Type": "application/json",
-      "x-user-id": localStorage.getItem("userId")
+  if (!token) {
+    // ✅ ไม่มี token ใช้ข้อมูลจาก localStorage แทน
+    updateDashboardNutrition();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/log-meal/today`, {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json"
+      }
+    });
+
+    // ✅ ถ้า token หมดอายุ ใช้ localStorage แทน
+    if (!res.ok) {
+      updateDashboardNutrition();
+      return;
     }
-  });
 
-  const meals = await res.json();
+    const meals = await res.json();
 
-  meals.forEach(m => {
+    meals.forEach(m => {
+      selectedMeals[m.mealType] = {
+        id: m.food.id,
+        name: m.food.nameTh,
+        kcal: m.food.calories,
+        protein: m.food.protein,
+        carbs: m.food.carbs,
+        fat: m.food.fat,
+        img: m.food.imageUrl
+      };
+    });
 
-    selectedMeals[m.mealType] = {
-      id: m.food.id,
-      name: m.food.nameTh,
-      kcal: m.food.calories,
-      protein: m.food.protein,
-      carbs: m.food.carbs,
-      fat: m.food.fat,
-      img: m.food.imageUrl
-    };
+    updateDashboardNutrition();
 
-  });
-
-  updateDashboardNutrition();
+  } catch (err) {
+    console.error(err);
+    // ✅ fallback
+    updateDashboardNutrition();
+  }
 }
 
 
