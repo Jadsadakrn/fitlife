@@ -5,6 +5,7 @@
     เว็บdeploy
     : "https://fitlife-dlfz.onrender.com";
    ========================================= */
+let isSavingMeal = false; // 🔥 ตัวแปรล็อกสถานะการบันทึกอาหาร
 
 // ===== Auth/User scope =====
 const __session = (window.Auth && Auth.getSession) ? Auth.getSession() : null;
@@ -1335,12 +1336,6 @@ function updateDashboardFromProfile() {
   const tdee = user.tdee;
 
   setText("dash-cal-target", `เป้าหมาย ${tdee.toLocaleString()} kcal`);
-
-  updateCircleGraph(0, tdee);
-  updateMacroBar("bar-protein", 0, user.protein);
-  updateMacroBar("bar-carbs", 0, user.carbs);
-  updateMacroBar("bar-fat", 0, user.fat);
-
   setText("bmi-val", user.bmi.toFixed(1));
 }
 
@@ -1745,6 +1740,9 @@ function closeMealPopup() {
 }
 
  async function confirmMeal() {
+  if (isSavingMeal) return;
+  isSavingMeal = true;
+  
   if (!currentPopupMeal || !currentselectedFood) return;
 
   const token = localStorage.getItem("token");
@@ -1771,17 +1769,18 @@ function closeMealPopup() {
       return;
     }
 
-    selectedMeals[currentPopupMeal] = currentselectedFood;
-    localStorage.setItem(ukey("selected_meals"), JSON.stringify(selectedMeals));
+    await loadTodayMeals(); // รีเฟรชข้อมูลจากเซิร์ฟเวอร์
 
     updateDashboardNutrition();
     renderDashboardMeals();
     showToast("✅ บันทึกเรียบร้อย", "success");
     closeMealPopup();
+    isSavingMeal = false;
 
   } catch (err) {
     console.error(err);
     showToast("❌ เกิดข้อผิดพลาด", "warning");
+    isSavingMeal = false;
   }
 }
 
@@ -1977,10 +1976,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadTodayMeals() {
+  
   const token = localStorage.getItem("token");
 
   if (!token) {
     updateDashboardNutrition();
+    renderDashboardMeals();
     return;
   }
 
@@ -1995,6 +1996,7 @@ async function loadTodayMeals() {
 
     if (!res.ok) {
       updateDashboardNutrition();
+      renderDashboardMeals();
       return;
     }
 
@@ -2008,16 +2010,14 @@ async function loadTodayMeals() {
         protein: m.food.protein,
         carbs: m.food.carbs,
         fat: m.food.fat,
-        img: m.food.imageUrl
+        img: m.food.imageUrl || m.food.imageurl
       };
     });
 
     updateDashboardNutrition();
+    renderDashboardMeals();
 
   } catch (err) {
     updateDashboardNutrition();
   }
 }
-
-
-
