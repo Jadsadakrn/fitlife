@@ -670,7 +670,7 @@ function buildMonthCalendar(monthValue) {
   if (hint) hint.textContent = `เลือกแล้ว ${selected.size} วัน`;
 }
 
-function markTodayAsDone() {
+async function markTodayAsDone() {
   const key = getTodayKey();
 
   const dailyLog = getDailyLog();
@@ -687,6 +687,8 @@ function markTodayAsDone() {
     });
 
     saveDailyLog(dailyLog);
+
+    await loadWorkoutLogs(); // รีโหลดประวัติการออกกำลังกายเพื่ออัปเดตข้อมูลล่าสุด
 
     renderWeeklyStreak();
     updateStreakDisplay();
@@ -740,8 +742,9 @@ function updateWeeklyChart() {
 
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-    const done = workoutHistory.some(item => item.date === key);
-
+    const done = workoutHistory.some(item => 
+      item.date.slice(0,10) === key
+    );
     if (done) {
       bar.style.height = "100%";
       bar.classList.add("active");
