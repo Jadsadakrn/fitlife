@@ -267,6 +267,18 @@ app.post("/api/workout-log", async (req, res) => {
   }
 });
 
+app.get("/api/workout-log", async (req, res) => {
+  try {
+    const logs = await prisma.workoutLog.findMany({
+      orderBy: { date: "desc" }
+    });
+    res.json(logs);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch workout logs" });
+  }
+});
+
 // POST /api/log-meal
 app.post("/api/log-meal", authenticateToken, async (req, res) => {
   const { foodId, mealType } = req.body;

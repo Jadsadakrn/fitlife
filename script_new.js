@@ -238,21 +238,14 @@ function animateValue(id, start, end, duration) {
   if (!obj) return;
 
   let startTimestamp = null;
+
   const step = (timestamp) => {
     if (!startTimestamp) startTimestamp = timestamp;
 
     const progress = Math.min((timestamp - startTimestamp) / duration, 1);
     const currentVal = Math.floor(progress * (end - start) + start);
 
-    obj.innerHTML = currentVal.toLocaleString();
-
-    const noUnitIDs = [
-      'dash-cal-val', 'dash-weight', 'dash-height', 'dash-bmi',
-      'bmi-val', 'dash-cal-target', 'water-count'
-    ];
-    if (!noUnitIDs.includes(id)) {
-      obj.innerHTML += '<small style="font-size:0.6em; margin-left:2px; color:#888;">g</small>';
-    }
+    obj.textContent = currentVal.toLocaleString();
 
     if (progress < 1) window.requestAnimationFrame(step);
   };
@@ -522,7 +515,7 @@ function openWorkoutModal(item, mode = "do") {
       const today = getTodayKey();
 
       try {
-        await fetch("http://localhost:3000/api/workout-log", {
+        await fetch(`${API_BASE}/api/workout-log`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -761,6 +754,23 @@ function updateWeeklyChart() {
   });
 }
 
+async function loadWorkoutLogs() {
+  try {
+    const res = await fetch(`${API_BASE}/api/workout-log`);
+    const data = await res.json();
+
+    console.log("Fetched workout logs:", data);
+
+    if (data && data.length) {
+      workoutHistory = data;
+      updateWeeklyChart();
+    }
+
+  } catch (err) {
+    console.error("Error loading workout logs:", err);
+  }
+}
+
 
 function updateStreakDisplay() {
   let streak = 0;
@@ -828,16 +838,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadFoodLibrary();
   await loadExercisesFromAPI();
   await loadTodayMeals();
-
-  const todayKey = getTodayKey();
-  const history = JSON.parse(localStorage.getItem(ukey("fit_history")) || "{}");
-
-  if (history[todayKey]) {
-    selectedMeals = history[todayKey];
-  }
+  
+  await loadWorkoutLogs();
 
   loadUserData();
-  updateDashboardFromProfile();
   renderDashboardMeals();
   updateDashboardNutrition();
   updateWeeklyChart();
@@ -1336,6 +1340,9 @@ function updateDashboardFromProfile() {
   const tdee = user.tdee;
 
   setText("dash-cal-target", `เป้าหมาย ${tdee.toLocaleString()} kcal`);
+
+  updateDashboardNutrition();
+
   setText("bmi-val", user.bmi.toFixed(1));
 }
 
@@ -1367,18 +1374,14 @@ function loadUserData() {
     else statusEl.style.color = "#FF5252";
   }
 
-
   // ===== Food (Nutrition Hub) =====
 
   const todayKey = getTodayKey();
-
 
   let totalCal = 0;
   let totalP = 0;
   let totalC = 0;
   let totalF = 0;
-
-
 
   const tdee = data.tdee;
   setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()}`);
@@ -1386,16 +1389,6 @@ function loadUserData() {
   const pGoal = Math.round((tdee * 0.3) / 4);
   const cGoal = Math.round((tdee * 0.45) / 4);
   const fGoal = Math.round((tdee * 0.25) / 9);
-
-  animateValue('dash-protein', 0, totalP, 1500);
-  animateValue('dash-carbs', 0, totalC, 1500);
-  animateValue('dash-fat', 0, totalF, 1500);
-  animateValue('dash-cal-val', 0, totalCal, 1500);
-
-  updateMacroBar('bar-protein', totalP, pGoal);
-  updateMacroBar('bar-carbs', totalC, cGoal);
-  updateMacroBar('bar-fat', totalF, fGoal);
-  updateCircleGraph(totalCal, tdee);
 
   updateWaterUI();
   updateStreakDisplay();
@@ -1825,16 +1818,21 @@ function changeMeal() {
 
 function updateDashboardNutrition() {
 
+  console.log("Updating dashboard nutrition with selected meals:", selectedMeals);
+
   let totalCal = 0;
   let totalP = 0;
   let totalC = 0;
   let totalF = 0;
 
   Object.values(selectedMeals).forEach(f => {
-    totalCal += f.kcal;
-    totalP += f.protein;
-    totalC += f.carbs;
-    totalF += f.fat;
+   
+    const kcal = f.kcal ?? f.calories ?? 0;
+
+    totalCal += kcal;
+    totalP += f.protein || 0;
+    totalC += f.carbs || 0;
+    totalF += f.fat || 0;
   });
 
   const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
@@ -1976,7 +1974,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadTodayMeals() {
-  
+
   const token = localStorage.getItem("token");
 
   if (!token) {
@@ -1986,6 +1984,7 @@ async function loadTodayMeals() {
   }
 
   try {
+
     const res = await fetch(`${API_BASE}/api/log-meal/today`, {
       method: "GET",
       headers: {
@@ -2002,6 +2001,11 @@ async function loadTodayMeals() {
 
     const meals = await res.json();
 
+    console.log("Today's meals from API:", meals);
+
+    // 🔥 สำคัญมาก
+    selectedMeals = {};
+
     meals.forEach(m => {
       selectedMeals[m.mealType] = {
         id: m.food.id,
@@ -2014,10 +2018,13 @@ async function loadTodayMeals() {
       };
     });
 
+    console.log("Mapped selectedMeals:", selectedMeals); 
+
     updateDashboardNutrition();
     renderDashboardMeals();
 
   } catch (err) {
+    console.error(err);
     updateDashboardNutrition();
   }
 }
