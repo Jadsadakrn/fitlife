@@ -19,7 +19,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 app.post("/api/register", async (req, res) => {
   const { email, password } = req.body;
 
-  // ✅ Validation
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
@@ -30,17 +29,14 @@ app.post("/api/register", async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = await prisma.user.create({
       data: { email, password: hashedPassword },
     });
-
     res.json({ message: "User created", userId: user.id });
   } catch (error) {
     res.status(400).json({ error: "Email already exists" });
   }
 });
-
 
 // LOGIN
 app.post("/api/login", async (req, res) => {
@@ -50,18 +46,16 @@ app.post("/api/login", async (req, res) => {
     return res.status(400).json({ error: "Email and password are required" });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    return res.status(400).json({ error: "Invalid credentials" });
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 
   const valid = await bcrypt.compare(password, user.password);
 
   if (!valid) {
-    return res.status(400).json({ error: "Invalid credentials" });
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
@@ -70,7 +64,6 @@ app.post("/api/login", async (req, res) => {
 
   res.json({ token });
 });
-
 
 app.get("/", (req, res) => {
   res.send("FitLife API is running 🚀");
@@ -81,7 +74,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -101,49 +93,56 @@ app.get("/api/me", authenticateToken, async (req, res) => {
     where: { id: req.user.userId },
     select: { id: true, email: true, createdAt: true }
   });
-
   res.json(user);
 });
 
-  // Workout History API
-  // POST: บันทึกประวัติการออกกำลังกาย
-  app.post("/api/workout-history", authenticateToken, async (req, res) => {
-    const { date, title } = req.body;
-    if (!date || !title) {
-      return res.status(400).json({ error: "date and title are required" });
-    }
-    try {
-      const log = await prisma.workoutLog.create({
-        data: {
-          date,
-          title,
-          // เพิ่ม userId หรือ exerciseId ถ้าตารางรองรับ
-        },
-      });
-      res.json({ message: "Workout history saved", log });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  });
+// ===============================
+// WORKOUT LOG
+// ===============================
+app.post("/api/workout-log", authenticateToken, async (req, res) => {
+  const { date, title } = req.body;
 
-  // GET: ดึงประวัติการออกกำลังกายของผู้ใช้
-  app.get("/api/workout-history", authenticateToken, async (req, res) => {
-    try {
-      // ดึงประวัติทั้งหมด (อาจเพิ่ม filter ตาม userId ถ้าตารางรองรับ)
-      const logs = await prisma.workoutLog.findMany({
-        // where: { userId: req.user.userId }, // ถ้ามี userId ในตาราง
-        orderBy: { id: "desc" },
-      });
-      res.json(logs);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+  if (!date || !title) {
+    return res.status(400).json({ error: "Missing data" });
+  }
+
+  try {
+    const log = await prisma.workoutLog.create({
+      data: {
+        userId: req.user.userId,
+        date: new Date(date),
+        note: title
+      }
+    });
+    res.json({ success: true, log });
+  } catch (err) {
+    if (err.code === "P2002") {
+      return res.json({ success: true, message: "Already logged" });
     }
-  });
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.get("/api/workout-log", authenticateToken, async (req, res) => {
+  try {
+    const logs = await prisma.workoutLog.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { date: "desc" }
+    });
+    res.json(logs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// ===============================
+// PROGRAMS
+// ===============================
 app.get("/api/programs", async (req, res) => {
   try {
-    const programs = await prisma.program.findMany({
-      orderBy: { id: "asc" }
-    });
+    const programs = await prisma.program.findMany({ orderBy: { id: "asc" } });
     res.json(programs);
   } catch (error) {
     console.error(error);
@@ -156,34 +155,17 @@ app.get("/api/programs/:id/days/:day", async (req, res) => {
     const programId = req.params.id;
     const dayNumber = parseInt(req.params.day);
 
-    // 1️⃣ ดึงข้อมูลวัน
     const dayInfo = await prisma.programDay.findFirst({
-      where: {
-        programId,
-        dayNumber
-      }
+      where: { programId, dayNumber }
     });
 
-    // 2️⃣ ดึง workout พร้อม join exercise
     const workouts = await prisma.programWorkout.findMany({
-      where: {
-        programId,
-        dayNumber
-      },
-      orderBy: {
-        sequence: "asc"
-      },
-      include: {
-        gymWorkout: true,
-        homeWorkout: true
-      }
+      where: { programId, dayNumber },
+      orderBy: { sequence: "asc" },
+      include: { gymWorkout: true, homeWorkout: true }
     });
 
-    res.json({
-      dayInfo,
-      workouts
-    });
-
+    res.json({ dayInfo, workouts });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to load program day" });
@@ -196,17 +178,9 @@ app.get("/api/programs/:id/days/:day/workouts", async (req, res) => {
     const dayNumber = parseInt(req.params.day);
 
     const workouts = await prisma.programWorkout.findMany({
-      where: {
-        programId,
-        dayNumber,
-      },
-      orderBy: {
-        sequence: "asc",
-      },
-      include: {
-        gymWorkout: true,
-        homeWorkout: true,
-      },
+      where: { programId, dayNumber },
+      orderBy: { sequence: "asc" },
+      include: { gymWorkout: true, homeWorkout: true },
     });
 
     res.json(workouts);
@@ -216,24 +190,21 @@ app.get("/api/programs/:id/days/:day/workouts", async (req, res) => {
   }
 });
 
+// ===============================
+// EXERCISES & FOODS
+// ===============================
 app.get("/api/exercises", async (req, res) => {
-  const exercises = await prisma.exercise.findMany({
-    orderBy: { id: "asc" }
-  });
-
+  const exercises = await prisma.exercise.findMany({ orderBy: { id: "asc" } });
   res.json(exercises);
 });
 
 app.get("/api/foods", async (req, res) => {
-  const foods = await prisma.food.findMany({
-    orderBy: { nameTh: "asc" }
-  });
-
+  const foods = await prisma.food.findMany({ orderBy: { nameTh: "asc" } });
   res.json(foods);
 });
 
 // ===============================
-// CREATE ACTIVITY
+// ACTIVITIES
 // ===============================
 app.post("/api/my-activities", authenticateToken, async (req, res) => {
   const { type, note } = req.body;
@@ -244,13 +215,8 @@ app.post("/api/my-activities", authenticateToken, async (req, res) => {
 
   try {
     const activity = await prisma.activity.create({
-      data: {
-        type,
-        note,
-        userId: req.user.userId,
-      },
+      data: { type, note, userId: req.user.userId },
     });
-
     res.json(activity);
   } catch (error) {
     console.error(error);
@@ -258,16 +224,12 @@ app.post("/api/my-activities", authenticateToken, async (req, res) => {
   }
 });
 
-// ===============================
-// GET MY ACTIVITIES
-// ===============================
 app.get("/api/my-activities", authenticateToken, async (req, res) => {
   try {
     const activities = await prisma.activity.findMany({
       where: { userId: req.user.userId },
       orderBy: { createdAt: "desc" },
     });
-
     res.json(activities);
   } catch (error) {
     console.error(error);
@@ -275,86 +237,34 @@ app.get("/api/my-activities", authenticateToken, async (req, res) => {
   }
 });
 
-app.post("/api/workout-log", async (req, res) => {
-  const { date, title } = req.body;
-
-  if (!date || !title) {
-    return res.status(400).json({ error: "Missing data" });
-  }
-
-  try {
-    const log = await prisma.workoutLog.create({
-      data: { date, title }
-    });
-
-    res.json({ success: true, log });
-
-  } catch (err) {
-
-    // 👇 ตรงนี้สำคัญ
-    if (err.code === "P2002") {
-      return res.json({ success: true, message: "Already logged" });
-    }
-
-    console.error(err);
-    res.status(500).json({ error: "Database error" });
-  }
-});
-
-app.post("/api/workout-log", authenticateToken, async (req, res) => {
-  const { date } = req.body;
-
-  try {
-    const log = await prisma.workoutLog.create({
-      data: {
-        userId: req.user.userId,
-        date: new Date(date)
-      }
-    });
-
-    res.json({ success: true, log });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Database error" });
-  }
-});
-
-// POST /api/log-meal
+// ===============================
+// MEAL LOG
+// ===============================
 app.post("/api/log-meal", authenticateToken, async (req, res) => {
   const { foodId, mealType } = req.body;
   const userId = req.user.userId;
 
   try {
     const log = await prisma.mealLog.create({
-      data: {
-        userId,
-        foodId,
-        mealType,
-        date: new Date()  // ✅ ใช้วันนี้เลย ไม่ต้องรับจาก frontend
-      }
+      data: { userId, foodId, mealType, date: new Date() }
     });
     res.json(log);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });  // ✅ ดู error จริง
+    res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/log-meal/today
 app.get("/api/log-meal/today", authenticateToken, async (req, res) => {
-  const userId = req.user.userId;  // ✅ ดึงจาก token แทน query
+  const userId = req.user.userId;
 
   const now = new Date();
-  const start = new Date(now); start.setHours(0,0,0,0);
-  const end = new Date(now); end.setHours(23,59,59,999);
+  const start = new Date(now); start.setHours(0, 0, 0, 0);
+  const end = new Date(now); end.setHours(23, 59, 59, 999);
 
   try {
     const logs = await prisma.mealLog.findMany({
-      where: {
-        userId,
-        date: { gte: start, lte: end }
-      },
+      where: { userId, date: { gte: start, lte: end } },
       include: { food: true }
     });
     res.json(logs);
