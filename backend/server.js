@@ -105,6 +105,40 @@ app.get("/api/me", authenticateToken, async (req, res) => {
   res.json(user);
 });
 
+  // Workout History API
+  // POST: บันทึกประวัติการออกกำลังกาย
+  app.post("/api/workout-history", authenticateToken, async (req, res) => {
+    const { date, title } = req.body;
+    if (!date || !title) {
+      return res.status(400).json({ error: "date and title are required" });
+    }
+    try {
+      const log = await prisma.workoutLog.create({
+        data: {
+          date,
+          title,
+          // เพิ่ม userId หรือ exerciseId ถ้าตารางรองรับ
+        },
+      });
+      res.json({ message: "Workout history saved", log });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // GET: ดึงประวัติการออกกำลังกายของผู้ใช้
+  app.get("/api/workout-history", authenticateToken, async (req, res) => {
+    try {
+      // ดึงประวัติทั้งหมด (อาจเพิ่ม filter ตาม userId ถ้าตารางรองรับ)
+      const logs = await prisma.workoutLog.findMany({
+        // where: { userId: req.user.userId }, // ถ้ามี userId ในตาราง
+        orderBy: { createdAt: "desc" },
+      });
+      res.json(logs);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
 app.get("/api/programs", async (req, res) => {
   try {
     const programs = await prisma.program.findMany({

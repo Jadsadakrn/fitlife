@@ -15,6 +15,8 @@ model User {
   activities Activity[]
   mealLogs MealLog[]
 
+  workoutLogs WorkoutLog[]
+
 }
 
 model Exercise {
@@ -29,6 +31,8 @@ model Exercise {
 
   gymWorkouts  ProgramWorkout[] @relation("GymWorkout")
   homeWorkouts ProgramWorkout[] @relation("HomeWorkout")
+
+  workoutLogs WorkoutLog[]
 }
 
 
@@ -98,12 +102,21 @@ model Activity {
 }
 
 model WorkoutLog {
-  id Int  @id @default(autoincrement())
-  date String
-  title String
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  userId      String
+  exerciseId  String?
+  date        DateTime
+  sets        Int?
+  reps        Int?
+  duration    Int? // หน่วยเป็นนาที
+  note        String?
+  createdAt   DateTime @default(now())
 
-  @@unique([date, title])
+  user        User     @relation(fields: [userId], references: [id])
+  exercise    Exercise? @relation(fields: [exerciseId], references: [id])
+
+  @@index([userId])
+  @@index([exerciseId])
 }
 
 model MealLog {
