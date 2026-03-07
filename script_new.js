@@ -45,7 +45,7 @@ let programSchedule = [];
 window.todayWorkout = [];
 
 function getDailyLog(){
-  return JSON.parse(localStorage.getItem("fit_daily_log")) || {};
+  return JSON.parse(localStorage.getItem("fit_daily")) || {};
 
 }
 
@@ -64,6 +64,7 @@ if (window.Auth && !__session) {
 async function loadExercisesFromAPI() {
   try {
     const res = await fetch(`${API_BASE}/api/exercises`);
+    if (!res.ok) throw new Error("API error");
     const data = await res.json();
 
     window.workoutData = data.map(ex => ({
@@ -840,15 +841,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadFoodLibrary();
   await loadExercisesFromAPI();
-  await loadTodayMeals();
-  
   await loadWorkoutLogs();
 
-  loadUserData();
-  renderDashboardMeals();
-  updateDashboardNutrition();
+  loadUserData(); // ✅ โหลด user ก่อน
   updateWeeklyChart();
 
+  await loadTodayMeals(); // ✅ โหลด meals หลังสุด ไม่ถูก reset
+  renderDashboardMeals();
 
   if (!localStorage.getItem(ukey("fit_user"))) {
     const wizard = document.getElementById("onboarding-modal");
@@ -1767,6 +1766,8 @@ function closeMealPopup() {
 
     await loadTodayMeals(); // รีเฟรชข้อมูลจากเซิร์ฟเวอร์
 
+    isSavingMeal = false;
+
     updateDashboardNutrition();
     renderDashboardMeals();
     showToast("✅ บันทึกเรียบร้อย", "success");
@@ -2029,5 +2030,91 @@ async function loadTodayMeals() {
   } catch (err) {
     console.error(err);
     updateDashboardNutrition();
+  }
+}
+
+async function loadWorkoutHistory() {
+  const token = localStorage.getItem('token');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/workout-history`, {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    if (!res.ok) {
+      console.error("Workout history error:", res.status);
+      return;
+    }
+
+    const data = await res.json();
+
+    const tbody = document.querySelector('#workout-history-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    data.forEach(item => {
+      const row = document.createElement('tr');
+
+      row.innerHTML = `
+        <td>${new Date(item.date).toLocaleDateString()}</td>
+        <td>${item.exercise?.nameTh || '-'}</td>
+        <td>${item.sets || '-'}</td>
+        <td>${item.reps || item.duration || '-'}</td>
+        <td>${item.note || '-'}</td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error("Error loading workout history:", err);
+  }
+}
+
+async function loadMealHistory() {
+  const token = localStorage.getItem('token');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/meal-history`, {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    if (!res.ok) {
+      console.error("Meal history error:", res.status);
+      return;
+    }
+
+    const data = await res.json();
+
+    const tbody = document.querySelector('#meal-history-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    data.forEach(item => {
+      const food = item.food || {};
+
+      const row = document.createElement('tr');
+
+      row.innerHTML = `
+        <td>${new Date(item.date).toLocaleDateString()}</td>
+        <td>${item.mealType || '-'}</td>
+        <td>${food.nameTh || '-'}</td>
+        <td>${food.calories || '-'}</td>
+        <td>${food.protein || '-'}</td>
+        <td>${food.carbs || '-'}</td>
+        <td>${food.fat || '-'}</td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error("Error loading meal history:", err);
   }
 }

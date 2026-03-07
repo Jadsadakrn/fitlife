@@ -1,0 +1,95 @@
+<!-- Section: ประวัติการออกกำลังกาย -->
+<div class="settings-section">
+  <h2>ประวัติการออกกำลังกาย</h2>
+  <table id="workout-history-table" border="1" style="width:100%;margin-top:1em;">
+    <thead>
+      <tr>
+        <th>วันที่</th>
+        <th>ท่าออกกำลังกาย</th>
+        <th>จำนวนเซ็ต</th>
+        <th>จำนวนครั้ง/เวลา</th>
+        <th>หมายเหตุ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- ข้อมูลจะถูกเติมโดย JS -->
+    </tbody>
+  </table>
+</div>
+
+<!-- Section: ประวัติอาหาร -->
+<div class="settings-section" style="margin-top:2em;">
+  <h2>ประวัติอาหาร</h2>
+  <table id="meal-history-table" border="1" style="width:100%;margin-top:1em;">
+    <thead>
+      <tr>
+        <th>วันที่</th>
+        <th>มื้อ</th>
+        <th>ชื่ออาหาร</th>
+        <th>แคลอรี่</th>
+        <th>โปรตีน</th>
+        <th>คาร์บ</th>
+        <th>ไขมัน</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- ข้อมูลจะถูกเติมโดย JS -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000'
+  : 'https://your-render-backend-url'; // เปลี่ยนเป็น URL จริงของ Render
+
+async function loadWorkoutHistory() {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_BASE}/api/workout-history`, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  const tbody = document.querySelector('#workout-history-table tbody');
+  tbody.innerHTML = '';
+  data.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${new Date(item.date).toLocaleDateString()}</td>
+      <td>${item.exercise?.nameTh || '-'}</td>
+      <td>${item.sets || '-'}</td>
+      <td>${item.reps || item.duration || '-'}</td>
+      <td>${item.note || '-'}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+async function loadMealHistory() {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_BASE}/api/meal-history`, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  const tbody = document.querySelector('#meal-history-table tbody');
+  tbody.innerHTML = '';
+  data.forEach(item => {
+    const food = item.food || {};
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${new Date(item.date).toLocaleDateString()}</td>
+      <td>${item.mealType || '-'}</td>
+      <td>${food.nameTh || '-'}</td>
+      <td>${food.calories || '-'}</td>
+      <td>${food.protein || '-'}</td>
+      <td>${food.carbs || '-'}</td>
+      <td>${food.fat || '-'}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadWorkoutHistory();
+  loadMealHistory();
+});
+</script>
