@@ -509,7 +509,8 @@ function openWorkoutModal(item, mode = "do") {
         await fetch(`${API_BASE}/api/workout-log`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
           },
           body: JSON.stringify({
             date: today,
@@ -750,7 +751,10 @@ function updateWeeklyChart() {
 
 async function loadWorkoutLogs() {
   try {
-    const res = await fetch(`${API_BASE}/api/workout-log`);
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE}/api/workout-log`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
     const data = await res.json();
 
     console.log("Fetched workout logs:", data);
