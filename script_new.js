@@ -18,16 +18,6 @@ const API_BASE =
     : "https://fitlife-dlfz.onrender.com";
 
 
-window.navigateTo = function (pageId) {
-  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-  const targetPage = document.getElementById(pageId);
-  if (targetPage) targetPage.classList.add('active');
-
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.getAttribute('data-page') === pageId) btn.classList.add('active');
-  });
-};
 
 let currentStep = 1;
 const totalSteps = 3;
