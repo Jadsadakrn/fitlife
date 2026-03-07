@@ -102,7 +102,7 @@ model Activity {
 }
 
 model WorkoutLog {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   userId      String
   exerciseId  String?
   date        DateTime

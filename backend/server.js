@@ -132,7 +132,7 @@ app.get("/api/me", authenticateToken, async (req, res) => {
       // ดึงประวัติทั้งหมด (อาจเพิ่ม filter ตาม userId ถ้าตารางรองรับ)
       const logs = await prisma.workoutLog.findMany({
         // where: { userId: req.user.userId }, // ถ้ามี userId ในตาราง
-        orderBy: { createdAt: "desc" },
+        orderBy: { id: "desc" },
       });
       res.json(logs);
     } catch (error) {
