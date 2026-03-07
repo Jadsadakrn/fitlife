@@ -301,15 +301,22 @@ app.post("/api/workout-log", async (req, res) => {
   }
 });
 
-app.get("/api/workout-log", async (req, res) => {
+app.post("/api/workout-log", authenticateToken, async (req, res) => {
+  const { date } = req.body;
+
   try {
-    const logs = await prisma.workoutLog.findMany({
-      orderBy: { date: "desc" }
+    const log = await prisma.workoutLog.create({
+      data: {
+        userId: req.user.userId,
+        date: new Date(date)
+      }
     });
-    res.json(logs);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch workout logs" });
+
+    res.json({ success: true, log });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 });
 
