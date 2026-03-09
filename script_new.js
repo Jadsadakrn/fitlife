@@ -34,7 +34,7 @@ let foodLibrary = [];
 let programSchedule = [];
 window.todayWorkout = [];
 
-function getDailyLog(){
+function getDailyLog() {
   return JSON.parse(localStorage.getItem("fit_daily")) || {};
 
 }
@@ -498,35 +498,32 @@ function openWorkoutModal(item, mode = "do") {
 
   if (finishBtn) {
     finishBtn.onclick = async () => {
+      if (finishBtn.disabled) return;
+      finishBtn.disabled = true;
 
-      console.log("BUTTON CLICKED");
-
-      if (!activeTitle) return;
+      if (!activeTitle) { finishBtn.disabled = false; return; }
 
       const today = getTodayKey();
+      const token = localStorage.getItem("token");
 
       try {
         await fetch(`${API_BASE}/api/workout-log`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
+            "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({
-            date: today,
-            title: activeTitle
-          })
+          body: JSON.stringify({ date: today, title: activeTitle })
         });
 
-        console.log("FETCH SENT");
-
-        markTodayAsDone();
-
+        await markTodayAsDone();
         showToast("บันทึกเรียบร้อย 💪", "success");
         closeTimerModal();
 
       } catch (err) {
         console.error(err);
+      } finally {
+        finishBtn.disabled = false;
       }
     };
   }
@@ -666,28 +663,28 @@ async function markTodayAsDone() {
   const key = getTodayKey();
 
   const dailyLog = getDailyLog();
-  
+
   if (!dailyLog[key]) {
-  dailyLog[key] = {
-    workouts: [],
-    nutrition: null
-  };
+    dailyLog[key] = {
+      workouts: [],
+      nutrition: null
+    };
   }
-    dailyLog[key].workouts.push({
-      completed: true,
-      timestamp: Date.now()
-    });
+  dailyLog[key].workouts.push({
+    completed: true,
+    timestamp: Date.now()
+  });
 
-    saveDailyLog(dailyLog);
+  saveDailyLog(dailyLog);
 
-    await loadWorkoutLogs(); // รีโหลดประวัติการออกกำลังกายเพื่ออัปเดตข้อมูลล่าสุด
+  await loadWorkoutLogs(); // รีโหลดประวัติการออกกำลังกายเพื่ออัปเดตข้อมูลล่าสุด
 
-    renderWeeklyStreak();
-    updateStreakDisplay();
-    updateWeeklyChart();
+  renderWeeklyStreak();
+  updateStreakDisplay();
+  updateWeeklyChart();
 
-    showToast("✅ บันทึกการฝึกสำเร็จ!", "success");
-  }
+  showToast("✅ บันทึกการฝึกสำเร็จ!", "success");
+}
 
 
 function renderWeeklyStreak() {
@@ -707,7 +704,7 @@ function renderWeeklyStreak() {
     card.className = 'day-card';
 
     if (i === 0) card.classList.add('active');
-    if (workoutHistory.some(item => item.date === key)) {
+    if (workoutHistory.some(item => item.date.slice(0, 10) === key)) {
       card.classList.add('done');
 
     }
@@ -728,14 +725,14 @@ function updateWeeklyChart() {
     const dayIndex = parseInt(bar.dataset.day); // 0-6
     const d = new Date(today);
 
-    const startOfweek = new Date(today);
-    startOfweek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-    d.setDate(startOfweek.getDate() + dayIndex);
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay()); // 0=อาทิตย์
+    d.setDate(startOfWeek.getDate() + dayIndex);
 
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-    const done = workoutHistory.some(item => 
-      item.date.slice(0,10) === key
+    const done = workoutHistory.some(item =>
+      item.date.slice(0, 10) === key
     );
     if (done) {
       bar.style.height = "100%";
@@ -757,11 +754,11 @@ async function loadWorkoutLogs() {
     });
     const data = await res.json();
 
-    console.log("Fetched workout logs:", data);
-
-    if (data && data.length) {
+    if (Array.isArray(data)) {
       workoutHistory = data;
       updateWeeklyChart();
+      renderWeeklyStreak();
+      updateStreakDisplay();
     }
 
   } catch (err) {
@@ -1107,7 +1104,7 @@ function renderFullCalendar() {
         const thisDate = new Date(y, m, dateCount);
 
         if (dateCount === now.getDate() && m === now.getMonth() && y === now.getFullYear()) cell.classList.add('today');
-        else if (workoutHistory.some(item => item.date === key)) {
+        else if (workoutHistory.some(item => item.date.slice(0, 10) === key)) {
           cell.classList.add('done');
         }
         else if (thisDate < now) cell.classList.add('missed');
@@ -1167,7 +1164,8 @@ function renderMiniCalendar() {
     const checkKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
 
     if (workoutHistory.some(item => item.date === checkKey)) {
-      className += ' workout-done';}
+      className += ' workout-done';
+    }
     if (i === now.getDate()) className += ' today';
 
     container.innerHTML += `<div class="${className}">${i}</div>`;
@@ -1389,11 +1387,6 @@ function loadUserData() {
   updateWaterUI();
   updateStreakDisplay();
 
-  workoutHistory = JSON.parse(
-    localStorage.getItem('fit_workout_history')
-  ) || [];
-
-  updateWeeklyChart();
 }
 
 /* =========================================
@@ -1544,7 +1537,7 @@ function closeDashMealDetail() {
 
 function generateMealPlan() {
   const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
-  
+
   if (!foodLibrary.length) return null;
 
   const totalCal = user?.tdee || 2000;
@@ -1728,10 +1721,10 @@ function closeMealPopup() {
   document.getElementById("meal-popup").style.display = "none";
 }
 
- async function confirmMeal() {
+async function confirmMeal() {
   if (isSavingMeal) return;
   isSavingMeal = true;
-  
+
   if (!currentPopupMeal || !currentselectedFood) return;
 
   const token = localStorage.getItem("token");
@@ -1824,7 +1817,7 @@ function updateDashboardNutrition() {
   let totalF = 0;
 
   Object.values(selectedMeals).forEach(f => {
-   
+
     const kcal = f.kcal ?? f.calories ?? 0;
 
     totalCal += kcal;
@@ -2016,7 +2009,7 @@ async function loadTodayMeals() {
       };
     });
 
-    console.log("Mapped selectedMeals:", selectedMeals); 
+    console.log("Mapped selectedMeals:", selectedMeals);
 
     updateDashboardNutrition();
     renderDashboardMeals();

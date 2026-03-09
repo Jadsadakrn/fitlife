@@ -12,11 +12,24 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
-  activities Activity[]
-  mealLogs MealLog[]
 
+  name      String?
+  age       Int?
+  gender    String?
+  weight    Float?
+  height    Float?
+  goal      String?
+  focus     String?
+  level     String?
+  tdee      Int?
+  protein   Int?
+  carbs     Int?
+  fat       Int?
+  bmi       Float?
+
+  activities  Activity[]
+  mealLogs    MealLog[]
   workoutLogs WorkoutLog[]
-
 }
 
 model Exercise {
@@ -121,7 +134,7 @@ model WorkoutLog {
 
 model MealLog {
   id        String   @id @default(uuid())
-  userId    String
+  userId    String 
   foodId    String
   mealType  String   // breakfast | lunch | dinner
   date      DateTime
