@@ -831,7 +831,7 @@ async function loadFoodLibrary() {
 document.addEventListener("DOMContentLoaded", async () => {
 
   await loadProfileFromServer();
-  
+
   await loadFoodLibrary();
   await loadExercisesFromAPI();
   await loadWorkoutLogs();
@@ -1273,7 +1273,9 @@ async function finishWizard() {
   // 3️⃣ Activity Multiplier
   // =========================
   let activityMultiplier = 1.35;
-  const level = document.getElementById("selected-level")?.value || "medium";
+  const levelRaw = document.getElementById("inp-level")?.value || "1";
+  const levelMap = { "1": "easy", "2": "medium", "3": "hard" };
+  const level = levelMap[levelRaw] || "easy";
 
   if (level === "easy") activityMultiplier = 1.375;
   if (level === "medium") activityMultiplier = 1.55;
@@ -1937,6 +1939,25 @@ function extractReps(text) {
   return match ? match[1] + " ครั้ง" : text;
 }
 
+function getProgramId() {
+  const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  if (!user) return "PG01";
+
+  const goal = user.goal;
+  const level = user.level;
+
+  if (goal === "lose-fat") {
+    if (level === "medium" || level === "hard") return "PG02";
+    return "PG01";
+  }
+  if (goal === "build-muscle") {
+    if (level === "hard") return "PG05";
+    if (level === "medium") return "PG03";
+    return "PG04";
+  }
+  return "PG01"; // maintain หรือ default
+}
+
 async function loadProgramDay(programId, dayNumber) {
 
   try {
@@ -1980,12 +2001,12 @@ function navigateTo(pageId) {
 
   // 👇 เพิ่มตรงนี้
   if (pageId === "dashboard") {
-    loadProgramDay("PG01", 1);
+    loadProgramDay(getProgramId(), 1);
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadProgramDay("PG01", 1);
+  loadProgramDay(getProgramId(), 1);
   loadTodayMeals();
 });
 
