@@ -273,3 +273,40 @@ app.get("/api/log-meal/today", authenticateToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ===============================
+// USER PROFILE
+// ===============================
+app.put("/api/profile", authenticateToken, async (req, res) => {
+  const { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi } = req.body;
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi }
+    });
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save profile" });
+  }
+});
+
+app.get("/api/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: {
+        id: true, email: true,
+        name: true, age: true, gender: true,
+        weight: true, height: true,
+        goal: true, focus: true, level: true,
+        tdee: true, protein: true, carbs: true, fat: true, bmi: true
+      }
+    });
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
+});

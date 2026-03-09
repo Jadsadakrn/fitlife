@@ -830,6 +830,8 @@ async function loadFoodLibrary() {
    ========================================= */
 document.addEventListener("DOMContentLoaded", async () => {
 
+  await loadProfileFromServer();
+  
   await loadFoodLibrary();
   await loadExercisesFromAPI();
   await loadWorkoutLogs();
@@ -1229,7 +1231,7 @@ function updateLevelText(val) {
   if (el) el.innerText = map[String(val)] || "ง่าย";
 }
 
-function finishWizard() {
+async function finishWizard() {
   const name = document.getElementById('inp-name')?.value;
   const weight = parseFloat(document.getElementById('inp-weight')?.value || "0");
   const height = parseFloat(document.getElementById('inp-height')?.value || "0");
@@ -1312,6 +1314,29 @@ function finishWizard() {
     bmiStatus
   }));
 
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      await fetch(`${API_BASE}/api/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name, age, gender, weight, height,
+          goal, focus, level,
+          tdee: Math.round(tdee),
+          protein: Math.round(protein),
+          fat: Math.round(fat),
+          carbs: Math.round(carbs),
+          bmi: Number(bmi.toFixed(2))
+        })
+      });
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    }
+  }
   loadUserData();
 
   const modal = document.getElementById('onboarding-modal');
@@ -2103,5 +2128,42 @@ async function loadMealHistory() {
 
   } catch (err) {
     console.error("Error loading meal history:", err);
+  }
+}
+
+async function loadProfileFromServer() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/profile`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+
+    const profile = await res.json();
+
+    // ถ้ามีข้อมูลใน server ให้ sync ลง localStorage
+    if (profile && profile.name) {
+      localStorage.setItem(ukey("fit_user"), JSON.stringify({
+        name: profile.name,
+        age: profile.age,
+        gender: profile.gender,
+        weight: profile.weight,
+        height: profile.height,
+        goal: profile.goal,
+        focus: profile.focus,
+        level: profile.level,
+        tdee: profile.tdee,
+        protein: profile.protein,
+        carbs: profile.carbs,
+        fat: profile.fat,
+        bmi: profile.bmi,
+        bmiStatus: profile.bmi < 18.5 ? "ผอม" : profile.bmi < 23 ? "ปกติ" : profile.bmi < 25 ? "ท้วม" : "อ้วน"
+      }));
+      loadUserData();
+    }
+  } catch (err) {
+    console.error("Failed to load profile from server:", err);
   }
 }
