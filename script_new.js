@@ -21,7 +21,7 @@ const API_BASE =
 
 
 let currentStep = 1;
-const totalSteps = 3;
+const totalSteps = 4;
 
 let waterIntake = 750;
 const waterGoal = 2000;
@@ -1209,7 +1209,7 @@ function showStep(n) {
   const progress = document.getElementById('wizard-progress');
   if (progress) progress.style.width = ((n / totalSteps) * 100) + '%';
 
-  setText('wizard-title', `Step ${n}: ${["ข้อมูลพื้นฐาน", "เป้าหมาย", "ระดับ"][n - 1]}`);
+  setText('wizard-title', `Step ${n}: ${["ข้อมูลพื้นฐาน", "เป้าหมาย", "ระดับ", "โปรแกรม"][n - 1]}`);
 
   const prevBtn = document.getElementById('prev-btn');
   const nextBtn = document.getElementById('next-btn');
@@ -1218,6 +1218,26 @@ function showStep(n) {
   if (prevBtn) prevBtn.disabled = (n === 1);
   if (nextBtn) nextBtn.style.display = (n === totalSteps) ? 'none' : 'inline-block';
   if (finishBtn) finishBtn.style.display = (n === totalSteps) ? 'inline-block' : 'none';
+}
+
+function selectDuration(elem, days) {
+  [...elem.parentElement.children].forEach(c => c.classList.remove('selected'));
+  elem.classList.add('selected');
+  document.getElementById('inp-duration').value = days;
+}
+
+// Set default start date to today when wizard opens
+function startOnboarding() {
+  const modal = document.getElementById('onboarding-modal');
+  if (modal) modal.style.display = 'flex';
+  currentStep = 1;
+  showStep(1);
+  // set default start date = today
+  const dateInput = document.getElementById('inp-start-date');
+  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+  // set default duration = 30
+  const firstCard = document.querySelector('#step-4 .select-card');
+  if (firstCard) firstCard.classList.add('selected');
 }
 
 function selectOption(elem, type, value) {
@@ -1301,6 +1321,9 @@ async function finishWizard() {
   // =========================
   // 6️⃣ บันทึกข้อมูล
   // =========================
+  const startDate = document.getElementById('inp-start-date')?.value || new Date().toISOString().split('T')[0];
+  const duration = parseInt(document.getElementById('inp-duration')?.value || "30");
+
   localStorage.setItem(ukey("fit_user"), JSON.stringify({
     name,
     weight,
@@ -1315,7 +1338,9 @@ async function finishWizard() {
     fat: Math.round(fat),
     carbs: Math.round(carbs),
     bmi: Number(bmi.toFixed(2)),
-    bmiStatus
+    bmiStatus,
+    startDate,
+    duration
   }));
 
   const token = localStorage.getItem("token");
@@ -1334,7 +1359,9 @@ async function finishWizard() {
           protein: Math.round(protein),
           fat: Math.round(fat),
           carbs: Math.round(carbs),
-          bmi: Number(bmi.toFixed(2))
+          bmi: Number(bmi.toFixed(2)),
+          startDate,
+          duration
         })
       });
     } catch (err) {
@@ -2161,35 +2188,72 @@ function getProgramId() {
   return "PG01"; // maintain หรือ default
 }
 
-async function loadProgramDay(programId, dayNumber) {
+async function loadTodayWorkout() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
   try {
-    const res = await fetch(
-      `${API_BASE}/api/programs/${programId}/days/${dayNumber}`
-    );
-
+    const res = await fetch(`${API_BASE}/api/today-workout`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
     const data = await res.json();
 
-    if (!data.workouts) {
-      console.error("No workouts found");
+    const container = document.getElementById("dashboard-workout-list");
+    const headerEl = document.querySelector(".workout-progress-text");
+
+    // กรณียังไม่ได้ตั้งโปรแกรม
+    if (data.noProgram) {
+      if (container) container.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#9CA3AF;">
+          <i class="fas fa-calendar-plus" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
+          ยังไม่ได้ตั้งค่าโปรแกรม กรุณา setup profile ก่อนครับ
+        </div>`;
       return;
     }
 
-    // 🔹 แสดงหัววัน
-    if (data.dayInfo) {
-      document.getElementById("day-title").innerText =
-        data.dayInfo.day_title;
-
-      document.getElementById("day-description").innerText =
-        data.dayInfo.description;
+    // กรณีโปรแกรมครบแล้ว
+    if (data.programDone) {
+      if (container) container.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#10B981;">
+          <i class="fas fa-trophy" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
+          🎉 ทำโปรแกรม ${data.totalDays} วันครบแล้ว! ยอดเยี่ยมมาก!
+        </div>`;
+      return;
     }
 
-    const mapped = mapProgramWorkoutsToCards(data.workouts);
-    window.todayWorkout = mapped;
-    renderWorkoutCards("dashboard-workout-list", mapped);
+    // อัพเดต header
+    if (headerEl) {
+      const partsLabel = data.isRestDay ? "วันพัก" : (data.bodyParts || []).join(" + ");
+      headerEl.innerHTML = `วันที่ <strong>${data.dayProgress}/${data.totalDays}</strong> • ${partsLabel} • เหลือ <strong>${data.daysLeft} วัน</strong>`;
+    }
 
-  } catch (error) {
-    console.error("Failed to load program day", error);
+    // วันพัก
+    if (data.isRestDay) {
+      if (container) container.innerHTML = `
+        <div style="text-align:center; padding:30px;">
+          <div style="font-size:3rem; margin-bottom:10px;">💤</div>
+          <h3 style="color:#374151; margin:0 0 6px;">วันพักผ่อน</h3>
+          <p style="color:#9CA3AF; font-size:0.9rem;">พักกล้ามเนื้อให้ฟื้นตัว พรุ่งนี้สู้ต่อ!</p>
+        </div>`;
+      return;
+    }
+
+    // แสดงท่าออกกำลังกาย
+    window.todayWorkout = data.exercises.map(ex => ({
+      id: ex.id,
+      nameTh: ex.nameTh,
+      nameEn: ex.nameEn,
+      imageUrl: ex.imageUrl,
+      description: ex.description,
+      repsInfo: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
+      sets: data.sets,
+      reps: data.reps
+    }));
+
+    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+
+  } catch (err) {
+    console.error("Failed to load today workout:", err);
   }
 }
 
@@ -2203,7 +2267,7 @@ function navigateTo(pageId) {
   if (targetPage) targetPage.classList.add('active');
 
   if (pageId === "dashboard") {
-    loadProgramDay(getProgramId(), 1);
+    loadTodayWorkout();
   }
   if (pageId === "profile") {
     loadProfilePage();
@@ -2211,7 +2275,7 @@ function navigateTo(pageId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadProgramDay(getProgramId(), 1);
+  loadTodayWorkout();
   loadTodayMeals();
 });
 
