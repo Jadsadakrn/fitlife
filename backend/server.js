@@ -275,38 +275,93 @@ app.get("/api/log-meal/today", authenticateToken, async (req, res) => {
 });
 
 // ===============================
-// USER PROFILE
+// PROFILE (GET + PUT)
 // ===============================
-app.put("/api/profile", authenticateToken, async (req, res) => {
-  const { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi } = req.body;
-
-  try {
-    const user = await prisma.user.update({
-      where: { id: req.user.userId },
-      data: { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi }
-    });
-    res.json({ success: true, user });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to save profile" });
-  }
-});
-
 app.get("/api/profile", authenticateToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
       select: {
-        id: true, email: true,
-        name: true, age: true, gender: true,
-        weight: true, height: true,
-        goal: true, focus: true, level: true,
+        id: true, email: true, name: true, age: true, gender: true,
+        weight: true, height: true, goal: true, focus: true, level: true,
         tdee: true, protein: true, carbs: true, fat: true, bmi: true
       }
     });
+    if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch profile" });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/profile", authenticateToken, async (req, res) => {
+  const { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi } = req.body;
+  try {
+    const updated = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi },
+      select: {
+        id: true, email: true, name: true, age: true, gender: true,
+        weight: true, height: true, goal: true, focus: true, level: true,
+        tdee: true, protein: true, carbs: true, fat: true, bmi: true
+      }
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===============================
+// CHANGE PASSWORD
+// ===============================
+app.put("/api/change-password", authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword)
+    return res.status(400).json({ error: "กรุณากรอกรหัสผ่านให้ครบ" });
+  if (newPassword.length < 6)
+    return res.status(400).json({ error: "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร" });
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) return res.status(400).json({ error: "รหัสผ่านปัจจุบันไม่ถูกต้อง" });
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: req.user.userId }, data: { password: hashed } });
+    res.json({ message: "เปลี่ยนรหัสผ่านสำเร็จ" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===============================
+// WORKOUT HISTORY
+// ===============================
+app.get("/api/workout-history", authenticateToken, async (req, res) => {
+  try {
+    const logs = await prisma.workoutLog.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { date: "desc" },
+      take: 50
+    });
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===============================
+// MEAL HISTORY
+// ===============================
+app.get("/api/meal-history", authenticateToken, async (req, res) => {
+  try {
+    const logs = await prisma.mealLog.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { date: "desc" },
+      take: 100,
+      include: { food: true }
+    });
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });

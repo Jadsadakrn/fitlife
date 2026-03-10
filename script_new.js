@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* =========================================
    const API_BASE =
   window.location.hostname === "localhost"
@@ -841,6 +842,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadTodayMeals(); // ✅ โหลด meals หลังสุด ไม่ถูก reset
   renderDashboardMeals();
+  initPwStrength();
 
   if (!localStorage.getItem(ukey("fit_user"))) {
     const wizard = document.getElementById("onboarding-modal");
@@ -1575,6 +1577,160 @@ function loadProfilePage() {
   if (goalSel  && user.goal)  goalSel.value  = user.goal;
   if (focusSel && user.focus) focusSel.value = user.focus;
   if (levelSel && user.level) levelSel.value = user.level;
+
+  // โหลด email จาก server
+  loadEmailFromServer();
+}
+
+async function loadEmailFromServer() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/profile`, {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const emailEl = document.getElementById('profile-email-display');
+    if (emailEl && data.email) emailEl.value = data.email;
+  } catch (err) {
+    console.error("Load email error:", err);
+  }
+}
+
+function toggleChangePw() {
+  const panel = document.getElementById('change-pw-panel');
+  const btn   = document.getElementById('btn-pw-toggle');
+  if (!panel || !btn) return;
+  panel.classList.toggle('open');
+  btn.classList.toggle('active');
+  // clear fields เมื่อปิด
+  if (!panel.classList.contains('open')) {
+    ['pw-current','pw-new','pw-confirm'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const fill = document.getElementById('pw-strength-fill');
+    const txt  = document.getElementById('pw-strength-text');
+    if (fill) { fill.style.width = '0'; fill.style.background = ''; }
+    if (txt)  txt.textContent = '';
+  }
+}
+
+function togglePwEye(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  btn.innerHTML = isHidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+}
+
+// password strength checker
+document.addEventListener('DOMContentLoaded', () => {
+  const pwNew = document.getElementById('pw-new');
+  if (pwNew) {
+    pwNew.addEventListener('input', () => {
+      const val = pwNew.value;
+      const fill = document.getElementById('pw-strength-fill');
+      const txt  = document.getElementById('pw-strength-text');
+      if (!fill || !txt) return;
+
+      let strength = 0;
+      if (val.length >= 6)  strength++;
+      if (val.length >= 10) strength++;
+      if (/[A-Z]/.test(val)) strength++;
+      if (/[0-9]/.test(val)) strength++;
+      if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+      const levels = [
+        { w: '20%', color: '#EF4444', label: 'อ่อนมาก' },
+        { w: '40%', color: '#F59E0B', label: 'อ่อน' },
+        { w: '60%', color: '#F59E0B', label: 'ปานกลาง' },
+        { w: '80%', color: '#10B981', label: 'แข็งแรง' },
+        { w: '100%', color: '#059669', label: 'แข็งแรงมาก!' },
+      ];
+      const lv = val.length === 0 ? null : levels[Math.min(strength - 1, 4)];
+      if (lv) {
+        fill.style.width = lv.w;
+        fill.style.background = lv.color;
+        txt.textContent = lv.label;
+        txt.style.color = lv.color;
+      } else {
+        fill.style.width = '0';
+        txt.textContent = '';
+      }
+    });
+  }
+}
+
+function initPwStrength() {
+  const pwNew = document.getElementById('pw-new');
+  if (pwNew) {
+    pwNew.addEventListener('input', () => {
+      const val = pwNew.value;
+      const fill = document.getElementById('pw-strength-fill');
+      const txt  = document.getElementById('pw-strength-text');
+      if (!fill || !txt) return;
+      let strength = 0;
+      if (val.length >= 6)  strength++;
+      if (val.length >= 10) strength++;
+      if (/[A-Z]/.test(val)) strength++;
+      if (/[0-9]/.test(val)) strength++;
+      if (/[^A-Za-z0-9]/.test(val)) strength++;
+      const levels = [
+        { w: '20%', color: '#EF4444', label: 'อ่อนมาก' },
+        { w: '40%', color: '#F59E0B', label: 'อ่อน' },
+        { w: '60%', color: '#F59E0B', label: 'ปานกลาง' },
+        { w: '80%', color: '#10B981', label: 'แข็งแรง' },
+        { w: '100%', color: '#059669', label: 'แข็งแรงมาก!' },
+      ];
+      const lv = val.length === 0 ? null : levels[Math.min(strength - 1, 4)];
+      if (lv) { fill.style.width = lv.w; fill.style.background = lv.color; txt.textContent = lv.label; txt.style.color = lv.color; }
+      else { fill.style.width = '0'; txt.textContent = ''; }
+    });
+  }
+}
+
+async function changePassword() {
+  const current  = document.getElementById('pw-current')?.value?.trim();
+  const newPw    = document.getElementById('pw-new')?.value?.trim();
+  const confirm  = document.getElementById('pw-confirm')?.value?.trim();
+  const btn      = document.querySelector('.btn-save-pw');
+
+  if (!current || !newPw || !confirm) {
+    showToast("⚠️ กรอกรหัสผ่านให้ครบทุกช่อง", "warning"); return;
+  }
+  if (newPw.length < 6) {
+    showToast("⚠️ รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร", "warning"); return;
+  }
+  if (newPw !== confirm) {
+    showToast("⚠️ รหัสผ่านใหม่ไม่ตรงกัน", "warning"); return;
+  }
+
+  if (btn) { btn.textContent = "กำลังเปลี่ยน..."; btn.style.opacity = "0.7"; }
+
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(`${API_BASE}/api/change-password`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ currentPassword: current, newPassword: newPw })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast("❌ " + (data.error || "เปลี่ยนรหัสผ่านไม่สำเร็จ"), "warning");
+      if (btn) { btn.innerHTML = '<i class="fas fa-key"></i> ยืนยันเปลี่ยนรหัสผ่าน'; btn.style.opacity = "1"; }
+      return;
+    }
+
+    showToast("✅ เปลี่ยนรหัสผ่านสำเร็จ!", "success");
+    toggleChangePw(); // ปิด panel + clear fields
+    if (btn) { btn.innerHTML = '<i class="fas fa-key"></i> ยืนยันเปลี่ยนรหัสผ่าน'; btn.style.opacity = "1"; }
+  } catch (err) {
+    showToast("❌ เกิดข้อผิดพลาด", "warning");
+    if (btn) { btn.innerHTML = '<i class="fas fa-key"></i> ยืนยันเปลี่ยนรหัสผ่าน'; btn.style.opacity = "1"; }
+  }
 }
 
 function toggleEditPanel() {

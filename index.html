@@ -839,6 +839,31 @@
   .history-table td { padding: 11px 14px; border-bottom: 1px solid #F9FAFB; color: #374151; }
   .history-table tr:last-child td { border-bottom: none; }
   .history-empty { padding: 28px; text-align: center; color: #9CA3AF; font-size: 0.88rem; }
+  .account-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; }
+  .account-divider::before, .account-divider::after { content: ''; flex: 1; height: 1px; background: #E5E7EB; }
+  .account-divider span { font-size: 0.75rem; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+
+  .pf-input-readonly { background: #F3F4F6 !important; color: #6B7280 !important; cursor: default; }
+
+  .btn-change-pw-toggle { width: 100%; padding: 10px 14px; background: #F3F4F6; color: #374151; border: 1.5px solid #E5E7EB; border-radius: 12px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: 'Kanit', sans-serif; display: flex; align-items: center; gap: 8px; transition: all 0.2s; margin-bottom: 0; }
+  .btn-change-pw-toggle:hover { background: #E5E7EB; }
+  .btn-change-pw-toggle.active { background: #FFF3F3; border-color: #FF6B6B; color: #FF6B6B; }
+
+  .change-pw-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .change-pw-panel.open { max-height: 500px; }
+
+  .pw-input-wrap { position: relative; }
+  .pw-input-wrap .pf-input { padding-right: 42px; }
+  .pw-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9CA3AF; cursor: pointer; font-size: 0.85rem; padding: 4px; }
+  .pw-eye:hover { color: #374151; }
+
+  .pw-strength-bar { height: 4px; background: #E5E7EB; border-radius: 4px; margin: 10px 0 4px; overflow: hidden; }
+  .pw-strength-bar div { height: 100%; width: 0; border-radius: 4px; transition: width 0.3s, background 0.3s; }
+  .pw-strength-text { font-size: 0.74rem; color: #9CA3AF; margin: 0 0 12px; min-height: 16px; }
+
+  .btn-save-pw { width: 100%; padding: 11px; background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: white; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: 'Kanit', sans-serif; margin-bottom: 10px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(59,130,246,0.25); }
+  .btn-save-pw:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(59,130,246,0.35); }
+
   </style>
   <link rel="stylesheet" href="modern.css">
 </head>
@@ -1276,6 +1301,55 @@
             <button class="btn-save-new" onclick="saveProfile()">
               <i class="fas fa-save"></i> บันทึกข้อมูล
             </button>
+
+            <!-- ACCOUNT SECTION -->
+            <div class="account-divider">
+              <span>ข้อมูลบัญชี</span>
+            </div>
+
+            <div class="pf-grid">
+              <div class="pf-field full">
+                <label>อีเมล</label>
+                <input type="email" id="profile-email-display" class="pf-input pf-input-readonly" readonly placeholder="กำลังโหลด...">
+              </div>
+            </div>
+
+            <!-- Change Password Toggle -->
+            <button class="btn-change-pw-toggle" onclick="toggleChangePw()" id="btn-pw-toggle">
+              <i class="fas fa-lock"></i> เปลี่ยนรหัสผ่าน
+            </button>
+
+            <div class="change-pw-panel" id="change-pw-panel">
+              <div class="pf-grid">
+                <div class="pf-field full">
+                  <label>รหัสผ่านปัจจุบัน</label>
+                  <div class="pw-input-wrap">
+                    <input type="password" id="pw-current" placeholder="••••••••" class="pf-input">
+                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-current', this)"><i class="fas fa-eye"></i></button>
+                  </div>
+                </div>
+                <div class="pf-field">
+                  <label>รหัสผ่านใหม่</label>
+                  <div class="pw-input-wrap">
+                    <input type="password" id="pw-new" placeholder="อย่างน้อย 6 ตัว" class="pf-input">
+                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-new', this)"><i class="fas fa-eye"></i></button>
+                  </div>
+                </div>
+                <div class="pf-field">
+                  <label>ยืนยันรหัสผ่านใหม่</label>
+                  <div class="pw-input-wrap">
+                    <input type="password" id="pw-confirm" placeholder="ยืนยันอีกครั้ง" class="pf-input">
+                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-confirm', this)"><i class="fas fa-eye"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="pw-strength-bar" id="pw-strength-bar"><div id="pw-strength-fill"></div></div>
+              <p class="pw-strength-text" id="pw-strength-text"></p>
+              <button class="btn-save-pw" onclick="changePassword()">
+                <i class="fas fa-key"></i> ยืนยันเปลี่ยนรหัสผ่าน
+              </button>
+            </div>
+
             <button class="btn-logout-new" onclick="logout()">
               <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
             </button>
