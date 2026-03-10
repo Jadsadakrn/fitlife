@@ -1489,29 +1489,112 @@ function updateWaterUI() {
 /* =========================================
    14. PROFILE & LOGOUT
    ========================================= */
-function saveProfile() {
-  const goal = document.getElementById('goalSelect')?.value;
-  const activity = document.getElementById('activitySelect')?.value;
+async function saveProfile() {
+  const name   = document.getElementById('profile-inp-name')?.value?.trim();
+  const weight = parseFloat(document.getElementById('profile-inp-weight')?.value);
+  const height = parseFloat(document.getElementById('profile-inp-height')?.value);
+  const goal   = document.getElementById('goalSelect')?.value;
+  const focus  = document.getElementById('focusSelect')?.value;
+  const level  = document.getElementById('levelSelect')?.value;
 
-  const btn = document.querySelector('.btn-save-profile');
-  if (!btn) return;
+  const btn = document.querySelector('.btn-save-new');
+  if (btn) { btn.textContent = "กำลังบันทึก..."; btn.style.opacity = "0.7"; }
 
-  const originalText = btn.innerText;
-  btn.innerText = "กำลังบันทึก...";
-  btn.style.opacity = "0.7";
+  // คำนวณ BMI, TDEE
+  let bmi = null, tdee = null, protein = null, fat = null, carbs = null;
+  if (weight && height) {
+    bmi = parseFloat((weight / ((height / 100) ** 2)).toFixed(1));
+    const bmr = 10 * weight + 6.25 * height - 5 * 25 + 5;
+    tdee = Math.round(bmr * 1.55);
+    protein = Math.round(weight * 2);
+    fat = Math.round((tdee * 0.25) / 9);
+    carbs = Math.round((tdee - protein * 4 - fat * 9) / 4);
+  }
 
-  setTimeout(() => {
-    btn.innerText = "บันทึกเรียบร้อย! ✅";
-    btn.style.background = "#059669";
-    btn.style.opacity = "1";
+  const userData = { name, weight, height, goal, focus, level, bmi, tdee, protein, fat, carbs };
 
-    setTimeout(() => {
-      btn.innerText = originalText;
-      btn.style.background = "linear-gradient(to right, #10B981, #059669)";
-    }, 2000);
+  // อัปเดต localStorage
+  const existing = JSON.parse(localStorage.getItem(ukey("fit_user"))) || {};
+  localStorage.setItem(ukey("fit_user"), JSON.stringify({ ...existing, ...userData }));
 
-    console.log("Saved Goal:", goal, "Activity:", activity);
-  }, 800);
+  // ส่งขึ้น server
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      await fetch(`${API_BASE}/api/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify(userData)
+      });
+    } catch (err) { console.error("Save profile error:", err); }
+  }
+
+  if (btn) { btn.textContent = "บันทึกเรียบร้อย! ✅"; btn.style.opacity = "1"; setTimeout(() => { btn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล'; }, 2000); }
+
+  loadProfilePage();
+  loadUserData();
+}
+
+function loadProfilePage() {
+  const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  if (!user) return;
+
+  const nameEl = document.getElementById('profile-name-display');
+  if (nameEl) nameEl.textContent = user.name || 'Guest User';
+
+  const goalMap  = { 'lose-fat': '🔥 ลดไขมัน', 'build-muscle': '💪 สร้างกล้าม', 'maintain': '🧘 รักษารูปร่าง' };
+  const focusMap = { 'chest-arms': '💪 อก & แขน', 'legs-core': '🦵 ขา & แกน', 'full-body': '🏃 ทั่วร่าง' };
+  const levelMap = { 'easy': '⭐ Beginner', 'medium': '⭐⭐ Intermediate', 'hard': '⭐⭐⭐ Advanced' };
+
+  const tagGoal  = document.getElementById('profile-tag-goal');
+  const tagFocus = document.getElementById('profile-tag-focus');
+  const tagLevel = document.getElementById('profile-tag-level');
+  if (tagGoal)  tagGoal.textContent  = goalMap[user.goal]   || '🎯 ยังไม่ระบุ';
+  if (tagFocus) tagFocus.textContent = focusMap[user.focus]  || '💪 ยังไม่ระบุ';
+  if (tagLevel) tagLevel.textContent = levelMap[user.level]  || '⭐ Beginner';
+
+  const wEl = document.getElementById('profile-weight-display');
+  const hEl = document.getElementById('profile-height-display');
+  const bEl = document.getElementById('profile-bmi-display');
+  const tEl = document.getElementById('profile-tdee-display');
+  if (wEl) wEl.textContent = user.weight || '--';
+  if (hEl) hEl.textContent = user.height || '--';
+  if (bEl) bEl.textContent = user.bmi    ? user.bmi.toFixed(1) : '--';
+  if (tEl) tEl.textContent = user.tdee   || '--';
+
+  const nameInp   = document.getElementById('profile-inp-name');
+  const weightInp = document.getElementById('profile-inp-weight');
+  const heightInp = document.getElementById('profile-inp-height');
+  if (nameInp)   nameInp.value   = user.name   || '';
+  if (weightInp) weightInp.value = user.weight || '';
+  if (heightInp) heightInp.value = user.height || '';
+
+  const goalSel  = document.getElementById('goalSelect');
+  const focusSel = document.getElementById('focusSelect');
+  const levelSel = document.getElementById('levelSelect');
+  if (goalSel  && user.goal)  goalSel.value  = user.goal;
+  if (focusSel && user.focus) focusSel.value = user.focus;
+  if (levelSel && user.level) levelSel.value = user.level;
+}
+
+function toggleEditPanel() {
+  const panel = document.getElementById('edit-panel');
+  const btn   = document.querySelector('.profile-edit-btn');
+  if (!panel) return;
+  panel.classList.toggle('open');
+  if (btn) btn.innerHTML = panel.classList.contains('open')
+    ? '<i class="fas fa-times"></i> ปิด'
+    : '<i class="fas fa-pen"></i> แก้ไขข้อมูล';
+}
+
+function toggleHistory(type) {
+  const card = document.getElementById(type + '-history-card');
+  if (!card) return;
+  card.classList.toggle('open');
+  if (card.classList.contains('open')) {
+    if (type === 'workout') loadWorkoutHistory();
+    if (type === 'meal')    loadMealHistory();
+  }
 }
 
 function logout() {
@@ -1999,9 +2082,11 @@ function navigateTo(pageId) {
   const targetPage = document.getElementById(pageId);
   if (targetPage) targetPage.classList.add('active');
 
-  // 👇 เพิ่มตรงนี้
   if (pageId === "dashboard") {
     loadProgramDay(getProgramId(), 1);
+  }
+  if (pageId === "profile") {
+    loadProfilePage();
   }
 }
 
