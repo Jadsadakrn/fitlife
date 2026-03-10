@@ -1625,43 +1625,7 @@ function togglePwEye(inputId, btn) {
   btn.innerHTML = isHidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
 }
 
-// password strength checker
-document.addEventListener('DOMContentLoaded', () => {
-  const pwNew = document.getElementById('pw-new');
-  if (pwNew) {
-    pwNew.addEventListener('input', () => {
-      const val = pwNew.value;
-      const fill = document.getElementById('pw-strength-fill');
-      const txt  = document.getElementById('pw-strength-text');
-      if (!fill || !txt) return;
-
-      let strength = 0;
-      if (val.length >= 6)  strength++;
-      if (val.length >= 10) strength++;
-      if (/[A-Z]/.test(val)) strength++;
-      if (/[0-9]/.test(val)) strength++;
-      if (/[^A-Za-z0-9]/.test(val)) strength++;
-
-      const levels = [
-        { w: '20%', color: '#EF4444', label: 'อ่อนมาก' },
-        { w: '40%', color: '#F59E0B', label: 'อ่อน' },
-        { w: '60%', color: '#F59E0B', label: 'ปานกลาง' },
-        { w: '80%', color: '#10B981', label: 'แข็งแรง' },
-        { w: '100%', color: '#059669', label: 'แข็งแรงมาก!' },
-      ];
-      const lv = val.length === 0 ? null : levels[Math.min(strength - 1, 4)];
-      if (lv) {
-        fill.style.width = lv.w;
-        fill.style.background = lv.color;
-        txt.textContent = lv.label;
-        txt.style.color = lv.color;
-      } else {
-        fill.style.width = '0';
-        txt.textContent = '';
-      }
-    });
-  }
-}
+// password strength checker — handled by initPwStrength() called in DOMContentLoaded
 
 function initPwStrength() {
   const pwNew = document.getElementById('pw-new');

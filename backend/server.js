@@ -284,7 +284,8 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
       select: {
         id: true, email: true, name: true, age: true, gender: true,
         weight: true, height: true, goal: true, focus: true, level: true,
-        tdee: true, protein: true, carbs: true, fat: true, bmi: true
+        tdee: true, protein: true, carbs: true, fat: true, bmi: true,
+        startDate: true, duration: true
       }
     });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -295,15 +296,21 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
 });
 
 app.put("/api/profile", authenticateToken, async (req, res) => {
-  const { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi } = req.body;
+  const { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi, startDate, duration } = req.body;
   try {
     const updated = await prisma.user.update({
       where: { id: req.user.userId },
-      data: { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi },
+      data: {
+        name, age, gender, weight, height, goal, focus, level,
+        tdee, protein, carbs, fat, bmi,
+        startDate: startDate ? new Date(startDate) : undefined,
+        duration: duration ? parseInt(duration) : undefined
+      },
       select: {
         id: true, email: true, name: true, age: true, gender: true,
         weight: true, height: true, goal: true, focus: true, level: true,
-        tdee: true, protein: true, carbs: true, fat: true, bmi: true
+        tdee: true, protein: true, carbs: true, fat: true, bmi: true,
+        startDate: true, duration: true
       }
     });
     res.json(updated);
@@ -344,6 +351,194 @@ app.get("/api/workout-history", authenticateToken, async (req, res) => {
       take: 50
     });
     res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===============================
+// TODAY WORKOUT
+// ===============================
+// Day plan mapping: goal -> focus -> dayNumber -> bodyParts[]
+const DAY_PLAN = {
+  "build-muscle": {
+    "chest-arms": {
+      1: ["Chest", "Arms"],
+      2: ["Back", "Abs"],
+      3: ["Legs"],
+      4: "rest",
+      5: ["Shoulder", "Arms"],
+      6: ["Chest", "Back"],
+      7: "rest"
+    },
+    "legs-core": {
+      1: ["Legs"],
+      2: ["Abs", "Back"],
+      3: ["Chest", "Shoulder"],
+      4: "rest",
+      5: ["Legs"],
+      6: ["Abs", "Full Body"],
+      7: "rest"
+    },
+    "full-body": {
+      1: ["Chest", "Back"],
+      2: ["Legs", "Abs"],
+      3: ["Shoulder", "Arms"],
+      4: "rest",
+      5: ["Full Body"],
+      6: ["Chest", "Legs"],
+      7: "rest"
+    }
+  },
+  "lose-fat": {
+    "chest-arms": {
+      1: ["Cardio", "Chest"],
+      2: ["Arms", "Abs"],
+      3: ["Full Body"],
+      4: "rest",
+      5: ["Cardio", "Back"],
+      6: ["Chest", "Arms"],
+      7: "rest"
+    },
+    "legs-core": {
+      1: ["Cardio", "Legs"],
+      2: ["Abs", "Back"],
+      3: ["Full Body"],
+      4: "rest",
+      5: ["Cardio", "Legs"],
+      6: ["Abs", "Full Body"],
+      7: "rest"
+    },
+    "full-body": {
+      1: ["Cardio", "Full Body"],
+      2: ["Abs", "Back"],
+      3: ["Full Body"],
+      4: "rest",
+      5: ["Cardio"],
+      6: ["Full Body"],
+      7: "rest"
+    }
+  },
+  "maintain": {
+    "chest-arms": {
+      1: ["Full Body"],
+      2: ["Chest", "Arms"],
+      3: ["Legs", "Abs"],
+      4: "rest",
+      5: ["Full Body"],
+      6: ["Cardio", "Abs"],
+      7: "rest"
+    },
+    "legs-core": {
+      1: ["Full Body"],
+      2: ["Legs", "Abs"],
+      3: ["Back", "Shoulder"],
+      4: "rest",
+      5: ["Full Body"],
+      6: ["Cardio", "Abs"],
+      7: "rest"
+    },
+    "full-body": {
+      1: ["Full Body"],
+      2: ["Cardio", "Abs"],
+      3: ["Full Body"],
+      4: "rest",
+      5: ["Full Body"],
+      6: ["Cardio"],
+      7: "rest"
+    }
+  }
+};
+
+const REPS_BY_LEVEL = {
+  easy:   { sets: 3, reps: 10 },
+  medium: { sets: 3, reps: 12 },
+  hard:   { sets: 4, reps: 12 }
+};
+
+const COUNT_BY_LEVEL = { easy: 4, medium: 5, hard: 7 };
+
+app.get("/api/today-workout", authenticateToken, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { goal: true, focus: true, level: true, startDate: true, duration: true }
+    });
+
+    if (!user || !user.startDate) {
+      return res.json({ isRestDay: false, dayNumber: 1, exercises: [], noProgram: true });
+    }
+
+    // คำนวณ Day ปัจจุบัน
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(user.startDate);
+    start.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    const totalDays = user.duration || 30;
+
+    // เกินระยะเวลาโปรแกรมแล้ว
+    if (diffDays >= totalDays) {
+      return res.json({ isRestDay: false, dayNumber: null, exercises: [], programDone: true, totalDays });
+    }
+
+    const dayInCycle = (diffDays % 7) + 1; // 1-7
+
+    const goal = user.goal || "maintain";
+    const focus = user.focus || "full-body";
+    const level = user.level || "easy";
+
+    const planForGoal = DAY_PLAN[goal] || DAY_PLAN["maintain"];
+    const planForFocus = planForGoal[focus] || planForGoal["full-body"];
+    const todayPlan = planForFocus[dayInCycle];
+
+    if (todayPlan === "rest") {
+      return res.json({ isRestDay: true, dayNumber: dayInCycle, daysLeft: totalDays - diffDays });
+    }
+
+    // ดึงท่าออกกำลังกาย
+    const count = COUNT_BY_LEVEL[level] || 5;
+    const reps = REPS_BY_LEVEL[level] || REPS_BY_LEVEL.medium;
+    const bodyParts = todayPlan;
+
+    // แบ่งจำนวนท่าตาม bodyPart
+    const perPart = Math.ceil(count / bodyParts.length);
+    let exercises = [];
+
+    for (const part of bodyParts) {
+      const found = await prisma.exercise.findMany({
+        where: { bodyPart: part, level: { equals: level, mode: "insensitive" } },
+        take: perPart
+      });
+      exercises = exercises.concat(found);
+    }
+
+    // ตัดให้พอดีจำนวน
+    exercises = exercises.slice(0, count);
+
+    // ถ้าได้ไม่พอ เติมจาก bodyPart แรกโดยไม่ filter level
+    if (exercises.length < count) {
+      const extra = await prisma.exercise.findMany({
+        where: { bodyPart: { in: bodyParts } },
+        take: count - exercises.length
+      });
+      const existingIds = exercises.map(e => e.id);
+      const filtered = extra.filter(e => !existingIds.includes(e.id));
+      exercises = exercises.concat(filtered).slice(0, count);
+    }
+
+    res.json({
+      isRestDay: false,
+      dayNumber: dayInCycle,
+      daysLeft: totalDays - diffDays,
+      dayProgress: diffDays + 1,
+      totalDays,
+      bodyParts,
+      sets: reps.sets,
+      reps: reps.reps,
+      exercises
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

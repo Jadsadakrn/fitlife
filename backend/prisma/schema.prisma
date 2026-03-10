@@ -12,7 +12,6 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
-
   name      String?
   age       Int?
   gender    String?
@@ -26,10 +25,13 @@ model User {
   carbs     Int?
   fat       Int?
   bmi       Float?
+  startDate DateTime?
+  duration  Int?
 
   activities  Activity[]
   mealLogs    MealLog[]
   workoutLogs WorkoutLog[]
+
 }
 
 model Exercise {
@@ -65,7 +67,7 @@ model Program {
   name  String
 
   days      ProgramDay[]
-  workouts  ProgramWorkout[]   // 👈 เพิ่มบรรทัดนี้
+  workouts  ProgramWorkout[]  
 }
 
 
@@ -134,7 +136,7 @@ model WorkoutLog {
 
 model MealLog {
   id        String   @id @default(uuid())
-  userId    String 
+  userId    String
   foodId    String
   mealType  String   // breakfast | lunch | dinner
   date      DateTime
