@@ -512,34 +512,31 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     const perPart = Math.ceil(count / bodyParts.length);
     let exercises = [];
 
+    // cascade level: ดึงตาม level ก่อน ถ้าไม่พอดึง level ต่ำกว่าเติม
+    const levelCascade = level === "hard"   ? ["Hard", "Medium", "Easy"]
+                       : level === "medium" ? ["Medium", "Easy"]
+                       : ["Easy"];
+
     for (const part of bodyParts) {
-      const found = await prisma.exercise.findMany({
-        where: {
-          bodyPart: part,
-          level: { equals: level, mode: "insensitive" },
-          equipment: { in: equipmentList }
-        },
-        take: perPart
-      });
-      exercises = exercises.concat(found);
+      let partExercises = [];
+      for (const lvl of levelCascade) {
+        if (partExercises.length >= perPart) break;
+        const found = await prisma.exercise.findMany({
+          where: {
+            bodyPart: part,
+            level: { equals: lvl, mode: "insensitive" },
+            equipment: { in: equipmentList },
+            id: { notIn: [...exercises.map(e => e.id), ...partExercises.map(e => e.id)] }
+          },
+          take: perPart - partExercises.length
+        });
+        partExercises = partExercises.concat(found);
+      }
+      exercises = exercises.concat(partExercises);
     }
 
     // ตัดให้พอดีจำนวน
     exercises = exercises.slice(0, count);
-
-    // ถ้าได้ไม่พอ เติมโดยไม่ filter level แต่ยัง filter equipment
-    if (exercises.length < count) {
-      const extra = await prisma.exercise.findMany({
-        where: {
-          bodyPart: { in: bodyParts },
-          equipment: { in: equipmentList }
-        },
-        take: count - exercises.length
-      });
-      const existingIds = exercises.map(e => e.id);
-      const filtered = extra.filter(e => !existingIds.includes(e.id));
-      exercises = exercises.concat(filtered).slice(0, count);
-    }
 
     res.json({
       isRestDay: false,

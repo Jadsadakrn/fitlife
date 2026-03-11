@@ -1528,6 +1528,7 @@ async function saveProfile() {
   const goal   = document.getElementById('goalSelect')?.value;
   const focus  = document.getElementById('focusSelect')?.value;
   const level  = document.getElementById('levelSelect')?.value;
+  const equipment = document.getElementById('equipSelect')?.value || 'gym';
 
   const btn = document.querySelector('.btn-save-new');
   if (btn) { btn.textContent = "กำลังบันทึก..."; btn.style.opacity = "0.7"; }
@@ -1543,7 +1544,7 @@ async function saveProfile() {
     carbs = Math.round((tdee - protein * 4 - fat * 9) / 4);
   }
 
-  const userData = { name, weight, height, goal, focus, level, bmi, tdee, protein, fat, carbs };
+  const userData = { name, weight, height, goal, focus, level, equipment, bmi, tdee, protein, fat, carbs };
 
   // อัปเดต localStorage
   const existing = JSON.parse(localStorage.getItem(ukey("fit_user"))) || {};
@@ -1604,9 +1605,11 @@ function loadProfilePage() {
   const goalSel  = document.getElementById('goalSelect');
   const focusSel = document.getElementById('focusSelect');
   const levelSel = document.getElementById('levelSelect');
-  if (goalSel  && user.goal)  goalSel.value  = user.goal;
-  if (focusSel && user.focus) focusSel.value = user.focus;
-  if (levelSel && user.level) levelSel.value = user.level;
+  const equipSel = document.getElementById('equipSelect');
+  if (goalSel  && user.goal)      goalSel.value  = user.goal;
+  if (focusSel && user.focus)     focusSel.value = user.focus;
+  if (levelSel && user.level)     levelSel.value = user.level;
+  if (equipSel && user.equipment) equipSel.value = user.equipment;
 
   // โหลด email จาก server
   loadEmailFromServer();
