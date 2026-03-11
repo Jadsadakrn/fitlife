@@ -2239,15 +2239,23 @@ async function loadTodayWorkout() {
     }
 
     // แสดงท่าออกกำลังกาย
+    if (!data.exercises || data.exercises.length === 0) {
+      if (container) container.innerHTML = `<div style="text-align:center; padding:20px; color:#9CA3AF;">ไม่พบท่าออกกำลังกายสำหรับวันนี้</div>`;
+      return;
+    }
+
     window.todayWorkout = data.exercises.map(ex => ({
       id: ex.id,
-      nameTh: ex.nameTh,
+      title: ex.nameTh,
       nameEn: ex.nameEn,
-      imageUrl: ex.imageUrl,
+      img: ex.imageUrl?.replace('[URL]', '').replace('[URL] ', '').trim() || '',
+      sub: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
       description: ex.description,
       repsInfo: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
       sets: data.sets,
-      reps: data.reps
+      reps: data.reps,
+      bodyPart: ex.bodyPart,
+      level: ex.level
     }));
 
     renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
