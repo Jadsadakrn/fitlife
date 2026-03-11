@@ -27,6 +27,7 @@ model User {
   bmi       Float?
   startDate DateTime?
   duration  Int?
+  equipment String?   // gym | bodyweight
 
   activities  Activity[]
   mealLogs    MealLog[]
@@ -67,7 +68,7 @@ model Program {
   name  String
 
   days      ProgramDay[]
-  workouts  ProgramWorkout[]  
+  workouts  ProgramWorkout[]   // 👈 เพิ่มบรรทัดนี้
 }
 
 

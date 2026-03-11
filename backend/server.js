@@ -285,7 +285,7 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
         id: true, email: true, name: true, age: true, gender: true,
         weight: true, height: true, goal: true, focus: true, level: true,
         tdee: true, protein: true, carbs: true, fat: true, bmi: true,
-        startDate: true, duration: true
+        startDate: true, duration: true, equipment: true
       }
     });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -296,7 +296,7 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
 });
 
 app.put("/api/profile", authenticateToken, async (req, res) => {
-  const { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi, startDate, duration } = req.body;
+  const { name, age, gender, weight, height, goal, focus, level, tdee, protein, carbs, fat, bmi, startDate, duration, equipment } = req.body;
   try {
     const updated = await prisma.user.update({
       where: { id: req.user.userId },
@@ -304,13 +304,14 @@ app.put("/api/profile", authenticateToken, async (req, res) => {
         name, age, gender, weight, height, goal, focus, level,
         tdee, protein, carbs, fat, bmi,
         startDate: startDate ? new Date(startDate) : undefined,
-        duration: duration ? parseInt(duration) : undefined
+        duration: duration ? parseInt(duration) : undefined,
+        equipment: equipment || undefined
       },
       select: {
         id: true, email: true, name: true, age: true, gender: true,
         weight: true, height: true, goal: true, focus: true, level: true,
         tdee: true, protein: true, carbs: true, fat: true, bmi: true,
-        startDate: true, duration: true
+        startDate: true, duration: true, equipment: true
       }
     });
     res.json(updated);
@@ -462,7 +463,7 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { goal: true, focus: true, level: true, startDate: true, duration: true }
+      select: { goal: true, focus: true, level: true, startDate: true, duration: true, equipment: true }
     });
 
     if (!user || !user.startDate) {
@@ -500,6 +501,12 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     const count = COUNT_BY_LEVEL[level] || 5;
     const reps = REPS_BY_LEVEL[level] || REPS_BY_LEVEL.medium;
     const bodyParts = todayPlan;
+    const userEquipment = user.equipment || "gym";
+
+    // equipment filter: gym = Gym + Bodyweight, bodyweight = Bodyweight + No Equipment
+    const equipmentList = userEquipment === "gym"
+      ? ["Gym", "Bodyweight", "No Equipment"]
+      : ["Bodyweight", "No Equipment"];
 
     // แบ่งจำนวนท่าตาม bodyPart
     const perPart = Math.ceil(count / bodyParts.length);
@@ -507,7 +514,11 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
 
     for (const part of bodyParts) {
       const found = await prisma.exercise.findMany({
-        where: { bodyPart: part, level: { equals: level, mode: "insensitive" } },
+        where: {
+          bodyPart: part,
+          level: { equals: level, mode: "insensitive" },
+          equipment: { in: equipmentList }
+        },
         take: perPart
       });
       exercises = exercises.concat(found);
@@ -516,10 +527,13 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     // ตัดให้พอดีจำนวน
     exercises = exercises.slice(0, count);
 
-    // ถ้าได้ไม่พอ เติมจาก bodyPart แรกโดยไม่ filter level
+    // ถ้าได้ไม่พอ เติมโดยไม่ filter level แต่ยัง filter equipment
     if (exercises.length < count) {
       const extra = await prisma.exercise.findMany({
-        where: { bodyPart: { in: bodyParts } },
+        where: {
+          bodyPart: { in: bodyParts },
+          equipment: { in: equipmentList }
+        },
         take: count - exercises.length
       });
       const existingIds = exercises.map(e => e.id);

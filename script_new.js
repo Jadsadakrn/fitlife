@@ -1267,6 +1267,7 @@ async function finishWizard() {
 
   const goal = document.getElementById('selected-goal')?.value || 'maintain';
   const focus = document.getElementById('selected-focus')?.value || 'full-body';
+  const equipment = document.getElementById('selected-equipment')?.value || 'gym';
 
   const datesStr = document.getElementById('selected-dates')?.value || "";
   const workoutDates = datesStr.split(',').map(s => s.trim()).filter(Boolean);
@@ -1340,7 +1341,8 @@ async function finishWizard() {
     bmi: Number(bmi.toFixed(2)),
     bmiStatus,
     startDate,
-    duration
+    duration,
+    equipment
   }));
 
   const token = localStorage.getItem("token");
@@ -1361,7 +1363,8 @@ async function finishWizard() {
           carbs: Math.round(carbs),
           bmi: Number(bmi.toFixed(2)),
           startDate,
-          duration
+          duration,
+          equipment
         })
       });
     } catch (err) {
