@@ -1467,6 +1467,17 @@
             <div class="select-card" onclick="selectOption(this, 'focus', 'full-body')">ทั่วร่าง</div>
           </div>
 
+          <label class="wizard-label mt-20">อุปกรณ์ที่มี?</label>
+          <div class="selection-grid">
+            <div class="select-card" onclick="selectOption(this, 'equipment', 'gym')">
+              <i class="fas fa-dumbbell"></i><br>🏋️ Gym<br><small style="color:#9CA3AF;">มีอุปกรณ์</small>
+            </div>
+            <div class="select-card" onclick="selectOption(this, 'equipment', 'bodyweight')">
+              <i class="fas fa-running"></i><br>💪 Bodyweight<br><small style="color:#9CA3AF;">ไม่มีอุปกรณ์</small>
+            </div>
+          </div>
+          <input type="hidden" id="selected-equipment" value="gym">
+
           <label class="wizard-label mt-20">กำหนดวันออกกำลังกาย (แบบรายเดือน)</label>
 
           <div class="month-row">
