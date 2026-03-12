@@ -503,35 +503,58 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     const bodyParts = todayPlan;
     const userEquipment = user.equipment || "gym";
 
-    // equipment filter: gym = Gym + Bodyweight, bodyweight = Bodyweight + No Equipment
-    const equipmentList = userEquipment === "gym"
-      ? ["Gym", "Bodyweight", "No Equipment"]
-      : ["Bodyweight", "No Equipment"];
+    // equipment priority:
+    // gym user   -> ดึง Gym ก่อน (cascade level) -> ไม่พอค่อยเติม Bodyweight
+    // bodyweight -> ดึง Bodyweight + No Equipment (cascade level)
+    const primaryEquip  = userEquipment === "gym" ? ["Gym"] : ["Bodyweight", "No Equipment"];
+    const fallbackEquip = userEquipment === "gym" ? ["Bodyweight", "No Equipment"] : [];
 
     // แบ่งจำนวนท่าตาม bodyPart
     const perPart = Math.ceil(count / bodyParts.length);
     let exercises = [];
 
-    // cascade level: ดึงตาม level ก่อน ถ้าไม่พอดึง level ต่ำกว่าเติม
+    // cascade level: ดึง level สูงก่อน ถ้าไม่พอลงมาเรื่อยๆ
+    // cascade level: ดึงระดับที่เลือกก่อน ถ้าไม่พอไล่ขึ้น/ลงเติม
     const levelCascade = level === "hard"   ? ["Hard", "Medium", "Easy"]
-                       : level === "medium" ? ["Medium", "Easy"]
-                       : ["Easy"];
+                       : level === "medium" ? ["Medium", "Easy", "Hard"]
+                       : ["Easy", "Medium", "Hard"];  // easy ก็ cascade ขึ้น medium/hard ถ้าไม่พอ
 
     for (const part of bodyParts) {
       let partExercises = [];
+      const usedIds = () => [...exercises.map(e => e.id), ...partExercises.map(e => e.id)];
+
+      // รอบ 1: ดึง primary equipment ก่อน (Gym หรือ Bodyweight) + cascade level
       for (const lvl of levelCascade) {
         if (partExercises.length >= perPart) break;
         const found = await prisma.exercise.findMany({
           where: {
             bodyPart: part,
             level: { equals: lvl, mode: "insensitive" },
-            equipment: { in: equipmentList },
-            id: { notIn: [...exercises.map(e => e.id), ...partExercises.map(e => e.id)] }
+            equipment: { in: primaryEquip },
+            id: { notIn: usedIds() }
           },
           take: perPart - partExercises.length
         });
         partExercises = partExercises.concat(found);
       }
+
+      // รอบ 2: ยังไม่พอ -> เติม fallback equipment (Bodyweight) + cascade level
+      if (fallbackEquip.length > 0 && partExercises.length < perPart) {
+        for (const lvl of levelCascade) {
+          if (partExercises.length >= perPart) break;
+          const found = await prisma.exercise.findMany({
+            where: {
+              bodyPart: part,
+              level: { equals: lvl, mode: "insensitive" },
+              equipment: { in: fallbackEquip },
+              id: { notIn: usedIds() }
+            },
+            take: perPart - partExercises.length
+          });
+          partExercises = partExercises.concat(found);
+        }
+      }
+
       exercises = exercises.concat(partExercises);
     }
 

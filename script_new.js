@@ -2256,8 +2256,8 @@ async function loadTodayWorkout() {
       nameEn: ex.nameEn,
       img: ex.imageUrl?.replace('[URL]', '').replace('[URL] ', '').trim() || '',
       sub: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
-      description: ex.description,
-      repsInfo: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
+      instruction: ex.description,           // ← fix: openWorkoutModal ต้องการ instruction
+      repsGuide: `${data.reps} ครั้ง`,       // ← fix: openWorkoutModal ต้องการ repsGuide
       sets: data.sets,
       reps: data.reps,
       bodyPart: ex.bodyPart,
