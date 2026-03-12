@@ -1278,7 +1278,7 @@
                 <select id="goalSelect" class="pf-select">
                   <option value="lose-fat">🔥 ลดไขมัน</option>
                   <option value="build-muscle">💪 สร้างกล้าม</option>
-                  <option value="maintain">🧘 รักษารูปร่าง</option>
+
                 </select>
               </div>
               <div class="pf-field">
@@ -1459,19 +1459,23 @@
         <div class="wizard-step" id="step-2">
           <label class="wizard-label">เป้าหมายของคุณคือ?</label>
           <div class="selection-grid">
-            <div class="select-card" onclick="selectOption(this, 'goal', 'lose-fat')"><i class="fas fa-fire"></i>
+            <div class="select-card" onclick="selectOption(this, 'goal', 'lose-fat'); onGoalChange('lose-fat')"><i class="fas fa-fire"></i>
               ลดไขมัน</div>
-            <div class="select-card" onclick="selectOption(this, 'goal', 'build-muscle')"><i
+            <div class="select-card" onclick="selectOption(this, 'goal', 'build-muscle'); onGoalChange('build-muscle')"><i
                 class="fas fa-dumbbell"></i> เพิ่มกล้ามเนื้อ</div>
-            <div class="select-card" onclick="selectOption(this, 'goal', 'maintain')"><i
-                class="fas fa-balance-scale"></i> รักษารูปร่าง</div>
+
           </div>
 
-          <label class="wizard-label mt-20">ส่วนที่อยากเน้น?</label>มื้ออาหาร
-          <div class="selection-grid">
-            <div class="select-card" onclick="selectOption(this, 'focus', 'chest-arms')">อก & แขน</div>
-            <div class="select-card" onclick="selectOption(this, 'focus', 'legs-core')">ขา & แกนกลาง</div>
-            <div class="select-card" onclick="selectOption(this, 'focus', 'full-body')">ทั่วร่าง</div>
+          <div id="focus-section">
+            <label class="wizard-label mt-20">ส่วนที่อยากเน้น?</label>
+            <div class="selection-grid" id="focus-grid">
+              <div class="select-card" id="focus-chest-arms" onclick="selectOption(this, 'focus', 'chest-arms')">💪 อก & แขน</div>
+              <div class="select-card" id="focus-legs-core" onclick="selectOption(this, 'focus', 'legs-core')">🦵 ขา & แกนกลาง</div>
+              <div class="select-card" id="focus-full-body" onclick="selectOption(this, 'focus', 'full-body')">🏃 ทั่วร่าง</div>
+            </div>
+            <p id="focus-note" style="display:none; color:#EF4444; font-size:0.82rem; margin-top:6px;">
+              🔒 ลดไขมัน = ระบบจัดโปรแกรม Cardio + Full Body ให้อัตโนมัติ
+            </p>
           </div>
 
           <label class="wizard-label mt-20">อุปกรณ์ที่มี?</label>
@@ -1503,10 +1507,15 @@
 
         <!-- STEP 3 -->
         <div class="wizard-step" id="step-3">
-          <label class="wizard-label">ระดับความยาก</label>
-          <div class="range-selector">
-            <input type="range" min="1" max="3" value="1" id="inp-level" oninput="updateLevelText(this.value)">
-            <p id="level-text">ง่าย</p>
+          <div id="level-section">
+            <label class="wizard-label">ระดับความยาก</label>
+            <div class="range-selector" id="level-range-wrapper">
+              <input type="range" min="1" max="3" value="1" id="inp-level" oninput="updateLevelText(this.value)">
+              <p id="level-text">ง่าย</p>
+            </div>
+            <p id="level-note" style="display:none; color:#EF4444; font-size:0.82rem; margin-top:6px;">
+              🔒 ลดไขมัน = ระบบใช้ระดับปานกลางให้อัตโนมัติ
+            </p>
           </div>
 
           <label class="wizard-label mt-20">อาการบาดเจ็บ (ถ้ามี)</label>
@@ -1642,4 +1651,4 @@
 
 </body>
 
-</html>
+</html> 

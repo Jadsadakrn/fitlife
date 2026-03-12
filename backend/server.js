@@ -392,60 +392,32 @@ const DAY_PLAN = {
     }
   },
   "lose-fat": {
+    // lose-fat ทุก focus ใช้ plan เดียวกัน: Cardio+Abs สลับ Full Body
     "chest-arms": {
-      1: ["Cardio", "Chest"],
-      2: ["Arms", "Abs"],
-      3: ["Full Body"],
-      4: "rest",
-      5: ["Cardio", "Back"],
-      6: ["Chest", "Arms"],
-      7: "rest"
-    },
-    "legs-core": {
-      1: ["Cardio", "Legs"],
-      2: ["Abs", "Back"],
-      3: ["Full Body"],
-      4: "rest",
-      5: ["Cardio", "Legs"],
-      6: ["Abs", "Full Body"],
-      7: "rest"
-    },
-    "full-body": {
-      1: ["Cardio", "Full Body"],
-      2: ["Abs", "Back"],
-      3: ["Full Body"],
-      4: "rest",
-      5: ["Cardio"],
-      6: ["Full Body"],
-      7: "rest"
-    }
-  },
-  "maintain": {
-    "chest-arms": {
-      1: ["Full Body"],
-      2: ["Chest", "Arms"],
-      3: ["Legs", "Abs"],
+      1: ["Cardio", "Abs"],
+      2: ["Full Body"],
+      3: ["Cardio", "Abs"],
       4: "rest",
       5: ["Full Body"],
       6: ["Cardio", "Abs"],
       7: "rest"
     },
     "legs-core": {
-      1: ["Full Body"],
-      2: ["Legs", "Abs"],
-      3: ["Back", "Shoulder"],
+      1: ["Cardio", "Abs"],
+      2: ["Full Body"],
+      3: ["Cardio", "Abs"],
       4: "rest",
       5: ["Full Body"],
       6: ["Cardio", "Abs"],
       7: "rest"
     },
     "full-body": {
-      1: ["Full Body"],
-      2: ["Cardio", "Abs"],
-      3: ["Full Body"],
+      1: ["Cardio", "Abs"],
+      2: ["Full Body"],
+      3: ["Cardio", "Abs"],
       4: "rest",
       5: ["Full Body"],
-      6: ["Cardio"],
+      6: ["Cardio", "Abs"],
       7: "rest"
     }
   }
@@ -457,7 +429,12 @@ const REPS_BY_LEVEL = {
   hard:   { sets: 4, reps: 12 }
 };
 
+// lose-fat ใช้เวลาแทนครั้ง
+const CARDIO_DURATION = { sets: 3, reps: "30 วินาที", isTime: true };
+const FULLBODY_DURATION = { sets: 3, reps: "40 วินาที", isTime: true };
+
 const COUNT_BY_LEVEL = { easy: 4, medium: 5, hard: 7 };
+const COUNT_LOSEFAT = 6; // lose-fat ได้ 6 ท่า (Cardio 3 + Abs 3)
 
 app.get("/api/today-workout", authenticateToken, async (req, res) => {
   try {
@@ -489,7 +466,7 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     const focus = user.focus || "full-body";
     const level = user.level || "easy";
 
-    const planForGoal = DAY_PLAN[goal] || DAY_PLAN["maintain"];
+    const planForGoal = DAY_PLAN[goal] || DAY_PLAN["lose-fat"];
     const planForFocus = planForGoal[focus] || planForGoal["full-body"];
     const todayPlan = planForFocus[dayInCycle];
 
@@ -498,63 +475,50 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     }
 
     // ดึงท่าออกกำลังกาย
-    const count = COUNT_BY_LEVEL[level] || 5;
-    const reps = REPS_BY_LEVEL[level] || REPS_BY_LEVEL.medium;
+    const isLoseFat = goal === "lose-fat";
+    const count = isLoseFat ? COUNT_LOSEFAT : (COUNT_BY_LEVEL[level] || 5);
+
+    // lose-fat: ใช้เวลาแทนครั้ง โดยดูว่าวันนี้เป็น Cardio หรือ Full Body
+    let reps;
+    if (isLoseFat) {
+      const isCardioDay = todayPlan.includes("Cardio");
+      reps = isCardioDay ? CARDIO_DURATION : FULLBODY_DURATION;
+    } else {
+      reps = REPS_BY_LEVEL[level] || REPS_BY_LEVEL.medium;
+    }
+
     const bodyParts = todayPlan;
     const userEquipment = user.equipment || "gym";
 
-    // equipment priority:
-    // gym user   -> ดึง Gym ก่อน (cascade level) -> ไม่พอค่อยเติม Bodyweight
-    // bodyweight -> ดึง Bodyweight + No Equipment (cascade level)
-    const primaryEquip  = userEquipment === "gym" ? ["Gym"] : ["Bodyweight", "No Equipment"];
-    const fallbackEquip = userEquipment === "gym" ? ["Bodyweight", "No Equipment"] : [];
+    // equipment filter: gym = ทุกประเภท, bodyweight = Bodyweight + No Equipment
+    const equipmentList = userEquipment === "gym"
+      ? ["Gym", "Bodyweight", "No Equipment"]
+      : ["Bodyweight", "No Equipment"];
 
     // แบ่งจำนวนท่าตาม bodyPart
     const perPart = Math.ceil(count / bodyParts.length);
     let exercises = [];
 
-    // cascade level: ดึง level สูงก่อน ถ้าไม่พอลงมาเรื่อยๆ
-    // cascade level: ดึงระดับที่เลือกก่อน ถ้าไม่พอไล่ขึ้น/ลงเติม
+    // cascade level: ดึงระดับที่เลือกก่อน ถ้าไม่พอ cascade ลง/ขึ้น
     const levelCascade = level === "hard"   ? ["Hard", "Medium", "Easy"]
                        : level === "medium" ? ["Medium", "Easy", "Hard"]
-                       : ["Easy", "Medium", "Hard"];  // easy ก็ cascade ขึ้น medium/hard ถ้าไม่พอ
+                       : ["Easy", "Medium", "Hard"];
 
     for (const part of bodyParts) {
       let partExercises = [];
-      const usedIds = () => [...exercises.map(e => e.id), ...partExercises.map(e => e.id)];
-
-      // รอบ 1: ดึง primary equipment ก่อน (Gym หรือ Bodyweight) + cascade level
       for (const lvl of levelCascade) {
         if (partExercises.length >= perPart) break;
         const found = await prisma.exercise.findMany({
           where: {
             bodyPart: part,
             level: { equals: lvl, mode: "insensitive" },
-            equipment: { in: primaryEquip },
-            id: { notIn: usedIds() }
+            equipment: { in: equipmentList },
+            id: { notIn: [...exercises.map(e => e.id), ...partExercises.map(e => e.id)] }
           },
           take: perPart - partExercises.length
         });
         partExercises = partExercises.concat(found);
       }
-
-      // รอบ 2: ยังไม่พอ -> เติม fallback equipment (Bodyweight) + cascade level
-      if (fallbackEquip.length > 0 && partExercises.length < perPart) {
-        for (const lvl of levelCascade) {
-          if (partExercises.length >= perPart) break;
-          const found = await prisma.exercise.findMany({
-            where: {
-              bodyPart: part,
-              level: { equals: lvl, mode: "insensitive" },
-              equipment: { in: fallbackEquip },
-              id: { notIn: usedIds() }
-            },
-            take: perPart - partExercises.length
-          });
-          partExercises = partExercises.concat(found);
-        }
-      }
-
       exercises = exercises.concat(partExercises);
     }
 
@@ -570,6 +534,7 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
       bodyParts,
       sets: reps.sets,
       reps: reps.reps,
+      isTime: reps.isTime || false,
       exercises
     });
 

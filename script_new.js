@@ -1247,6 +1247,66 @@ function selectOption(elem, type, value) {
   if (input) input.value = value;
 }
 
+function onGoalChange(goal) {
+  const focusCards   = document.querySelectorAll('#focus-grid .select-card');
+  const focusNote    = document.getElementById('focus-note');
+  const levelWrapper = document.getElementById('level-range-wrapper');
+  const levelNote    = document.getElementById('level-note');
+  const levelInput   = document.getElementById('inp-level');
+  const focusInput   = document.getElementById('selected-focus');
+
+  if (goal === 'lose-fat') {
+    // ล็อก focus → auto full-body
+    focusCards.forEach(c => {
+      c.style.opacity = '0.4';
+      c.style.pointerEvents = 'none';
+      c.classList.remove('selected');
+    });
+    const fullBodyCard = document.getElementById('focus-full-body');
+    if (fullBodyCard) fullBodyCard.classList.add('selected');
+    if (focusInput) focusInput.value = 'full-body';
+    if (focusNote) focusNote.style.display = 'block';
+
+    // ล็อก level → auto medium
+    if (levelWrapper) levelWrapper.style.opacity = '0.4';
+    if (levelWrapper) levelWrapper.style.pointerEvents = 'none';
+    if (levelInput) { levelInput.value = '2'; updateLevelText('2'); }
+    if (levelNote) levelNote.style.display = 'block';
+
+    // ล็อก equipment → auto bodyweight
+    const equipCards = document.querySelectorAll('#step-2 .select-card[onclick*="equipment"]');
+    equipCards.forEach(c => {
+      c.style.opacity = '0.4';
+      c.style.pointerEvents = 'none';
+      c.classList.remove('selected');
+    });
+    const bwCard = document.querySelector('#step-2 .select-card[onclick*="bodyweight"]');
+    if (bwCard) bwCard.classList.add('selected');
+    const equipInput = document.getElementById('selected-equipment');
+    if (equipInput) equipInput.value = 'bodyweight';
+
+  } else { // build-muscle
+    // unlock focus
+    focusCards.forEach(c => {
+      c.style.opacity = '';
+      c.style.pointerEvents = '';
+    });
+    if (focusNote) focusNote.style.display = 'none';
+
+    // unlock level
+    if (levelWrapper) levelWrapper.style.opacity = '';
+    if (levelWrapper) levelWrapper.style.pointerEvents = '';
+    if (levelNote) levelNote.style.display = 'none';
+
+    // unlock equipment
+    const equipCards = document.querySelectorAll('#step-2 .select-card[onclick*="equipment"]');
+    equipCards.forEach(c => {
+      c.style.opacity = '';
+      c.style.pointerEvents = '';
+    });
+  }
+}
+
 function updateLevelText(val) {
   const map = { "1": "ง่าย", "2": "ปานกลาง", "3": "ยาก" };
   const el = document.getElementById("level-text");
@@ -1575,7 +1635,7 @@ function loadProfilePage() {
   const nameEl = document.getElementById('profile-name-display');
   if (nameEl) nameEl.textContent = user.name || 'Guest User';
 
-  const goalMap  = { 'lose-fat': '🔥 ลดไขมัน', 'build-muscle': '💪 สร้างกล้าม', 'maintain': '🧘 รักษารูปร่าง' };
+  const goalMap  = { 'lose-fat': '🔥 ลดไขมัน', 'build-muscle': '💪 สร้างกล้าม' };
   const focusMap = { 'chest-arms': '💪 อก & แขน', 'legs-core': '🦵 ขา & แกน', 'full-body': '🏃 ทั่วร่าง' };
   const levelMap = { 'easy': '⭐ Beginner', 'medium': '⭐⭐ Intermediate', 'hard': '⭐⭐⭐ Advanced' };
 
@@ -1609,6 +1669,34 @@ function loadProfilePage() {
   if (goalSel  && user.goal)      goalSel.value  = user.goal;
   if (focusSel && user.focus)     focusSel.value = user.focus;
   if (levelSel && user.level)     levelSel.value = user.level;
+
+  // ถ้า goal = lose-fat ล็อก focus และ level ใน profile page ด้วย
+  const isLoseFat = user.goal === 'lose-fat';
+  if (focusSel) {
+    focusSel.disabled = isLoseFat;
+    focusSel.style.opacity = isLoseFat ? '0.5' : '';
+    if (isLoseFat) focusSel.value = 'full-body';
+  }
+  if (levelSel) {
+    levelSel.disabled = isLoseFat;
+    levelSel.style.opacity = isLoseFat ? '0.5' : '';
+    if (isLoseFat) levelSel.value = 'medium';
+  }
+  const equipSel2 = document.getElementById('equipSelect');
+  if (equipSel2) {
+    equipSel2.disabled = isLoseFat;
+    equipSel2.style.opacity = isLoseFat ? '0.5' : '';
+    if (isLoseFat) equipSel2.value = 'bodyweight';
+  }
+  // ถ้า goalSel เปลี่ยน ให้ update lock/unlock
+  if (goalSel) {
+    goalSel.onchange = () => {
+      const lf = goalSel.value === 'lose-fat';
+      if (focusSel) { focusSel.disabled = lf; focusSel.style.opacity = lf ? '0.5' : ''; if (lf) focusSel.value = 'full-body'; }
+      if (levelSel) { levelSel.disabled = lf; levelSel.style.opacity = lf ? '0.5' : ''; if (lf) levelSel.value = 'medium'; }
+      if (equipSel2) { equipSel2.disabled = lf; equipSel2.style.opacity = lf ? '0.5' : ''; if (lf) equipSel2.value = 'bodyweight'; }
+    };
+  }
   if (equipSel && user.equipment) equipSel.value = user.equipment;
 
   // โหลด email จาก server
@@ -2191,7 +2279,7 @@ function getProgramId() {
     if (level === "medium") return "PG03";
     return "PG04";
   }
-  return "PG01"; // maintain หรือ default
+  return "PG01"; // default
 }
 
 async function loadTodayWorkout() {
@@ -2250,16 +2338,25 @@ async function loadTodayWorkout() {
       return;
     }
 
+    // lose-fat ใช้เวลา, อื่นๆ ใช้ครั้ง
+    const subText = data.isTime
+      ? `${data.reps} x ${data.sets} รอบ`
+      : `${data.reps} ครั้ง x ${data.sets} เซ็ต`;
+    const repsGuideText = data.isTime
+      ? `${data.reps}`
+      : `${data.reps} ครั้ง`;
+
     window.todayWorkout = data.exercises.map(ex => ({
       id: ex.id,
       title: ex.nameTh,
       nameEn: ex.nameEn,
       img: ex.imageUrl?.replace('[URL]', '').replace('[URL] ', '').trim() || '',
-      sub: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
-      instruction: ex.description,           // ← fix: openWorkoutModal ต้องการ instruction
-      repsGuide: `${data.reps} ครั้ง`,       // ← fix: openWorkoutModal ต้องการ repsGuide
+      sub: subText,
+      instruction: ex.description,
+      repsGuide: repsGuideText,
       sets: data.sets,
       reps: data.reps,
+      isTime: data.isTime || false,
       bodyPart: ex.bodyPart,
       level: ex.level
     }));
@@ -2470,4 +2567,4 @@ async function loadProfileFromServer() {
   } catch (err) {
     console.error("Failed to load profile from server:", err);
   }
-}
+} 
