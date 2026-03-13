@@ -572,3 +572,20 @@ app.get("/api/debug-db", async (req, res) => {
   `;
   res.json(result);
 });
+
+app.post("/api/debug-insert", async (req, res) => {
+  try {
+    const log = await prisma.workoutLog.create({
+      data: {
+        userId: "d1401518-299b-4144-bd09-3773f59086a0",
+        date: new Date(),
+        sets: 4,
+        reps: 12,
+        note: "debug test"
+      }
+    });
+    res.json(log);
+  } catch(err) {
+    res.json({ error: err.message });
+  }
+});
