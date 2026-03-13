@@ -520,8 +520,8 @@ function openWorkoutModal(item, mode = "do") {
             title: activeTitle,
             exerciseId: window.activeItem?.id || null,
             sets: window.activeItem?.sets || null,
-            reps: window.activeItem?.isTime ? null : (window.activeItem?.defaultReps || null),  // 🔥 แก้จาก .reps → .defaultReps
-            duration: window.activeItem?.isTime ? window.activeItem?.defaultReps : null,         // 🔥 แก้จาก .reps → .defaultReps
+            reps: window.activeItem?.isTime ? null : (window.activeItem?.reps || null),  
+            duration: window.activeItem?.isTime ? window.activeItem?.reps : null,         
             note: activeTitle
           })
         });
@@ -1042,20 +1042,6 @@ if (logBtn) {
   });
 }
 
-if (finishBtn) {
-  finishBtn.addEventListener('click', () => {
-    // โหมดดูเฉยๆ: แค่ปิดโมดอล
-    if (activeMode === "view") {
-      closeTimerModal();
-      return;
-    }
-
-    markTodayAsDone();
-    showToast("✅ จบวันนี้แล้ว!", "success");
-    playSound('finish');
-    closeTimerModal();
-  });
-}
 
 // Modal close on backdrop click
 window.onclick = function (e) {
