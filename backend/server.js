@@ -563,3 +563,12 @@ app.get("/api/meal-history", authenticateToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.get("/api/debug-db", async (req, res) => {
+  const result = await prisma.$queryRaw`
+    SELECT column_name, data_type 
+    FROM information_schema.columns 
+    WHERE table_name = 'WorkoutLog'
+  `;
+  res.json(result);
+});
