@@ -100,14 +100,29 @@ app.get("/api/me", authenticateToken, async (req, res) => {
 // WORKOUT LOG
 // ===============================
 app.post("/api/workout-log", authenticateToken, async (req, res) => {
-  console.log("REQ BODY:", JSON.stringify(req.body));
   const { date, title, exerciseId, sets, reps, duration, note } = req.body;
-  
-  if (!date) {
-    return res.status(400).json({ error: "Missing date" });
-  }
+
+  if (!date) return res.status(400).json({ error: "Missing date" });
 
   try {
+    // เช็คซ้ำ: userId + exerciseId + วันเดียวกัน
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existing = await prisma.workoutLog.findFirst({
+      where: {
+        userId: req.user.userId,
+        exerciseId: exerciseId || null,
+        date: { gte: startOfDay, lte: endOfDay }
+      }
+    });
+
+    if (existing) {
+      return res.json({ success: true, log: existing, duplicate: true });
+    }
+
     const log = await prisma.workoutLog.create({
       data: {
         userId: req.user.userId,

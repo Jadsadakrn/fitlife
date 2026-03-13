@@ -348,12 +348,10 @@ function renderWorkoutCards(containerId, items) {
   if (!el) return;
 
   el.innerHTML = items.map(item => `
-    <div class="workout-card" data-id="${item.id}">
+    <div class="workout-card ${item.done ? 'done' : ''}" data-id="${item.id}">
       <div class="workout-img">
         <img src="${item.img}" alt="${item.title}">
-        <span class="difficulty-badge beginner">
-          ${item.sub}
-        </span>
+        ${item.done ? '<div class="done-badge">✅</div>' : ''}
       </div>
       <div class="workout-content">
         <h3>${item.title}</h3>
@@ -370,8 +368,6 @@ function renderWorkoutCards(containerId, items) {
     });
   });
 }
-
-
 
 // [Sound System]
 let audioCtx = null;
@@ -2290,56 +2286,47 @@ async function loadTodayWorkout() {
     const container = document.getElementById("dashboard-workout-list");
     const headerEl = document.querySelector(".workout-progress-text");
 
-    // กรณียังไม่ได้ตั้งโปรแกรม
     if (data.noProgram) {
-      if (container) container.innerHTML = `
-        <div style="text-align:center; padding:20px; color:#9CA3AF;">
-          <i class="fas fa-calendar-plus" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
-          ยังไม่ได้ตั้งค่าโปรแกรม กรุณา setup profile ก่อนครับ
-        </div>`;
+      if (container) container.innerHTML = `<div style="text-align:center; padding:20px; color:#9CA3AF;"><i class="fas fa-calendar-plus" style="font-size:2rem; margin-bottom:10px; display:block;"></i>ยังไม่ได้ตั้งค่าโปรแกรม กรุณา setup profile ก่อนครับ</div>`;
       return;
     }
 
-    // กรณีโปรแกรมครบแล้ว
     if (data.programDone) {
-      if (container) container.innerHTML = `
-        <div style="text-align:center; padding:20px; color:#10B981;">
-          <i class="fas fa-trophy" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
-          🎉 ทำโปรแกรม ${data.totalDays} วันครบแล้ว! ยอดเยี่ยมมาก!
-        </div>`;
+      if (container) container.innerHTML = `<div style="text-align:center; padding:20px; color:#10B981;"><i class="fas fa-trophy" style="font-size:2rem; margin-bottom:10px; display:block;"></i>🎉 ทำโปรแกรม ${data.totalDays} วันครบแล้ว! ยอดเยี่ยมมาก!</div>`;
       return;
     }
 
-    // อัพเดต header
     if (headerEl) {
       const partsLabel = data.isRestDay ? "วันพัก" : (data.bodyParts || []).join(" + ");
       headerEl.innerHTML = `วันที่ <strong>${data.dayProgress}/${data.totalDays}</strong> • ${partsLabel} • เหลือ <strong>${data.daysLeft} วัน</strong>`;
     }
 
-    // วันพัก
     if (data.isRestDay) {
-      if (container) container.innerHTML = `
-        <div style="text-align:center; padding:30px;">
-          <div style="font-size:3rem; margin-bottom:10px;">💤</div>
-          <h3 style="color:#374151; margin:0 0 6px;">วันพักผ่อน</h3>
-          <p style="color:#9CA3AF; font-size:0.9rem;">พักกล้ามเนื้อให้ฟื้นตัว พรุ่งนี้สู้ต่อ!</p>
-        </div>`;
+      if (container) container.innerHTML = `<div style="text-align:center; padding:30px;"><div style="font-size:3rem; margin-bottom:10px;">💤</div><h3 style="color:#374151; margin:0 0 6px;">วันพักผ่อน</h3><p style="color:#9CA3AF; font-size:0.9rem;">พักกล้ามเนื้อให้ฟื้นตัว พรุ่งนี้สู้ต่อ!</p></div>`;
       return;
     }
 
-    // แสดงท่าออกกำลังกาย
     if (!data.exercises || data.exercises.length === 0) {
       if (container) container.innerHTML = `<div style="text-align:center; padding:20px; color:#9CA3AF;">ไม่พบท่าออกกำลังกายสำหรับวันนี้</div>`;
       return;
     }
 
-    // lose-fat ใช้เวลา, อื่นๆ ใช้ครั้ง
+    // 🔥 ดึงท่าที่ทำแล้ววันนี้
+    const todayKey = getTodayKey();
+    const logRes = await fetch(`${API_BASE}/api/workout-log`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const logData = await logRes.json();
+    const todayDoneIds = new Set(
+      logData
+        .filter(l => l.date.slice(0, 10) === todayKey)
+        .map(l => l.exerciseId)
+    );
+
     const subText = data.isTime
       ? `${data.reps} x ${data.sets} รอบ`
       : `${data.reps} ครั้ง x ${data.sets} เซ็ต`;
-    const repsGuideText = data.isTime
-      ? `${data.reps}`
-      : `${data.reps} ครั้ง`;
+    const repsGuideText = data.isTime ? `${data.reps}` : `${data.reps} ครั้ง`;
 
     window.todayWorkout = data.exercises.map(ex => ({
       id: ex.id,
@@ -2353,7 +2340,8 @@ async function loadTodayWorkout() {
       reps: data.reps,
       isTime: data.isTime || false,
       bodyPart: ex.bodyPart,
-      level: ex.level
+      level: ex.level,
+      done: todayDoneIds.has(ex.id)  // 🔥 ติ๊กท่าที่ทำแล้ว
     }));
 
     renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
@@ -2362,8 +2350,6 @@ async function loadTodayWorkout() {
     console.error("Failed to load today workout:", err);
   }
 }
-
-
 
 function navigateTo(pageId) {
   document.querySelectorAll('.page')
