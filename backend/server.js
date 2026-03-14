@@ -362,260 +362,208 @@ app.get("/api/workout-history", authenticateToken, async (req, res) => {
 });
 
 // ===============================
-// TODAY WORKOUT
+// TODAY WORKOUT CONFIGURATION
 // ===============================
-// Day plan mapping: goal -> focus -> dayNumber -> bodyParts[]
+
 const DAY_PLAN = {
   "build-muscle": {
-    "chest-arms": {
-      1: ["Chest", "Arms"],
-      2: ["Back", "Abs"],
-      3: ["Legs"],
-      4: "rest",
-      5: ["Shoulder", "Arms"],
-      6: ["Chest", "Back"],
-      7: "rest"
-    },
-    "legs-core": {
-      1: ["Legs"],
-      2: ["Abs", "Back"],
-      3: ["Chest", "Shoulder"],
-      4: "rest",
-      5: ["Legs"],
-      6: ["Abs", "Full Body"],
-      7: "rest"
-    },
-    "full-body": {
-      1: ["Chest", "Back"],
-      2: ["Legs", "Abs"],
-      3: ["Shoulder", "Arms"],
-      4: "rest",
-      5: ["Full Body"],
-      6: ["Chest", "Legs"],
-      7: "rest"
-    }
+    "chest-arms": { 1: ["Chest", "Arms"], 2: ["Back", "Abs"], 3: ["Legs"], 4: "rest", 5: ["Shoulder", "Arms"], 6: ["Chest", "Back"], 7: "rest" },
+    "legs-core": { 1: ["Legs"], 2: ["Abs", "Back"], 3: ["Chest", "Shoulder"], 4: "rest", 5: ["Legs"], 6: ["Abs", "Full Body"], 7: "rest" },
+    "full-body": { 1: ["Chest", "Back"], 2: ["Legs", "Abs"], 3: ["Shoulder", "Arms"], 4: "rest", 5: ["Full Body"], 6: ["Chest", "Legs"], 7: "rest" }
   },
   "build-muscle-female": {
-    "chest-arms": {
-      1: ["Legs"],
-      2: ["Abs", "Arms"],
-      3: ["Legs"],
-      4: "rest",
-      5: ["Full Body"],
-      6: ["Abs", "Legs"],
-      7: "rest"
-    },
-    "legs-core": {
-      1: ["Legs"],
-      2: ["Abs"],
-      3: ["Legs"],
-      4: "rest",
-      5: ["Abs", "Legs"],
-      6: ["Full Body"],
-      7: "rest"
-    },
-    "full-body": {
-      1: ["Legs", "Abs"],
-      2: ["Full Body"],
-      3: ["Legs"],
-      4: "rest",
-      5: ["Abs", "Legs"],
-      6: ["Full Body"],
-      7: "rest"
-    }
+    "chest-arms": { 1: ["Legs"], 2: ["Abs", "Arms"], 3: ["Legs"], 4: "rest", 5: ["Full Body"], 6: ["Abs", "Legs"], 7: "rest" },
+    "legs-core": { 1: ["Legs"], 2: ["Abs"], 3: ["Legs"], 4: "rest", 5: ["Abs", "Legs"], 6: ["Full Body"], 7: "rest" },
+    "full-body": { 1: ["Legs", "Abs"], 2: ["Full Body"], 3: ["Legs"], 4: "rest", 5: ["Abs", "Legs"], 6: ["Full Body"], 7: "rest" }
   },
-  "lose-fat": {
-    "chest-arms": {
-      1: ["Cardio", "Chest"],
-      2: ["Arms", "Abs"],
-      3: ["Full Body"],
-      4: "rest",
-      5: ["Cardio", "Back"],
-      6: ["Chest", "Arms"],
-      7: "rest"
-    },
-    "legs-core": {
-      1: ["Cardio", "Legs"],
-      2: ["Abs", "Back"],
-      3: ["Full Body"],
-      4: "rest",
-      5: ["Cardio", "Legs"],
-      6: ["Abs", "Full Body"],
-      7: "rest"
-    },
-    "full-body": {
-      1: ["Cardio", "Full Body"],
-      2: ["Abs", "Back"],
-      3: ["Full Body"],
-      4: "rest",
-      5: ["Cardio"],
-      6: ["Full Body"],
-      7: "rest"
-    }
+  "lose-fat": { // ของผู้ชาย: เน้นทั่วร่างสลับคาดิโอ + ท้อง
+    "full-body": { 1: ["Cardio", "Full Body", "Abs"], 2: ["Abs", "Back", "Legs"], 3: ["Cardio", "Full Body", "Abs"], 4: "rest", 5: ["Cardio", "Abs", "Arms"], 6: ["Full Body", "Abs", "Cardio"], 7: "rest" }
+  },
+  "lose-fat-female": { // ของผู้หญิง: เน้นขา ก้น ร่อง11 (ท้อง)
+    "full-body": { 1: ["Cardio", "Legs", "Abs"], 2: ["Abs", "Full Body", "Cardio"], 3: ["Legs", "Cardio", "Abs"], 4: "rest", 5: ["Cardio", "Abs", "Full Body"], 6: ["Legs", "Abs", "Cardio"], 7: "rest" }
   },
   "maintain": {
-    "chest-arms": {
-      1: ["Full Body"],
-      2: ["Chest", "Arms"],
-      3: ["Legs", "Abs"],
-      4: "rest",
-      5: ["Full Body"],
-      6: ["Cardio", "Abs"],
-      7: "rest"
-    },
-    "legs-core": {
-      1: ["Full Body"],
-      2: ["Legs", "Abs"],
-      3: ["Back", "Shoulder"],
-      4: "rest",
-      5: ["Full Body"],
-      6: ["Cardio", "Abs"],
-      7: "rest"
-    },
-    "full-body": {
-      1: ["Full Body"],
-      2: ["Cardio", "Abs"],
-      3: ["Full Body"],
-      4: "rest",
-      5: ["Full Body"],
-      6: ["Cardio"],
-      7: "rest"
-    }
+    "chest-arms": { 1: ["Full Body"], 2: ["Chest", "Arms"], 3: ["Legs", "Abs"], 4: "rest", 5: ["Full Body"], 6: ["Cardio", "Abs"], 7: "rest" },
+    "legs-core": { 1: ["Full Body"], 2: ["Legs", "Abs"], 3: ["Back", "Shoulder"], 4: "rest", 5: ["Full Body"], 6: ["Cardio", "Abs"], 7: "rest" },
+    "full-body": { 1: ["Full Body"], 2: ["Cardio", "Abs"], 3: ["Full Body"], 4: "rest", 5: ["Full Body"], 6: ["Cardio"], 7: "rest" }
   }
 };
 
 const REPS_BY_LEVEL = {
   male: {
-    easy:   { sets: 3, reps: 10 },
-    medium: { sets: 3, reps: 12 },
-    hard:   { sets: 4, reps: 12 }
+    easy:   { sets: 3, reps: 10, timeReps: 40 },
+    medium: { sets: 3, reps: 12, timeReps: 45 },
+    hard:   { sets: 4, reps: 15, timeReps: 60 }
   },
   female: {
-    easy:   { sets: 3, reps: 13 },
-    medium: { sets: 3, reps: 15 },
-    hard:   { sets: 4, reps: 15 }
+    easy:   { sets: 2, reps: 10, timeReps: 30 },
+    medium: { sets: 3, reps: 12, timeReps: 40 },
+    hard:   { sets: 4, reps: 15, timeReps: 45 }
   }
 };
 
-const COUNT_BY_LEVEL = { easy: 4, medium: 5, hard: 7 };
+// ตารางจำนวนท่าที่คุณต้องการ
+const EXERCISE_COUNT = {
+  "build-muscle": {
+    male:   { easy: 4, medium: 5, hard: 7 },
+    female: { easy: 4, medium: 5, hard: 6 }
+  },
+  "lose-fat": {
+    male:   { easy: 5, medium: 6, hard: 8 },
+    female: { easy: 4, medium: 5, hard: 7 } 
+  },
+  "maintain": {
+    male:   { easy: 4, medium: 5, hard: 6 },
+    female: { easy: 4, medium: 5, hard: 6 }
+  }
+};
+
+// ===============================
+// API ROUTE
+// ===============================
 
 app.get("/api/today-workout", authenticateToken, async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: { goal: true, focus: true, level: true, startDate: true, duration: true, equipment: true, gender: true }
-    });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { goal: true, focus: true, level: true, startDate: true, duration: true, equipment: true, gender: true }
+    });
 
-    if (!user || !user.startDate) {
-      return res.json({ isRestDay: false, dayNumber: 1, exercises: [], noProgram: true });
-    }
-
-    // คำนวณ Day ปัจจุบัน
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(user.startDate);
-    start.setHours(0, 0, 0, 0);
-    
-    let diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
-    
-    // ✅ จุดแก้ที่ 1: ดักกรณี Timezone คลาดเคลื่อน หรือตั้งวันในอนาคต (diffDays ติดลบ) ให้เป็น 0 (วันที่ 1)
-    if (diffDays < 0) {
-      diffDays = 0; 
+    if (!user || !user.startDate) {
+      return res.json({ isRestDay: false, dayNumber: 1, exercises: [], noProgram: true });
     }
 
-    const totalDays = user.duration || 30;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(user.startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    let diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) diffDays = 0; 
 
-    // เกินระยะเวลาโปรแกรมแล้ว
-    if (diffDays >= totalDays) {
-      return res.json({ isRestDay: false, dayNumber: null, exercises: [], programDone: true, totalDays });
-    }
+    const totalDays = user.duration || 30;
+    if (diffDays >= totalDays) {
+      return res.json({ isRestDay: false, dayNumber: null, exercises: [], programDone: true, totalDays });
+    }
 
-    const dayInCycle = (diffDays % 7) + 1; // 1-7
+    const dayInCycle = (diffDays % 7) + 1; 
 
-    const goal = user.goal || "lose-fat";
-    const focus = user.focus || "full-body";
-    const level = user.level || "easy";
-    const gender = user.gender || "male";
+    let goal = user.goal || "lose-fat";
+    let focus = user.focus || "full-body";
+    let level = user.level || "easy";
+    let gender = user.gender || "male";
+    let userEquipment = user.equipment || "gym";
 
-    // เลือก plan ตาม goal + gender
-    let planKey = goal;
-    if (goal === "build-muscle" && gender === "female") {
-      planKey = "build-muscle-female";
-    }
+    // 🛑 บังคับล็อกสเปคสำหรับสายลดไขมัน
+    if (goal === "lose-fat") {
+      focus = "full-body";
+      userEquipment = "bodyweight"; 
+    }
 
-    const planForGoal = DAY_PLAN[planKey] || DAY_PLAN["lose-fat"];
-    const planForFocus = planForGoal[focus] || planForGoal["full-body"];
-    const todayPlan = planForFocus[dayInCycle];
+    // เลือกระบบ ชาย/หญิง
+    let planKey = goal;
+    if (gender === "female") {
+      if (goal === "build-muscle") planKey = "build-muscle-female";
+      if (goal === "lose-fat") planKey = "lose-fat-female";
+    }
 
-    if (todayPlan === "rest") {
-      return res.json({ isRestDay: true, dayNumber: dayInCycle, daysLeft: totalDays - diffDays });
-    }
+    const planForGoal = DAY_PLAN[planKey] || DAY_PLAN["lose-fat"];
+    const planForFocus = planForGoal[focus] || planForGoal["full-body"];
+    const todayPlan = planForFocus[dayInCycle];
 
-    // ดึงท่าออกกำลังกาย
-    const count = COUNT_BY_LEVEL[level] || 5;
-    const genderReps = REPS_BY_LEVEL[gender] || REPS_BY_LEVEL.male;
-    const reps = genderReps[level] || genderReps.medium;
-    const bodyParts = todayPlan;
-    const userEquipment = user.equipment || "gym";
+    if (todayPlan === "rest") {
+      return res.json({ isRestDay: true, dayNumber: dayInCycle, daysLeft: totalDays - diffDays });
+    }
 
-    // ✅ จุดแก้ที่ 2: เพิ่มตัวพิมพ์เล็ก-ใหญ่ ให้ SQLite ค้นหาเจอ
-    const equipmentList = userEquipment === "gym"
-      ? ["Gym", "Bodyweight", "No Equipment", "gym", "bodyweight", "no equipment"]
-      : ["Bodyweight", "No Equipment", "bodyweight", "no equipment"];
+    // ดึงจำนวนท่าและ Reps/Sets
+    const count = EXERCISE_COUNT[goal]?.[gender]?.[level] || 5;
+    const genderReps = REPS_BY_LEVEL[gender] || REPS_BY_LEVEL.male;
+    const levelReps = genderReps[level] || genderReps.medium;
+    
+    const isTime = goal === "lose-fat";
+    const finalReps = isTime ? levelReps.timeReps : levelReps.reps;
 
-    // แบ่งจำนวนท่าตาม bodyPart
-    const perPart = Math.ceil(count / bodyParts.length);
-    let exercises = [];
+    const bodyParts = todayPlan;
+    
+    // 🛑 Priority อุปกรณ์: หา Gym ให้เกลี้ยงก่อนค่อยไป Bodyweight
+    const equipPriority = userEquipment === "gym"
+      ? [["Gym", "gym"], ["Bodyweight", "No Equipment", "bodyweight", "no equipment"]]
+      : [["Bodyweight", "No Equipment", "bodyweight", "no equipment"]];
 
-    // ✅ จุดแก้ที่ 3: เพิ่มตัวพิมพ์เล็ก-ใหญ่ให้ level เพื่อค้นหาใน SQLite โดยไม่ใช้ mode: "insensitive"
-    const levelCascade = level === "hard"   ? ["Hard", "Medium", "Easy", "hard", "medium", "easy"]
-                       : level === "medium" ? ["Medium", "Easy", "medium", "easy"]
-                       : ["Easy", "easy"];
+    const perPart = Math.ceil(count / bodyParts.length);
+    let exercises = [];
 
-    for (const part of bodyParts) {
-      let partExercises = [];
-      // ค้นหาทั้งพิมพ์เล็กและพิมพ์ใหญ่ (เช่น "Chest", "chest", "CHEST")
+    // ลำดับความยากแบบยืดหยุ่น (Cascade)
+    const levelCascade = level === "hard"   ? ["Hard", "Medium", "Easy", "hard", "medium", "easy"]
+                       : level === "medium" ? ["Medium", "Easy", "Hard", "medium", "easy", "hard"]
+                       : ["Easy", "Medium", "easy", "medium"]; 
+
+    // วนลูปหาท่าตามส่วนร่างกายและลำดับอุปกรณ์/ความยาก
+    for (const part of bodyParts) {
+      let partExercises = [];
       const partSearch = [part, part.toLowerCase(), part.toUpperCase()];
 
-      for (const lvl of levelCascade) {
-        if (partExercises.length >= perPart) break;
-        const found = await prisma.exercise.findMany({
-          where: {
-            bodyPart: { in: partSearch }, // ใช้ in แทน equals
-            level: { in: [lvl] }, // เอา mode: "insensitive" ออก ป้องกัน Error 500
-            equipment: { in: equipmentList },
-            id: { notIn: [...exercises.map(e => e.id), ...partExercises.map(e => e.id)] }
-          },
-          take: perPart - partExercises.length
-        });
-        partExercises = partExercises.concat(found);
-      }
-      exercises = exercises.concat(partExercises);
-    }
+      for (const eqList of equipPriority) {
+        if (partExercises.length >= perPart) break;
+        for (const lvl of levelCascade) {
+          if (partExercises.length >= perPart) break;
+          const found = await prisma.exercise.findMany({
+            where: {
+              bodyPart: { in: partSearch },
+              level: { in: [lvl] },
+              equipment: { in: eqList },
+              id: { notIn: [...exercises.map(e => e.id), ...partExercises.map(e => e.id)] }
+            },
+            take: perPart - partExercises.length
+          });
+          partExercises = partExercises.concat(found);
+        }
+      }
+      exercises = exercises.concat(partExercises);
+    }
 
-    // ตัดให้พอดีจำนวน
-    exercises = exercises.slice(0, count);
+    // 🚀 Fallback สุดท้าย: ถ้ายังไม่ครบ ให้ดึง Cardio หรือ ท้อง มาอุดช่องโหว่ (โดยไล่ Gym ก่อนเหมือนเดิม)
+    if (exercises.length < count) {
+      const shortfall = count - exercises.length;
+      let fillEx = [];
+      for (const eqList of equipPriority) {
+        if (fillEx.length >= shortfall) break;
+        for (const lvl of levelCascade) {
+          if (fillEx.length >= shortfall) break;
+          const found = await prisma.exercise.findMany({
+            where: {
+              bodyPart: { in: ["Cardio", "Abs", "cardio", "abs", "CARDIO", "ABS"] },
+              level: { in: [lvl] },
+              equipment: { in: eqList },
+              id: { notIn: [...exercises.map(e => e.id), ...fillEx.map(e => e.id)] }
+            },
+            take: shortfall - fillEx.length
+          });
+          fillEx = fillEx.concat(found);
+        }
+      }
+      exercises = exercises.concat(fillEx);
+    }
 
-    // ✅ ส่งตัวแปร isTime กลับไปให้ Frontend ใช้ด้วย
-    const isTime = goal === "lose-fat";
+    exercises = exercises.slice(0, count);
 
-    res.json({
-      isRestDay: false,
-      dayNumber: dayInCycle,
-      daysLeft: totalDays - diffDays,
-      dayProgress: diffDays + 1,
-      totalDays,
-      bodyParts,
-      sets: reps.sets,
-      reps: reps.reps,
+    res.json({
+      isRestDay: false,
+      dayNumber: dayInCycle,
+      daysLeft: totalDays - diffDays,
+      dayProgress: diffDays + 1,
+      totalDays,
+      bodyParts,
+      sets: levelReps.sets,
+      reps: finalReps,
       isTime: isTime,
-      exercises
-    });
+      exercises
+    });
 
-  } catch (err) {
+  } catch (err) {
     console.error("Today Workout Error:", err);
-    res.status(500).json({ error: err.message });
-  }
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ===============================
