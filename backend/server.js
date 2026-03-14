@@ -515,20 +515,15 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     today.setHours(0, 0, 0, 0);
     const start = new Date(user.startDate);
     start.setHours(0, 0, 0, 0);
-    const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
-    const totalDays = user.duration || 30;
+    
+    let diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    
+    // ✅ จุดแก้ที่ 1: ดักกรณี Timezone คลาดเคลื่อน หรือตั้งวันในอนาคต (diffDays ติดลบ) ให้เป็น 0 (วันที่ 1)
+    if (diffDays < 0) {
+      diffDays = 0; 
+    }
 
-    // 🛑 แก้จุดที่ 1: ดักจับกรณีผู้ใช้ตั้งวันเริ่มโปรแกรมล่วงหน้า (ยังไม่ถึงวันเริ่ม)
-    if (diffDays < 0) {
-      return res.json({
-        isRestDay: false,
-        dayNumber: 0,
-        exercises: [],
-        dayProgress: 0,
-        daysLeft: totalDays,
-        totalDays: totalDays
-      });
-    }
+    const totalDays = user.duration || 30;
 
     // เกินระยะเวลาโปรแกรมแล้ว
     if (diffDays >= totalDays) {
@@ -563,27 +558,31 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     const bodyParts = todayPlan;
     const userEquipment = user.equipment || "gym";
 
-    // equipment filter: gym = Gym + Bodyweight, bodyweight = Bodyweight + No Equipment
+    // ✅ จุดแก้ที่ 2: เพิ่มตัวพิมพ์เล็ก-ใหญ่ ให้ SQLite ค้นหาเจอ
     const equipmentList = userEquipment === "gym"
-      ? ["Gym", "Bodyweight", "No Equipment"]
-      : ["Bodyweight", "No Equipment"];
+      ? ["Gym", "Bodyweight", "No Equipment", "gym", "bodyweight", "no equipment"]
+      : ["Bodyweight", "No Equipment", "bodyweight", "no equipment"];
 
+    // แบ่งจำนวนท่าตาม bodyPart
     const perPart = Math.ceil(count / bodyParts.length);
     let exercises = [];
 
-    // 🛑 แก้จุดที่ 2: เพิ่มตัวพิมพ์เล็ก-ใหญ่เข้าไปใน Array เพื่อค้นหาแทนการใช้ mode: "insensitive"
+    // ✅ จุดแก้ที่ 3: เพิ่มตัวพิมพ์เล็ก-ใหญ่ให้ level เพื่อค้นหาใน SQLite โดยไม่ใช้ mode: "insensitive"
     const levelCascade = level === "hard"   ? ["Hard", "Medium", "Easy", "hard", "medium", "easy"]
                        : level === "medium" ? ["Medium", "Easy", "medium", "easy"]
                        : ["Easy", "easy"];
 
     for (const part of bodyParts) {
       let partExercises = [];
+      // ค้นหาทั้งพิมพ์เล็กและพิมพ์ใหญ่ (เช่น "Chest", "chest", "CHEST")
+      const partSearch = [part, part.toLowerCase(), part.toUpperCase()];
+
       for (const lvl of levelCascade) {
         if (partExercises.length >= perPart) break;
         const found = await prisma.exercise.findMany({
           where: {
-            bodyPart: part,
-            level: { in: [lvl] }, // ถอด mode: "insensitive" ออก ป้องกัน SQLite พัง
+            bodyPart: { in: partSearch }, // ใช้ in แทน equals
+            level: { in: [lvl] }, // เอา mode: "insensitive" ออก ป้องกัน Error 500
             equipment: { in: equipmentList },
             id: { notIn: [...exercises.map(e => e.id), ...partExercises.map(e => e.id)] }
           },
@@ -597,8 +596,8 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
     // ตัดให้พอดีจำนวน
     exercises = exercises.slice(0, count);
 
-    // สร้างเงื่อนไขเช็คเรื่องของเวลา (Time) เพื่อส่งกลับไปให้หน้า Frontend ใช้
-    const isTime = goal === "lose-fat";
+    // ✅ ส่งตัวแปร isTime กลับไปให้ Frontend ใช้ด้วย
+    const isTime = goal === "lose-fat";
 
     res.json({
       isRestDay: false,
@@ -609,12 +608,12 @@ app.get("/api/today-workout", authenticateToken, async (req, res) => {
       bodyParts,
       sets: reps.sets,
       reps: reps.reps,
-      isTime: isTime,
+      isTime: isTime,
       exercises
     });
 
   } catch (err) {
-    console.error("Today Workout Error:", err);
+    console.error("Today Workout Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
