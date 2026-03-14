@@ -464,7 +464,6 @@ function openWorkoutModal(item, mode = "do") {
   if (!item) return;
 
   activeTitle = item.title;
-  window.activeItem = item; // เก็บ item ทั้งหมดไว้ใช้ตอน log
   activeSetIndex = 0;
   activeMode = mode;
   activeImgUrl = item.img || "";
@@ -509,30 +508,14 @@ function openWorkoutModal(item, mode = "do") {
       const token = localStorage.getItem("token");
 
       try {
-        const res = await fetch(`${API_BASE}/api/workout-log`, {
+        await fetch(`${API_BASE}/api/workout-log`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({
-            date: today,
-            title: activeTitle,
-            exerciseId: window.activeItem?.id || null,
-            sets: window.activeItem?.sets || null,
-            reps: window.activeItem?.isTime ? null : (window.activeItem?.reps || null),
-            duration: window.activeItem?.isTime ? window.activeItem?.reps : null,
-            note: activeTitle
-          })
+          body: JSON.stringify({ date: today, title: activeTitle })
         });
-
-        const result = await res.json();
-
-        if (result.duplicate) {
-          showToast("บันทึกท่านี้ไปแล้ววันนี้ 👍", "info");
-          closeTimerModal();
-          return;
-        }
 
         await markTodayAsDone();
         showToast("บันทึกเรียบร้อย 💪", "success");
@@ -1264,66 +1247,6 @@ function selectOption(elem, type, value) {
   if (input) input.value = value;
 }
 
-function onGoalChange(goal) {
-  const focusCards   = document.querySelectorAll('#focus-grid .select-card');
-  const focusNote    = document.getElementById('focus-note');
-  const levelWrapper = document.getElementById('level-range-wrapper');
-  const levelNote    = document.getElementById('level-note');
-  const levelInput   = document.getElementById('inp-level');
-  const focusInput   = document.getElementById('selected-focus');
-
-  if (goal === 'lose-fat') {
-    // ล็อก focus → auto full-body
-    focusCards.forEach(c => {
-      c.style.opacity = '0.4';
-      c.style.pointerEvents = 'none';
-      c.classList.remove('selected');
-    });
-    const fullBodyCard = document.getElementById('focus-full-body');
-    if (fullBodyCard) fullBodyCard.classList.add('selected');
-    if (focusInput) focusInput.value = 'full-body';
-    if (focusNote) focusNote.style.display = 'block';
-
-    // ล็อก level → auto medium
-    if (levelWrapper) levelWrapper.style.opacity = '0.4';
-    if (levelWrapper) levelWrapper.style.pointerEvents = 'none';
-    if (levelInput) { levelInput.value = '2'; updateLevelText('2'); }
-    if (levelNote) levelNote.style.display = 'block';
-
-    // ล็อก equipment → auto bodyweight
-    const equipCards = document.querySelectorAll('#step-2 .select-card[onclick*="equipment"]');
-    equipCards.forEach(c => {
-      c.style.opacity = '0.4';
-      c.style.pointerEvents = 'none';
-      c.classList.remove('selected');
-    });
-    const bwCard = document.querySelector('#step-2 .select-card[onclick*="bodyweight"]');
-    if (bwCard) bwCard.classList.add('selected');
-    const equipInput = document.getElementById('selected-equipment');
-    if (equipInput) equipInput.value = 'bodyweight';
-
-  } else { // build-muscle
-    // unlock focus
-    focusCards.forEach(c => {
-      c.style.opacity = '';
-      c.style.pointerEvents = '';
-    });
-    if (focusNote) focusNote.style.display = 'none';
-
-    // unlock level
-    if (levelWrapper) levelWrapper.style.opacity = '';
-    if (levelWrapper) levelWrapper.style.pointerEvents = '';
-    if (levelNote) levelNote.style.display = 'none';
-
-    // unlock equipment
-    const equipCards = document.querySelectorAll('#step-2 .select-card[onclick*="equipment"]');
-    equipCards.forEach(c => {
-      c.style.opacity = '';
-      c.style.pointerEvents = '';
-    });
-  }
-}
-
 function updateLevelText(val) {
   const map = { "1": "ง่าย", "2": "ปานกลาง", "3": "ยาก" };
   const el = document.getElementById("level-text");
@@ -1652,7 +1575,7 @@ function loadProfilePage() {
   const nameEl = document.getElementById('profile-name-display');
   if (nameEl) nameEl.textContent = user.name || 'Guest User';
 
-  const goalMap  = { 'lose-fat': '🔥 ลดไขมัน', 'build-muscle': '💪 สร้างกล้าม' };
+  const goalMap  = { 'lose-fat': '🔥 ลดไขมัน', 'build-muscle': '💪 สร้างกล้าม', 'maintain': '🧘 รักษารูปร่าง' };
   const focusMap = { 'chest-arms': '💪 อก & แขน', 'legs-core': '🦵 ขา & แกน', 'full-body': '🏃 ทั่วร่าง' };
   const levelMap = { 'easy': '⭐ Beginner', 'medium': '⭐⭐ Intermediate', 'hard': '⭐⭐⭐ Advanced' };
 
@@ -1686,34 +1609,6 @@ function loadProfilePage() {
   if (goalSel  && user.goal)      goalSel.value  = user.goal;
   if (focusSel && user.focus)     focusSel.value = user.focus;
   if (levelSel && user.level)     levelSel.value = user.level;
-
-  // ถ้า goal = lose-fat ล็อก focus และ level ใน profile page ด้วย
-  const isLoseFat = user.goal === 'lose-fat';
-  if (focusSel) {
-    focusSel.disabled = isLoseFat;
-    focusSel.style.opacity = isLoseFat ? '0.5' : '';
-    if (isLoseFat) focusSel.value = 'full-body';
-  }
-  if (levelSel) {
-    levelSel.disabled = isLoseFat;
-    levelSel.style.opacity = isLoseFat ? '0.5' : '';
-    if (isLoseFat) levelSel.value = 'medium';
-  }
-  const equipSel2 = document.getElementById('equipSelect');
-  if (equipSel2) {
-    equipSel2.disabled = isLoseFat;
-    equipSel2.style.opacity = isLoseFat ? '0.5' : '';
-    if (isLoseFat) equipSel2.value = 'bodyweight';
-  }
-  // ถ้า goalSel เปลี่ยน ให้ update lock/unlock
-  if (goalSel) {
-    goalSel.onchange = () => {
-      const lf = goalSel.value === 'lose-fat';
-      if (focusSel) { focusSel.disabled = lf; focusSel.style.opacity = lf ? '0.5' : ''; if (lf) focusSel.value = 'full-body'; }
-      if (levelSel) { levelSel.disabled = lf; levelSel.style.opacity = lf ? '0.5' : ''; if (lf) levelSel.value = 'medium'; }
-      if (equipSel2) { equipSel2.disabled = lf; equipSel2.style.opacity = lf ? '0.5' : ''; if (lf) equipSel2.value = 'bodyweight'; }
-    };
-  }
   if (equipSel && user.equipment) equipSel.value = user.equipment;
 
   // โหลด email จาก server
@@ -1946,8 +1841,13 @@ function renderDashboardMeals() {
   const el = document.getElementById("dashboard-meal-list");
   if (!el) return;
 
-  const plan = generateMealPlan();
-  if (!plan) {
+  // ถ้ามีมื้อที่บันทึกจาก server ให้แสดงอันนั้น
+  const hasSavedMeals = Object.keys(selectedMeals).length > 0;
+
+  // ถ้ายังไม่มีมื้อบันทึก ใช้ generateMealPlan เป็น suggestion
+  const plan = hasSavedMeals ? null : generateMealPlan();
+
+  if (!hasSavedMeals && !plan) {
     el.innerHTML = "<p>ยังไม่มีแผนอาหาร</p>";
     return;
   }
@@ -1955,28 +1855,30 @@ function renderDashboardMeals() {
   el.innerHTML = `
   <div class="meal-dashboard-grid">
     ${["breakfast", "lunch", "dinner"].map(meal => {
-    const f = plan[meal];
-    if (!f) return "";
+      // ถ้ามี saved meal ใช้อันนั้น ไม่งั้นใช้ plan suggestion
+      const savedFood = selectedMeals[meal];
+      const f = savedFood || (plan && plan[meal]);
+      if (!f) return "";
 
-    const isSaved = selectedMeals[meal];
+      const isSaved = !!savedFood;
 
-    return `
+      return `
         <div class="meal-dashboard-card ${isSaved ? "saved" : ""}" 
              data-meal="${meal}" 
              data-id="${f.id}">
              
               ${isSaved ? `<div class="saved-badge">✔</div>` : ""}
 
-          <img src="${f.img}" class="meal-thumb">
+          <img src="${f.img || f.imageUrl || ''}" class="meal-thumb">
 
           <div class="meal-info">
             <h4>${mealLabel(meal)}</h4>
-            <p class="meal-name">${f.name}</p>
-            <span class="meal-cal">${f.kcal} kcal</span>
+            <p class="meal-name">${f.name || f.nameTh || ''}</p>
+            <span class="meal-cal">${f.kcal || f.calories || 0} kcal</span>
           </div>
         </div>
       `;
-  }).join("")}
+    }).join("")}
   </div>
 `;
   attachMealCardEvents();
@@ -2060,7 +1962,7 @@ let currentPopupMeal = null;
 let currentPopupKey = null;
 
 let currentselectedFood = null;
-let selectedMeals = JSON.parse(localStorage.getItem(ukey("selected_meals"))) || {};
+let selectedMeals = {}; // ไม่โหลดจาก localStorage แล้ว ใช้ server เป็น source of truth
 
 function openMealPopup(mealKey, foodId) {
 
@@ -2296,7 +2198,7 @@ function getProgramId() {
     if (level === "medium") return "PG03";
     return "PG04";
   }
-  return "PG01"; // default
+  return "PG01"; // maintain หรือ default
 }
 
 async function loadTodayWorkout() {
@@ -2355,25 +2257,16 @@ async function loadTodayWorkout() {
       return;
     }
 
-    // lose-fat ใช้เวลา, อื่นๆ ใช้ครั้ง
-    const subText = data.isTime
-      ? `${data.reps} x ${data.sets} รอบ`
-      : `${data.reps} ครั้ง x ${data.sets} เซ็ต`;
-    const repsGuideText = data.isTime
-      ? `${data.reps}`
-      : `${data.reps} ครั้ง`;
-
     window.todayWorkout = data.exercises.map(ex => ({
       id: ex.id,
       title: ex.nameTh,
       nameEn: ex.nameEn,
       img: ex.imageUrl?.replace('[URL]', '').replace('[URL] ', '').trim() || '',
-      sub: subText,
-      instruction: ex.description,
-      repsGuide: repsGuideText,
+      sub: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
+      description: ex.description,
+      repsInfo: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
       sets: data.sets,
       reps: data.reps,
-      isTime: data.isTime || false,
       bodyPart: ex.bodyPart,
       level: ex.level
     }));
@@ -2485,28 +2378,15 @@ async function loadWorkoutHistory() {
 
     tbody.innerHTML = '';
 
-    if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">ยังไม่มีประวัติการออกกำลังกาย</td></tr>';
-      return;
-    }
-
     data.forEach(item => {
       const row = document.createElement('tr');
 
-      const dateStr = new Date(item.date).toLocaleDateString('th-TH');
-      const name = item.exercise?.nameTh || item.note || '-';
-      // sets/reps อาจเป็น string หรือ number จาก DB
-      const setsVal = item.sets != null ? parseInt(item.sets) : null;
-      const repsVal = item.reps != null ? parseInt(item.reps) : null;
-      const durVal  = item.duration != null ? parseInt(item.duration) : null;
-      const setsStr = setsVal ? `${setsVal} เซ็ต` : '-';
-      const repsStr = durVal ? `${durVal} วินาที` : repsVal ? `${repsVal} ครั้ง` : '-';
-
       row.innerHTML = `
-        <td>${dateStr}</td>
-        <td>${name}</td>
-        <td>${setsStr}</td>
-        <td>${repsStr}</td>
+        <td>${new Date(item.date).toLocaleDateString()}</td>
+        <td>${item.exercise?.nameTh || '-'}</td>
+        <td>${item.sets || '-'}</td>
+        <td>${item.reps || item.duration || '-'}</td>
+        <td>${item.note || '-'}</td>
       `;
 
       tbody.appendChild(row);
