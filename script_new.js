@@ -347,8 +347,21 @@ function renderWorkoutCards(containerId, items) {
   const el = document.getElementById(containerId);
   if (!el) return;
 
-  el.innerHTML = items.map(item => `
-    <div class="workout-card" data-id="${item.id}">
+  const today = getTodayKey();
+
+  // เช็คว่าท่าไหนบันทึกวันนี้แล้ว
+  const doneIds = new Set(
+    workoutHistory
+      .filter(h => h.date && h.date.slice(0, 10) === today)
+      .map(h => h.exerciseId)
+      .filter(Boolean)
+  );
+
+  el.innerHTML = items.map(item => {
+    const isDone = doneIds.has(item.id);
+    return `
+    <div class="workout-card ${isDone ? 'workout-done' : ''}" data-id="${item.id}">
+      ${isDone ? `<div class="workout-done-badge">✔ บันทึกแล้ว</div>` : ''}
       <div class="workout-img">
         <img src="${item.img}" alt="${item.title}">
         <span class="difficulty-badge beginner">
@@ -360,7 +373,14 @@ function renderWorkoutCards(containerId, items) {
         <p>${item.sub}</p>
       </div>
     </div>
-  `).join("");
+  `}).join("");
+
+  // อัพเดต progress bar (ถ้าอยู่ใน dashboard)
+  if (containerId === "dashboard-workout-list") {
+    const total = items.length;
+    const done = items.filter(i => doneIds.has(i.id)).length;
+    updateWorkoutProgressBar(done, total);
+  }
 
   el.querySelectorAll(".workout-card").forEach(card => {
     card.addEventListener("click", () => {
@@ -369,6 +389,15 @@ function renderWorkoutCards(containerId, items) {
       if (item) openWorkoutModal(item, "do");
     });
   });
+}
+
+function updateWorkoutProgressBar(done, total) {
+  const bar = document.getElementById("workout-progress-bar");
+  const text = document.getElementById("workout-progress-label");
+  if (!bar || !total) return;
+  const pct = Math.round((done / total) * 100);
+  bar.style.width = pct + "%";
+  if (text) text.innerText = `${done}/${total} ท่า`;
 }
 
 
@@ -1841,13 +1870,8 @@ function renderDashboardMeals() {
   const el = document.getElementById("dashboard-meal-list");
   if (!el) return;
 
-  // ถ้ามีมื้อที่บันทึกจาก server ให้แสดงอันนั้น
-  const hasSavedMeals = Object.keys(selectedMeals).length > 0;
-
-  // ถ้ายังไม่มีมื้อบันทึก ใช้ generateMealPlan เป็น suggestion
-  const plan = hasSavedMeals ? null : generateMealPlan();
-
-  if (!hasSavedMeals && !plan) {
+  const plan = generateMealPlan();
+  if (!plan) {
     el.innerHTML = "<p>ยังไม่มีแผนอาหาร</p>";
     return;
   }
@@ -1855,30 +1879,28 @@ function renderDashboardMeals() {
   el.innerHTML = `
   <div class="meal-dashboard-grid">
     ${["breakfast", "lunch", "dinner"].map(meal => {
-      // ถ้ามี saved meal ใช้อันนั้น ไม่งั้นใช้ plan suggestion
-      const savedFood = selectedMeals[meal];
-      const f = savedFood || (plan && plan[meal]);
-      if (!f) return "";
+    const f = plan[meal];
+    if (!f) return "";
 
-      const isSaved = !!savedFood;
+    const isSaved = selectedMeals[meal];
 
-      return `
+    return `
         <div class="meal-dashboard-card ${isSaved ? "saved" : ""}" 
              data-meal="${meal}" 
              data-id="${f.id}">
              
               ${isSaved ? `<div class="saved-badge">✔</div>` : ""}
 
-          <img src="${f.img || f.imageUrl || ''}" class="meal-thumb">
+          <img src="${f.img}" class="meal-thumb">
 
           <div class="meal-info">
             <h4>${mealLabel(meal)}</h4>
-            <p class="meal-name">${f.name || f.nameTh || ''}</p>
-            <span class="meal-cal">${f.kcal || f.calories || 0} kcal</span>
+            <p class="meal-name">${f.name}</p>
+            <span class="meal-cal">${f.kcal} kcal</span>
           </div>
         </div>
       `;
-    }).join("")}
+  }).join("")}
   </div>
 `;
   attachMealCardEvents();
@@ -1962,7 +1984,7 @@ let currentPopupMeal = null;
 let currentPopupKey = null;
 
 let currentselectedFood = null;
-let selectedMeals = {}; // ไม่โหลดจาก localStorage แล้ว ใช้ server เป็น source of truth
+let selectedMeals = JSON.parse(localStorage.getItem(ukey("selected_meals"))) || {};
 
 function openMealPopup(mealKey, foodId) {
 

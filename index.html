@@ -845,6 +845,10 @@
 
   .pf-input-readonly { background: #F3F4F6 !important; color: #6B7280 !important; cursor: default; }
 
+  .workout-card.workout-done { border: 2px solid #10B981; background: linear-gradient(135deg, #D1FAE5 0%, #FFFFFF 100%); }
+  .workout-done-badge { position: absolute; top: 8px; right: 8px; background: #10B981; color: white; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; z-index: 2; }
+  .workout-card { position: relative; }
+
   .btn-change-pw-toggle { width: 100%; padding: 10px 14px; background: #F3F4F6; color: #374151; border: 1.5px solid #E5E7EB; border-radius: 12px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: 'Kanit', sans-serif; display: flex; align-items: center; gap: 8px; transition: all 0.2s; margin-bottom: 0; }
   .btn-change-pw-toggle:hover { background: #E5E7EB; }
   .btn-change-pw-toggle.active { background: #FFF3F3; border-color: #FF6B6B; color: #FF6B6B; }
@@ -1136,6 +1140,17 @@
         <!-- Tab 1: Workout -->
         <div id="tab-workout" class="tab-content active">
 
+          <!-- Progress Bar -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:#6B7280; margin-bottom:6px;">
+              <span>ความคืบหน้าวันนี้</span>
+              <span id="workout-progress-label">0/0 ท่า</span>
+            </div>
+            <div style="background:#F3F4F6; border-radius:10px; height:8px; overflow:hidden;">
+              <div id="workout-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#FF6B6B,#4ECDC4); border-radius:10px; transition:width 0.5s;"></div>
+            </div>
+          </div>
+
           <div id="dashboard-workout-list"></div>
           <h2 id="day-title"></h2>
           <p id="day-description"></p>
@@ -1278,7 +1293,7 @@
                 <select id="goalSelect" class="pf-select">
                   <option value="lose-fat">🔥 ลดไขมัน</option>
                   <option value="build-muscle">💪 สร้างกล้าม</option>
-
+                  <option value="maintain">🧘 รักษารูปร่าง</option>
                 </select>
               </div>
               <div class="pf-field">
@@ -1373,7 +1388,7 @@
             <table class="history-table" id="workout-history-table">
               <thead>
                 <tr>
-                  <th>วันที่</th><th>ท่า</th><th>เซ็ต</th><th>ครั้ง/เวลา</th>
+                  <th>วันที่</th><th>ท่า</th><th>เซ็ต</th><th>ครั้ง/เวลา</th><th>หมายเหตุ</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -1459,23 +1474,19 @@
         <div class="wizard-step" id="step-2">
           <label class="wizard-label">เป้าหมายของคุณคือ?</label>
           <div class="selection-grid">
-            <div class="select-card" onclick="selectOption(this, 'goal', 'lose-fat'); onGoalChange('lose-fat')"><i class="fas fa-fire"></i>
+            <div class="select-card" onclick="selectOption(this, 'goal', 'lose-fat')"><i class="fas fa-fire"></i>
               ลดไขมัน</div>
-            <div class="select-card" onclick="selectOption(this, 'goal', 'build-muscle'); onGoalChange('build-muscle')"><i
+            <div class="select-card" onclick="selectOption(this, 'goal', 'build-muscle')"><i
                 class="fas fa-dumbbell"></i> เพิ่มกล้ามเนื้อ</div>
-
+            <div class="select-card" onclick="selectOption(this, 'goal', 'maintain')"><i
+                class="fas fa-balance-scale"></i> รักษารูปร่าง</div>
           </div>
 
-          <div id="focus-section">
-            <label class="wizard-label mt-20">ส่วนที่อยากเน้น?</label>
-            <div class="selection-grid" id="focus-grid">
-              <div class="select-card" id="focus-chest-arms" onclick="selectOption(this, 'focus', 'chest-arms')">💪 อก & แขน</div>
-              <div class="select-card" id="focus-legs-core" onclick="selectOption(this, 'focus', 'legs-core')">🦵 ขา & แกนกลาง</div>
-              <div class="select-card" id="focus-full-body" onclick="selectOption(this, 'focus', 'full-body')">🏃 ทั่วร่าง</div>
-            </div>
-            <p id="focus-note" style="display:none; color:#EF4444; font-size:0.82rem; margin-top:6px;">
-              🔒 ลดไขมัน = ระบบจัดโปรแกรม Cardio + Full Body ให้อัตโนมัติ
-            </p>
+          <label class="wizard-label mt-20">ส่วนที่อยากเน้น?</label>มื้ออาหาร
+          <div class="selection-grid">
+            <div class="select-card" onclick="selectOption(this, 'focus', 'chest-arms')">อก & แขน</div>
+            <div class="select-card" onclick="selectOption(this, 'focus', 'legs-core')">ขา & แกนกลาง</div>
+            <div class="select-card" onclick="selectOption(this, 'focus', 'full-body')">ทั่วร่าง</div>
           </div>
 
           <label class="wizard-label mt-20">อุปกรณ์ที่มี?</label>
@@ -1507,15 +1518,10 @@
 
         <!-- STEP 3 -->
         <div class="wizard-step" id="step-3">
-          <div id="level-section">
-            <label class="wizard-label">ระดับความยาก</label>
-            <div class="range-selector" id="level-range-wrapper">
-              <input type="range" min="1" max="3" value="1" id="inp-level" oninput="updateLevelText(this.value)">
-              <p id="level-text">ง่าย</p>
-            </div>
-            <p id="level-note" style="display:none; color:#EF4444; font-size:0.82rem; margin-top:6px;">
-              🔒 ลดไขมัน = ระบบใช้ระดับปานกลางให้อัตโนมัติ
-            </p>
+          <label class="wizard-label">ระดับความยาก</label>
+          <div class="range-selector">
+            <input type="range" min="1" max="3" value="1" id="inp-level" oninput="updateLevelText(this.value)">
+            <p id="level-text">ง่าย</p>
           </div>
 
           <label class="wizard-label mt-20">อาการบาดเจ็บ (ถ้ามี)</label>
