@@ -139,7 +139,7 @@ function hydrateArenaImages() {
   });
 }
 
-/*
+
 // render each meal list
 const renderMeal = (meal, containerId, sumId) => {
   const el = document.getElementById(containerId);
@@ -173,7 +173,7 @@ const renderMeal = (meal, containerId, sumId) => {
 renderMeal("breakfast", "food-breakfast-list", "sum-breakfast");
 renderMeal("lunch", "food-lunch-list", "sum-lunch");
 renderMeal("dinner", "food-dinner-list", "sum-dinner");
-*/
+
 
 /* 
   const log = getFoodLog();
@@ -441,8 +441,9 @@ function showToast(message, type = 'success') {
 /* =========================================
    3. DATA & STORAGE
    ========================================= */
-let workoutHistory = JSON.parse(localStorage.getItem("fit_workout_history")) || [];
-if (!Array.isArray(workoutHistory)) workoutHistory = [];
+let workoutHistory = JSON.parse(
+  localStorage.getItem("fit_workout_history")
+) || [];
 
 let currentCalDate = new Date();
 let activeTitle = null;
@@ -519,8 +520,8 @@ function openWorkoutModal(item, mode = "do") {
             title: activeTitle,
             exerciseId: window.activeItem?.id || null,
             sets: window.activeItem?.sets || null,
-            reps: window.activeItem?.isTime ? null : (window.activeItem?.defaultReps || null),
-            duration: window.activeItem?.isTime ? window.activeItem?.defaultReps : null,
+            reps: window.activeItem?.isTime ? null : (window.activeItem?.reps || null),
+            duration: window.activeItem?.isTime ? window.activeItem?.reps : null,
             note: activeTitle
           })
         });
@@ -1482,73 +1483,46 @@ function updateDashboardFromProfile() {
    11. LOAD USER DATA
    ========================================= */
 function loadUserData() {
-const data = JSON.parse(localStorage.getItem(ukey("fit_user")));
-if (!data) return;
+  const data = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  if (!data) return;
 
-const hour = new Date().getHours();
-const greeting = hour < 12 ? "อรุณสวัสดิ์" : (hour < 18 ? "สวัสดี" : "สวัสดีตอนค่ำ");
-setText('user-name-display', `${greeting}, ${data.name}`);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "อรุณสวัสดิ์" : (hour < 18 ? "สวัสดี" : "สวัสดีตอนค่ำ");
+  setText('user-name-display', `${greeting}, ${data.name}`);
 
-setText('dash-weight', data.weight);
-setText('dash-height', data.height);
-setText('dash-bmi', data.bmi.toFixed(2));
-setText('bmi-val', data.bmi.toFixed(2));
-setText('bmi-status', data.bmiStatus);
+  setText('dash-weight', data.weight);
+  setText('dash-height', data.height);
+  setText('dash-bmi', data.bmi.toFixed(2));
+  setText('bmi-val', data.bmi.toFixed(2));
+  setText('bmi-status', data.bmiStatus);
 
-const statusEl = document.getElementById('bmi-status');
-if (statusEl) {
-if (data.bmi < 18.5) statusEl.style.color = "#FF9966";
-else if (data.bmi < 23) statusEl.style.color = "#4CAF50";
-else if (data.bmi < 25) statusEl.style.color = "#FFC107";
-else statusEl.style.color = "#FF5252";
-}
+  const statusEl = document.getElementById('bmi-status');
+  if (statusEl) {
+    if (data.bmi < 18.5) statusEl.style.color = "#FF9966";
+    else if (data.bmi < 23) statusEl.style.color = "#4CAF50";
+    else if (data.bmi < 25) statusEl.style.color = "#FFC107";
+    else statusEl.style.color = "#FF5252";
+  }
 
-// ===== Food (Nutrition Hub) =====
-const todayKey = getTodayKey();
+  // ===== Food (Nutrition Hub) =====
 
-let totalCal = 0;
-let totalP = 0;
-let totalC = 0;
-let totalF = 0;
+  const todayKey = getTodayKey();
 
-const foodLog = getFoodLog();
-const dayFood = foodLog[todayKey] || { breakfast: [], lunch: [], dinner: [] };
+  let totalCal = 0;
+  let totalP = 0;
+  let totalC = 0;
+  let totalF = 0;
 
-const allFood = [
-...(dayFood.breakfast || []),
-...(dayFood.lunch || []),
-...(dayFood.dinner || [])
-];
+  const tdee = data.tdee;
+  setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()}`);
 
-allFood.forEach(food => {
-totalCal += Number(food.cal || 0);
-totalP += Number(food.p || 0);
-totalC += Number(food.c || 0);
-totalF += Number(food.f || 0);
-});
+  const pGoal = Math.round((tdee * 0.3) / 4);
+  const cGoal = Math.round((tdee * 0.45) / 4);
+  const fGoal = Math.round((tdee * 0.25) / 9);
 
-// render หน้า food
-renderFoodPage();
+  updateWaterUI();
+  updateStreakDisplay();
 
-const tdee = data.tdee;
-setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()}`);
-
-const pGoal = Math.round((tdee * 0.3) / 4);
-const cGoal = Math.round((tdee * 0.45) / 4);
-const fGoal = Math.round((tdee * 0.25) / 9);
-
-animateValue('dash-protein', 0, totalP, 1500);
-animateValue('dash-carbs', 0, totalC, 1500);
-animateValue('dash-fat', 0, totalF, 1500);
-animateValue('dash-cal-val', 0, totalCal, 1500);
-
-updateMacroBar('bar-protein', totalP, pGoal);
-updateMacroBar('bar-carbs', totalC, cGoal);
-updateMacroBar('bar-fat', totalF, fGoal);
-updateCircleGraph(totalCal, tdee);
-
-updateWaterUI();
-updateStreakDisplay();
 }
 
 /* =========================================
@@ -2275,13 +2249,14 @@ function mapProgramWorkoutsToCards(workouts) {
 
       if (!workout) return null;
 
+      // กันซ้ำด้วย id ของ workout จริง
       if (seen.has(workout.id)) return null;
       seen.add(workout.id);
 
       return {
         id: workout.id,
         title: workout.nameTh || workout.nameEn || "ไม่มีชื่อ",
-        img: workout.imageUrl?.replace("[URL]", "").replace("[URL] ", "").trim() || "",
+        img: workout.imageUrl?.replace("[URL] ", "") || "",
         sub: w.repsInfo || "",
         instruction: workout.description || "",
         sets: extractSets(w.repsInfo),
@@ -2289,6 +2264,8 @@ function mapProgramWorkoutsToCards(workouts) {
       };
     })
     .filter(Boolean);
+
+  return Object.values(grouped).map(group => group[0]);
 }
 
 function extractSets(text) {
@@ -2323,91 +2300,108 @@ function getProgramId() {
 }
 
 async function loadTodayWorkout() {
-  const token = localStorage.getItem("token");
-  if (!token) return;
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-  try {
-    const res = await fetch(`${API_BASE}/api/today-workout`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    const data = await res.json();
+  try {
+    const res = await fetch(`${API_BASE}/api/today-workout`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
 
-    const container = document.getElementById("dashboard-workout-list");
+    const container = document.getElementById("dashboard-workout-list");
+    const headerEl = document.querySelector(".workout-progress-text");
+
+    // ✅ 1. เพิ่มระบบดักจับ Error 500 ป้องกัน UI แสดงผล undefined
+    if (!res.ok) {
+      console.error("API Error: ไม่สามารถโหลดข้อมูล today-workout ได้ สถานะ:", res.status);
+      if (headerEl) headerEl.innerHTML = `<span style="color: white;">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
+      if (container) container.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#EF4444;">
+          <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
+          โหลดข้อมูลไม่สำเร็จ (Error ${res.status}) กรุณาลองใหม่อีกครั้ง
+        </div>`;
+      return; 
+    }
+
+    const data = await res.json();
+
+    // กรณียังไม่ได้ตั้งโปรแกรม
+    if (data.noProgram) {
+      if (container) container.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#9CA3AF;">
+          <i class="fas fa-calendar-plus" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
+          ยังไม่ได้ตั้งค่าโปรแกรม กรุณา setup profile ก่อนครับ
+        </div>`;
+      if (headerEl) headerEl.innerHTML = `กรุณาตั้งค่าโปรแกรมการฝึก`;
+      return;
+    }
+
+    // กรณีโปรแกรมครบแล้ว
+    if (data.programDone) {
+      if (container) container.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#10B981;">
+          <i class="fas fa-trophy" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
+          🎉 ทำโปรแกรม ${data.totalDays} วันครบแล้ว! ยอดเยี่ยมมาก!
+        </div>`;
+      if (headerEl) headerEl.innerHTML = `เป้าหมายสำเร็จแล้ว!`;
+      return;
+    }
+
+    // อัพเดต header 
+    if (headerEl && data.dayProgress !== undefined) {
+      const partsLabel = data.isRestDay ? "วันพัก" : (data.bodyParts || []).join(" + ");
+      headerEl.innerHTML = `วันที่ <strong>${data.dayProgress}/${data.totalDays}</strong> • ${partsLabel} • เหลือ <strong>${data.daysLeft} วัน</strong>`;
+    }
+
+    // วันพัก
+    if (data.isRestDay) {
+      if (container) container.innerHTML = `
+        <div style="text-align:center; padding:30px;">
+          <div style="font-size:3rem; margin-bottom:10px;">💤</div>
+          <h3 style="color:#374151; margin:0 0 6px;">วันพักผ่อน</h3>
+          <p style="color:#9CA3AF; font-size:0.9rem;">พักกล้ามเนื้อให้ฟื้นตัว พรุ่งนี้สู้ต่อ!</p>
+        </div>`;
+      return;
+    }
+
+    // แสดงท่าออกกำลังกาย
+    if (!data.exercises || data.exercises.length === 0) {
+      if (container) container.innerHTML = `<div style="text-align:center; padding:20px; color:#9CA3AF;">ไม่พบท่าออกกำลังกายสำหรับวันนี้</div>`;
+      return;
+    }
+
+    // ✅ 2. เก็บตรรกะของเก่าของคุณไว้ (lose-fat ใช้เวลา, อื่นๆ ใช้ครั้ง)
+    const subText = data.isTime
+      ? `${data.reps} x ${data.sets} รอบ`
+      : `${data.reps} ครั้ง x ${data.sets} เซ็ต`;
+    const repsGuideText = data.isTime
+      ? `${data.reps}`
+      : `${data.reps} ครั้ง`;
+
+    window.todayWorkout = data.exercises.map(ex => ({
+      id: ex.id,
+      title: ex.nameTh,
+      nameEn: ex.nameEn,
+      img: ex.imageUrl?.replace('[URL]', '').replace('[URL] ', '').trim() || '',
+      sub: subText,
+      instruction: ex.description,
+      repsGuide: repsGuideText,
+      sets: data.sets,
+      reps: data.reps,
+      isTime: data.isTime || false,
+      bodyPart: ex.bodyPart,
+      level: ex.level
+    }));
+
+    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+
+  } catch (err) {
+    console.error("Failed to load today workout:", err);
+    // เผื่อกรณีเน็ตหลุด ยิง API ไม่ไปเลย
     const headerEl = document.querySelector(".workout-progress-text");
-
-    // กรณียังไม่ได้ตั้งโปรแกรม
-    if (data.noProgram) {
-      if (container) container.innerHTML = `
-        <div style="text-align:center; padding:20px; color:#9CA3AF;">
-          <i class="fas fa-calendar-plus" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
-          ยังไม่ได้ตั้งค่าโปรแกรม กรุณา setup profile ก่อนครับ
-        </div>`;
-      return;
-    }
-
-    // กรณีโปรแกรมครบแล้ว
-    if (data.programDone) {
-      if (container) container.innerHTML = `
-        <div style="text-align:center; padding:20px; color:#10B981;">
-          <i class="fas fa-trophy" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
-          🎉 ทำโปรแกรม ${data.totalDays} วันครบแล้ว! ยอดเยี่ยมมาก!
-        </div>`;
-      return;
-    }
-
-    // อัพเดต header
-    if (headerEl) {
-      const partsLabel = data.isRestDay ? "วันพัก" : (data.bodyParts || []).join(" + ");
-      headerEl.innerHTML = `วันที่ <strong>${data.dayProgress}/${data.totalDays}</strong> • ${partsLabel} • เหลือ <strong>${data.daysLeft} วัน</strong>`;
-    }
-
-    // วันพัก
-    if (data.isRestDay) {
-      if (container) container.innerHTML = `
-        <div style="text-align:center; padding:30px;">
-          <div style="font-size:3rem; margin-bottom:10px;">💤</div>
-          <h3 style="color:#374151; margin:0 0 6px;">วันพักผ่อน</h3>
-          <p style="color:#9CA3AF; font-size:0.9rem;">พักกล้ามเนื้อให้ฟื้นตัว พรุ่งนี้สู้ต่อ!</p>
-        </div>`;
-      return;
-    }
-
-    // แสดงท่าออกกำลังกาย
-    if (!data.exercises || data.exercises.length === 0) {
-      if (container) container.innerHTML = `<div style="text-align:center; padding:20px; color:#9CA3AF;">ไม่พบท่าออกกำลังกายสำหรับวันนี้</div>`;
-      return;
-    }
-
-    // lose-fat ใช้เวลา, อื่นๆ ใช้ครั้ง
-    const subText = data.isTime
-      ? `${data.reps} x ${data.sets} รอบ`
-      : `${data.reps} ครั้ง x ${data.sets} เซ็ต`;
-    const repsGuideText = data.isTime
-      ? `${data.reps}`
-      : `${data.reps} ครั้ง`;
-
-    window.todayWorkout = data.exercises.map(ex => ({
-      id: ex.id,
-      title: ex.nameTh,
-      nameEn: ex.nameEn,
-      img: ex.imageUrl?.replace('[URL]', '').replace('[URL] ', '').trim() || '',
-      sub: subText,
-      instruction: ex.description,
-      repsGuide: repsGuideText,
-      sets: data.sets,
-      reps: data.reps,
-      isTime: data.isTime || false,
-      bodyPart: ex.bodyPart,
-      level: ex.level
-    }));
-
-    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
-
-  } catch (err) {
-    console.error("Failed to load today workout:", err);
-  }
+    if (headerEl) headerEl.innerHTML = `<span style="color: white;">ข้อผิดพลาดในการเชื่อมต่อ</span>`;
+  }
 }
-
 
 
 function navigateTo(pageId) {
