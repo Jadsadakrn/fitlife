@@ -488,6 +488,7 @@ function openWorkoutModal(item, mode = "do") {
   if (!item) return;
 
   activeTitle = item.title;
+  window.activeItem = item; // 🔥 เก็บ item ทั้งหมด
   activeSetIndex = 0;
   activeMode = mode;
   activeImgUrl = item.img || "";
@@ -530,6 +531,7 @@ function openWorkoutModal(item, mode = "do") {
 
       const today = getTodayKey();
       const token = localStorage.getItem("token");
+      const activeItem = window.activeItem;
 
       try {
         await fetch(`${API_BASE}/api/workout-log`, {
@@ -538,8 +540,20 @@ function openWorkoutModal(item, mode = "do") {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({ date: today, title: activeTitle })
+          body: JSON.stringify({
+            date: today,
+            title: activeItem?.title || activeTitle,
+            exerciseId: activeItem?.id || null,
+            sets: activeItem?.sets || null,
+            reps: activeItem?.isTime ? null : (activeItem?.reps || null),
+            duration: activeItem?.isTime ? activeItem?.reps : null,
+            note: activeItem?.title || activeTitle
+          })
         });
+
+        // 🔥 อัปเดตการ์ดทันที
+        await loadWorkoutLogs();
+        renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
 
         await markTodayAsDone();
         showToast("บันทึกเรียบร้อย 💪", "success");
@@ -554,7 +568,6 @@ function openWorkoutModal(item, mode = "do") {
   }
 
   if (mode === "view") {
-
     if (finishBtn) {
       finishBtn.style.display = "";
       finishBtn.innerText = "จบวันนี้";
@@ -574,17 +587,6 @@ function openWorkoutModal(item, mode = "do") {
     showToast(`🏋️ เริ่มท่า ${item.title}!`, 'info');
   }
 }
-
-window.closeTimerModal = function () {
-  const timerModal = document.getElementById('timer-modal');
-  if (timerModal) timerModal.style.display = 'none';
-  activeTitle = null;
-  activeSetIndex = 0;
-  activeMode = "do"; // รีเซ็ต mode
-  activeImgUrl = "";
-  const imgEl = document.getElementById("modal-image");
-  if (imgEl) { imgEl.removeAttribute("src"); imgEl.style.display = "none"; }
-};
 
 
 function setupListTabs() {
@@ -1546,12 +1548,12 @@ function updateWaterUI() {
    14. PROFILE & LOGOUT
    ========================================= */
 async function saveProfile() {
-  const name   = document.getElementById('profile-inp-name')?.value?.trim();
+  const name = document.getElementById('profile-inp-name')?.value?.trim();
   const weight = parseFloat(document.getElementById('profile-inp-weight')?.value);
   const height = parseFloat(document.getElementById('profile-inp-height')?.value);
-  const goal   = document.getElementById('goalSelect')?.value;
-  const focus  = document.getElementById('focusSelect')?.value;
-  const level  = document.getElementById('levelSelect')?.value;
+  const goal = document.getElementById('goalSelect')?.value;
+  const focus = document.getElementById('focusSelect')?.value;
+  const level = document.getElementById('levelSelect')?.value;
   const equipment = document.getElementById('equipSelect')?.value || 'gym';
 
   const btn = document.querySelector('.btn-save-new');
@@ -1599,16 +1601,16 @@ function loadProfilePage() {
   const nameEl = document.getElementById('profile-name-display');
   if (nameEl) nameEl.textContent = user.name || 'Guest User';
 
-  const goalMap  = { 'lose-fat': '🔥 ลดไขมัน', 'build-muscle': '💪 สร้างกล้าม', 'maintain': '🧘 รักษารูปร่าง' };
+  const goalMap = { 'lose-fat': '🔥 ลดไขมัน', 'build-muscle': '💪 สร้างกล้าม', 'maintain': '🧘 รักษารูปร่าง' };
   const focusMap = { 'chest-arms': '💪 อก & แขน', 'legs-core': '🦵 ขา & แกน', 'full-body': '🏃 ทั่วร่าง' };
   const levelMap = { 'easy': '⭐ Beginner', 'medium': '⭐⭐ Intermediate', 'hard': '⭐⭐⭐ Advanced' };
 
-  const tagGoal  = document.getElementById('profile-tag-goal');
+  const tagGoal = document.getElementById('profile-tag-goal');
   const tagFocus = document.getElementById('profile-tag-focus');
   const tagLevel = document.getElementById('profile-tag-level');
-  if (tagGoal)  tagGoal.textContent  = goalMap[user.goal]   || '🎯 ยังไม่ระบุ';
-  if (tagFocus) tagFocus.textContent = focusMap[user.focus]  || '💪 ยังไม่ระบุ';
-  if (tagLevel) tagLevel.textContent = levelMap[user.level]  || '⭐ Beginner';
+  if (tagGoal) tagGoal.textContent = goalMap[user.goal] || '🎯 ยังไม่ระบุ';
+  if (tagFocus) tagFocus.textContent = focusMap[user.focus] || '💪 ยังไม่ระบุ';
+  if (tagLevel) tagLevel.textContent = levelMap[user.level] || '⭐ Beginner';
 
   const wEl = document.getElementById('profile-weight-display');
   const hEl = document.getElementById('profile-height-display');
@@ -1616,23 +1618,23 @@ function loadProfilePage() {
   const tEl = document.getElementById('profile-tdee-display');
   if (wEl) wEl.textContent = user.weight || '--';
   if (hEl) hEl.textContent = user.height || '--';
-  if (bEl) bEl.textContent = user.bmi    ? user.bmi.toFixed(1) : '--';
-  if (tEl) tEl.textContent = user.tdee   || '--';
+  if (bEl) bEl.textContent = user.bmi ? user.bmi.toFixed(1) : '--';
+  if (tEl) tEl.textContent = user.tdee || '--';
 
-  const nameInp   = document.getElementById('profile-inp-name');
+  const nameInp = document.getElementById('profile-inp-name');
   const weightInp = document.getElementById('profile-inp-weight');
   const heightInp = document.getElementById('profile-inp-height');
-  if (nameInp)   nameInp.value   = user.name   || '';
+  if (nameInp) nameInp.value = user.name || '';
   if (weightInp) weightInp.value = user.weight || '';
   if (heightInp) heightInp.value = user.height || '';
 
-  const goalSel  = document.getElementById('goalSelect');
+  const goalSel = document.getElementById('goalSelect');
   const focusSel = document.getElementById('focusSelect');
   const levelSel = document.getElementById('levelSelect');
   const equipSel = document.getElementById('equipSelect');
-  if (goalSel  && user.goal)      goalSel.value  = user.goal;
-  if (focusSel && user.focus)     focusSel.value = user.focus;
-  if (levelSel && user.level)     levelSel.value = user.level;
+  if (goalSel && user.goal) goalSel.value = user.goal;
+  if (focusSel && user.focus) focusSel.value = user.focus;
+  if (levelSel && user.level) levelSel.value = user.level;
   if (equipSel && user.equipment) equipSel.value = user.equipment;
 
   // โหลด email จาก server
@@ -1657,20 +1659,20 @@ async function loadEmailFromServer() {
 
 function toggleChangePw() {
   const panel = document.getElementById('change-pw-panel');
-  const btn   = document.getElementById('btn-pw-toggle');
+  const btn = document.getElementById('btn-pw-toggle');
   if (!panel || !btn) return;
   panel.classList.toggle('open');
   btn.classList.toggle('active');
   // clear fields เมื่อปิด
   if (!panel.classList.contains('open')) {
-    ['pw-current','pw-new','pw-confirm'].forEach(id => {
+    ['pw-current', 'pw-new', 'pw-confirm'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
     const fill = document.getElementById('pw-strength-fill');
-    const txt  = document.getElementById('pw-strength-text');
+    const txt = document.getElementById('pw-strength-text');
     if (fill) { fill.style.width = '0'; fill.style.background = ''; }
-    if (txt)  txt.textContent = '';
+    if (txt) txt.textContent = '';
   }
 }
 
@@ -1690,10 +1692,10 @@ function initPwStrength() {
     pwNew.addEventListener('input', () => {
       const val = pwNew.value;
       const fill = document.getElementById('pw-strength-fill');
-      const txt  = document.getElementById('pw-strength-text');
+      const txt = document.getElementById('pw-strength-text');
       if (!fill || !txt) return;
       let strength = 0;
-      if (val.length >= 6)  strength++;
+      if (val.length >= 6) strength++;
       if (val.length >= 10) strength++;
       if (/[A-Z]/.test(val)) strength++;
       if (/[0-9]/.test(val)) strength++;
@@ -1713,10 +1715,10 @@ function initPwStrength() {
 }
 
 async function changePassword() {
-  const current  = document.getElementById('pw-current')?.value?.trim();
-  const newPw    = document.getElementById('pw-new')?.value?.trim();
-  const confirm  = document.getElementById('pw-confirm')?.value?.trim();
-  const btn      = document.querySelector('.btn-save-pw');
+  const current = document.getElementById('pw-current')?.value?.trim();
+  const newPw = document.getElementById('pw-new')?.value?.trim();
+  const confirm = document.getElementById('pw-confirm')?.value?.trim();
+  const btn = document.querySelector('.btn-save-pw');
 
   if (!current || !newPw || !confirm) {
     showToast("⚠️ กรอกรหัสผ่านให้ครบทุกช่อง", "warning"); return;
@@ -1756,7 +1758,7 @@ async function changePassword() {
 
 function toggleEditPanel() {
   const panel = document.getElementById('edit-panel');
-  const btn   = document.querySelector('.profile-edit-btn');
+  const btn = document.querySelector('.profile-edit-btn');
   if (!panel) return;
   panel.classList.toggle('open');
   if (btn) btn.innerHTML = panel.classList.contains('open')
@@ -1770,7 +1772,7 @@ function toggleHistory(type) {
   card.classList.toggle('open');
   if (card.classList.contains('open')) {
     if (type === 'workout') loadWorkoutHistory();
-    if (type === 'meal')    loadMealHistory();
+    if (type === 'meal') loadMealHistory();
   }
 }
 
@@ -2396,17 +2398,26 @@ async function loadWorkoutHistory() {
 
     tbody.innerHTML = '';
 
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9CA3AF;">ยังไม่มีประวัติการออกกำลังกาย</td></tr>';
+      return;
+    }
+
     data.forEach(item => {
       const row = document.createElement('tr');
+      const dateStr = new Date(item.date).toLocaleDateString('th-TH');
+      const name = item.exercise?.nameTh || item.note || '-';
+      const setsStr = item.sets ? `${item.sets} เซ็ต` : '-';
+      const repsStr = item.duration ? `${item.duration} วินาที`
+        : item.reps ? `${item.reps} ครั้ง`
+          : '-';
 
       row.innerHTML = `
-        <td>${new Date(item.date).toLocaleDateString()}</td>
-        <td>${item.exercise?.nameTh || '-'}</td>
-        <td>${item.sets || '-'}</td>
-        <td>${item.reps || item.duration || '-'}</td>
-        <td>${item.note || '-'}</td>
+        <td>${dateStr}</td>
+        <td>${name}</td>
+        <td>${setsStr}</td>
+        <td>${repsStr}</td>
       `;
-
       tbody.appendChild(row);
     });
 
