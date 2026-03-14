@@ -102,31 +102,35 @@ app.get("/api/me", authenticateToken, async (req, res) => {
 app.post("/api/workout-log", authenticateToken, async (req, res) => {
   const { date, title, exerciseId, sets, reps, duration, note } = req.body;
 
-  if (!date) return res.status(400).json({ error: "Missing date" });
+  if (!date) {
+    return res.status(400).json({ error: "Missing date" });
+  }
 
   try {
-    // เช็คซ้ำ: userId + exerciseId + วันเดียวกัน
-    const startOfDay = new Date(date);
+    const logDate = new Date(date);
+    const startOfDay = new Date(logDate);
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
+    const endOfDay = new Date(logDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const existing = await prisma.workoutLog.findFirst({
-      where: {
-        userId: req.user.userId,
-        exerciseId: exerciseId || null,
-        date: { gte: startOfDay, lte: endOfDay }
+    // เช็คซ้ำ: ท่าเดิม วันเดิม user เดิม
+    if (exerciseId) {
+      const existing = await prisma.workoutLog.findFirst({
+        where: {
+          userId: req.user.userId,
+          exerciseId: exerciseId,
+          date: { gte: startOfDay, lte: endOfDay }
+        }
+      });
+      if (existing) {
+        return res.json({ success: true, duplicate: true, message: "Already logged today" });
       }
-    });
-
-    if (existing) {
-      return res.json({ success: true, log: existing, duplicate: true });
     }
 
     const log = await prisma.workoutLog.create({
       data: {
         userId: req.user.userId,
-        date: new Date(date),
+        date: logDate,
         exerciseId: exerciseId || null,
         sets: sets ? parseInt(sets) : null,
         reps: reps ? parseInt(reps) : null,
@@ -576,31 +580,5 @@ app.get("/api/meal-history", authenticateToken, async (req, res) => {
     res.json(logs);
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/debug-db", async (req, res) => {
-  const result = await prisma.$queryRaw`
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public'
-  `;
-  res.json(result);
-});
-
-app.post("/api/debug-insert", async (req, res) => {
-  try {
-    const log = await prisma.workoutLog.create({
-      data: {
-        userId: "d1401518-299b-4144-bd09-3773f59086a0",
-        date: new Date(),
-        sets: 4,
-        reps: 12,
-        note: "debug test"
-      }
-    });
-    res.json(log);
-  } catch(err) {
-    res.json({ error: err.message });
   }
 });
