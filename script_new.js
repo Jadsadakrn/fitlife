@@ -557,7 +557,7 @@ function openWorkoutModal(item, mode = "do") {
 
         await markTodayAsDone();
         showToast("บันทึกเรียบร้อย 💪", "success");
-        closeTimerModal();
+        window.closeTimerModal(); // 🔥 แก้ตรงนี้
 
       } catch (err) {
         console.error(err);
@@ -588,6 +588,18 @@ function openWorkoutModal(item, mode = "do") {
   }
 }
 
+function closeTimerModal() {
+  const timerModal = document.getElementById('timer-modal');
+  if (timerModal) timerModal.style.display = 'none';
+  activeTitle = null;
+  activeSetIndex = 0;
+  activeMode = "do";
+  activeImgUrl = "";
+  const imgEl = document.getElementById("modal-image");
+  if (imgEl) { imgEl.removeAttribute("src"); imgEl.style.display = "none"; }
+}
+
+window.closeTimerModal = closeTimerModal; // 🔥 ให้ HTML เรียกได้ด้วย
 
 function setupListTabs() {
   const btns = document.querySelectorAll(".mission-tabs-2 .tab-btn");
