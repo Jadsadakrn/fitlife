@@ -1271,9 +1271,10 @@ function onGoalChange(goal) {
   const levelNote    = document.getElementById('level-note');
   const levelInput   = document.getElementById('inp-level');
   const focusInput   = document.getElementById('selected-focus');
+  const equipInput   = document.getElementById('selected-equipment');
 
   if (goal === 'lose-fat') {
-    // ล็อก focus → auto full-body
+    // 1. [ล็อก] focus → auto full-body (เหมือนเดิม)
     focusCards.forEach(c => {
       c.style.opacity = '0.4';
       c.style.pointerEvents = 'none';
@@ -1284,13 +1285,14 @@ function onGoalChange(goal) {
     if (focusInput) focusInput.value = 'full-body';
     if (focusNote) focusNote.style.display = 'block';
 
-    // ล็อก level → auto medium
-    if (levelWrapper) levelWrapper.style.opacity = '0.4';
-    if (levelWrapper) levelWrapper.style.pointerEvents = 'none';
-    if (levelInput) { levelInput.value = '2'; updateLevelText('2'); }
-    if (levelNote) levelNote.style.display = 'block';
+    // 2. [ปลดล็อก] level → ให้เลือกได้เอง (แก้ไขตรงนี้!)
+    if (levelWrapper) {
+      levelWrapper.style.opacity = '';      // เอาสีเทาออก
+      levelWrapper.style.pointerEvents = ''; // ให้กลับมาเลื่อนได้
+    }
+    if (levelNote) levelNote.style.display = 'none'; // ซ่อนตัวหนังสือสีแดงที่บอกว่าล็อกอัตโนมัติ
 
-    // ล็อก equipment → auto bodyweight
+    // 3. [ล็อก] equipment → auto bodyweight (เหมือนเดิม)
     const equipCards = document.querySelectorAll('#step-2 .select-card[onclick*="equipment"]');
     equipCards.forEach(c => {
       c.style.opacity = '0.4';
@@ -1299,23 +1301,22 @@ function onGoalChange(goal) {
     });
     const bwCard = document.querySelector('#step-2 .select-card[onclick*="bodyweight"]');
     if (bwCard) bwCard.classList.add('selected');
-    const equipInput = document.getElementById('selected-equipment');
     if (equipInput) equipInput.value = 'bodyweight';
 
   } else { // build-muscle
-    // unlock focus
+    // [ปลดล็อกทุกอย่าง]
     focusCards.forEach(c => {
       c.style.opacity = '';
       c.style.pointerEvents = '';
     });
     if (focusNote) focusNote.style.display = 'none';
 
-    // unlock level
-    if (levelWrapper) levelWrapper.style.opacity = '';
-    if (levelWrapper) levelWrapper.style.pointerEvents = '';
+    if (levelWrapper) {
+      levelWrapper.style.opacity = '';
+      levelWrapper.style.pointerEvents = '';
+    }
     if (levelNote) levelNote.style.display = 'none';
 
-    // unlock equipment
     const equipCards = document.querySelectorAll('#step-2 .select-card[onclick*="equipment"]');
     equipCards.forEach(c => {
       c.style.opacity = '';

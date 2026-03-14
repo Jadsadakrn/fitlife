@@ -784,86 +784,510 @@
       margin-bottom: 6px;
     }
 
-  /* ===== PROFILE PAGE REDESIGN ===== */
-  #profile { padding: 0 !important; background: transparent; }
-  .profile-page-wrap { max-width: 680px; margin: 0 auto; padding: 16px 16px 40px; }
+    /* ===== PROFILE PAGE REDESIGN ===== */
+    #profile {
+      padding: 0 !important;
+      background: transparent;
+    }
 
-  .profile-hero { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(255,107,107,0.15); }
-  .profile-cover-bg { height: 130px; background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 50%, #4ECDC4 100%); }
-  .profile-hero-body { background: white; padding: 0 20px 20px; position: relative; }
-  .profile-avatar-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: -46px; margin-bottom: 14px; position: relative; z-index: 2; }
-  .profile-avatar { width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); border: 4px solid white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: white; box-shadow: 0 4px 16px rgba(102,126,234,0.3); flex-shrink: 0; position: relative; z-index: 3; }
-  .profile-edit-btn { background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Kanit', sans-serif; display: flex; align-items: center; gap: 6px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(255,107,107,0.3); }
-  .profile-edit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,107,107,0.4); }
-  .profile-display-name { font-size: 1.4rem; font-weight: 700; color: #111; margin: 0 0 8px; }
-  .profile-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-  .profile-tag { padding: 4px 12px; border-radius: 20px; font-size: 0.76rem; font-weight: 600; }
-  .tag-goal { background: #FFF3F3; color: #FF6B6B; border: 1px solid #FFD4D4; }
-  .tag-focus { background: #F0FFF4; color: #10B981; border: 1px solid #BBF7D0; }
-  .tag-level { background: #EFF6FF; color: #3B82F6; border: 1px solid #BFDBFE; }
+    .profile-page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+    }
 
-  .profile-stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #F3F4F6; border-radius: 16px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-  .stat-item { background: white; padding: 12px 6px; text-align: center; transition: background 0.2s; }
-  .stat-item:hover { background: #FFF5F5; }
-  .stat-icon { font-size: 1.1rem; margin-bottom: 4px; }
-  .stat-val { font-size: 1rem; font-weight: 700; color: #111; display: block; }
-  .stat-lbl { font-size: 0.68rem; color: #9CA3AF; display: block; }
+    .profile-hero {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(255, 107, 107, 0.15);
+    }
 
-  .edit-panel { background: white; border-radius: 20px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); max-height: 0; transition: max-height 0.5s ease, box-shadow 0.3s; }
-  .edit-panel.open { max-height: 1200px; box-shadow: 0 8px 32px rgba(255,107,107,0.12); }
-  .edit-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px 0; }
-  .edit-panel-inner { padding: 22px; }
-  .edit-panel-title { font-size: 1rem; font-weight: 700; color: #111; margin: 0 0 18px; display: flex; align-items: center; gap: 8px; }
-  .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .pf-field { display: flex; flex-direction: column; gap: 5px; }
-  .pf-field.full { grid-column: 1 / -1; }
-  .pf-field label { font-size: 0.74rem; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; }
-  .pf-input { padding: 10px 13px; border: 2px solid #E5E7EB; border-radius: 12px; font-size: 0.92rem; font-family: 'Kanit', sans-serif; color: #111; outline: none; transition: border-color 0.2s; background: #FAFAFA; width: 100%; box-sizing: border-box; }
-  .pf-input:focus { border-color: #FF6B6B; background: white; }
-  .pf-select { padding: 10px 36px 10px 13px; border: 2px solid #E5E7EB; border-radius: 12px; font-size: 0.92rem; font-family: 'Kanit', sans-serif; color: #111; outline: none; transition: border-color 0.2s; background: #FAFAFA url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 13px center; width: 100%; cursor: pointer; appearance: none; box-sizing: border-box; }
-  .pf-select:focus { border-color: #FF6B6B; background-color: white; }
-  .btn-save-new { width: 100%; padding: 13px; background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: white; border: none; border-radius: 14px; font-size: 0.98rem; font-weight: 700; cursor: pointer; font-family: 'Kanit', sans-serif; margin-top: 14px; transition: all 0.3s; box-shadow: 0 4px 16px rgba(255,107,107,0.3); }
-  .btn-save-new:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,107,0.4); }
-  /* logout button removed - use top-right nav button instead */
+    .profile-cover-bg {
+      height: 130px;
+      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 50%, #4ECDC4 100%);
+    }
 
-  .history-card { background: white; border-radius: 20px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-  .history-card-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6; cursor: pointer; transition: background 0.2s; }
-  .history-card-header:hover { background: #FAFAFA; }
-  .history-card-title { font-size: 0.92rem; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }
-  .history-toggle { color: #9CA3AF; font-size: 0.8rem; transition: transform 0.3s; }
-  .history-card.open .history-toggle { transform: rotate(180deg); }
-  .history-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
-  .history-card.open .history-body { max-height: 600px; overflow-y: auto; }
-  .history-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
-  .history-table th { padding: 10px 14px; text-align: left; font-size: 0.72rem; font-weight: 600; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; background: #F9FAFB; border-bottom: 1px solid #F3F4F6; }
-  .history-table td { padding: 11px 14px; border-bottom: 1px solid #F9FAFB; color: #374151; }
-  .history-table tr:last-child td { border-bottom: none; }
-  .history-empty { padding: 28px; text-align: center; color: #9CA3AF; font-size: 0.88rem; }
-  .account-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; }
-  .account-divider::before, .account-divider::after { content: ''; flex: 1; height: 1px; background: #E5E7EB; }
-  .account-divider span { font-size: 0.75rem; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+    .profile-hero-body {
+      background: white;
+      padding: 0 20px 20px;
+      position: relative;
+    }
 
-  .pf-input-readonly { background: #F3F4F6 !important; color: #6B7280 !important; cursor: default; }
+    .profile-avatar-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-top: -46px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 2;
+    }
 
-  .btn-change-pw-toggle { width: 100%; padding: 10px 14px; background: #F3F4F6; color: #374151; border: 1.5px solid #E5E7EB; border-radius: 12px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: 'Kanit', sans-serif; display: flex; align-items: center; gap: 8px; transition: all 0.2s; margin-bottom: 0; }
-  .btn-change-pw-toggle:hover { background: #E5E7EB; }
-  .btn-change-pw-toggle.active { background: #FFF3F3; border-color: #FF6B6B; color: #FF6B6B; }
+    .profile-avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: 4px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: white;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 3;
+    }
 
-  .change-pw-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
-  .change-pw-panel.open { max-height: 500px; }
+    .profile-edit-btn {
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Kanit', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+    }
 
-  .pw-input-wrap { position: relative; }
-  .pw-input-wrap .pf-input { padding-right: 42px; }
-  .pw-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9CA3AF; cursor: pointer; font-size: 0.85rem; padding: 4px; }
-  .pw-eye:hover { color: #374151; }
+    .profile-edit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(255, 107, 107, 0.4);
+    }
 
-  .pw-strength-bar { height: 4px; background: #E5E7EB; border-radius: 4px; margin: 10px 0 4px; overflow: hidden; }
-  .pw-strength-bar div { height: 100%; width: 0; border-radius: 4px; transition: width 0.3s, background 0.3s; }
-  .pw-strength-text { font-size: 0.74rem; color: #9CA3AF; margin: 0 0 12px; min-height: 16px; }
+    .profile-display-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #111;
+      margin: 0 0 8px;
+    }
 
-  .btn-save-pw { width: 100%; padding: 11px; background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: white; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: 'Kanit', sans-serif; margin-bottom: 10px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(59,130,246,0.25); }
-  .btn-save-pw:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(59,130,246,0.35); }
+    .profile-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
 
+    .profile-tag {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+
+    .tag-goal {
+      background: #FFF3F3;
+      color: #FF6B6B;
+      border: 1px solid #FFD4D4;
+    }
+
+    .tag-focus {
+      background: #F0FFF4;
+      color: #10B981;
+      border: 1px solid #BBF7D0;
+    }
+
+    .tag-level {
+      background: #EFF6FF;
+      color: #3B82F6;
+      border: 1px solid #BFDBFE;
+    }
+
+    .profile-stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: #F3F4F6;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-item {
+      background: white;
+      padding: 12px 6px;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .stat-item:hover {
+      background: #FFF5F5;
+    }
+
+    .stat-icon {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .stat-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #111;
+      display: block;
+    }
+
+    .stat-lbl {
+      font-size: 0.68rem;
+      color: #9CA3AF;
+      display: block;
+    }
+
+    .edit-panel {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      max-height: 0;
+      transition: max-height 0.5s ease, box-shadow 0.3s;
+    }
+
+    .edit-panel.open {
+      max-height: 1200px;
+      box-shadow: 0 8px 32px rgba(255, 107, 107, 0.12);
+    }
+
+    .edit-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px 0;
+    }
+
+    .edit-panel-inner {
+      padding: 22px;
+    }
+
+    .edit-panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #111;
+      margin: 0 0 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pf-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .pf-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .pf-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .pf-field label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #6B7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pf-input {
+      padding: 10px 13px;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-family: 'Kanit', sans-serif;
+      color: #111;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #FAFAFA;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .pf-input:focus {
+      border-color: #FF6B6B;
+      background: white;
+    }
+
+    .pf-select {
+      padding: 10px 36px 10px 13px;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-family: 'Kanit', sans-serif;
+      color: #111;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #FAFAFA url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 13px center;
+      width: 100%;
+      cursor: pointer;
+      appearance: none;
+      box-sizing: border-box;
+    }
+
+    .pf-select:focus {
+      border-color: #FF6B6B;
+      background-color: white;
+    }
+
+    .btn-save-new {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Kanit', sans-serif;
+      margin-top: 14px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-save-new:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
+    }
+
+    /* logout button removed - use top-right nav button instead */
+
+    .history-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .history-card-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #F3F4F6;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .history-card-header:hover {
+      background: #FAFAFA;
+    }
+
+    .history-card-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #111;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-toggle {
+      color: #9CA3AF;
+      font-size: 0.8rem;
+      transition: transform 0.3s;
+    }
+
+    .history-card.open .history-toggle {
+      transform: rotate(180deg);
+    }
+
+    .history-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .history-card.open .history-body {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+
+    .history-table th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #9CA3AF;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #F9FAFB;
+      border-bottom: 1px solid #F3F4F6;
+    }
+
+    .history-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #F9FAFB;
+      color: #374151;
+    }
+
+    .history-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .history-empty {
+      padding: 28px;
+      text-align: center;
+      color: #9CA3AF;
+      font-size: 0.88rem;
+    }
+
+    .account-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 14px;
+    }
+
+    .account-divider::before,
+    .account-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #E5E7EB;
+    }
+
+    .account-divider span {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #9CA3AF;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+    }
+
+    .pf-input-readonly {
+      background: #F3F4F6 !important;
+      color: #6B7280 !important;
+      cursor: default;
+    }
+
+    .btn-change-pw-toggle {
+      width: 100%;
+      padding: 10px 14px;
+      background: #F3F4F6;
+      color: #374151;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Kanit', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      margin-bottom: 0;
+    }
+
+    .btn-change-pw-toggle:hover {
+      background: #E5E7EB;
+    }
+
+    .btn-change-pw-toggle.active {
+      background: #FFF3F3;
+      border-color: #FF6B6B;
+      color: #FF6B6B;
+    }
+
+    .change-pw-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .change-pw-panel.open {
+      max-height: 500px;
+    }
+
+    .pw-input-wrap {
+      position: relative;
+    }
+
+    .pw-input-wrap .pf-input {
+      padding-right: 42px;
+    }
+
+    .pw-eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #9CA3AF;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 4px;
+    }
+
+    .pw-eye:hover {
+      color: #374151;
+    }
+
+    .pw-strength-bar {
+      height: 4px;
+      background: #E5E7EB;
+      border-radius: 4px;
+      margin: 10px 0 4px;
+      overflow: hidden;
+    }
+
+    .pw-strength-bar div {
+      height: 100%;
+      width: 0;
+      border-radius: 4px;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    .pw-strength-text {
+      font-size: 0.74rem;
+      color: #9CA3AF;
+      margin: 0 0 12px;
+      min-height: 16px;
+    }
+
+    .btn-save-pw {
+      width: 100%;
+      padding: 11px;
+      background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Kanit', sans-serif;
+      margin-bottom: 10px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .btn-save-pw:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+    }
   </style>
   <link rel="stylesheet" href="modern.css">
 </head>
@@ -1317,7 +1741,8 @@
             <div class="pf-grid">
               <div class="pf-field full">
                 <label>อีเมล</label>
-                <input type="email" id="profile-email-display" class="pf-input pf-input-readonly" readonly placeholder="กำลังโหลด...">
+                <input type="email" id="profile-email-display" class="pf-input pf-input-readonly" readonly
+                  placeholder="กำลังโหลด...">
               </div>
             </div>
 
@@ -1332,25 +1757,30 @@
                   <label>รหัสผ่านปัจจุบัน</label>
                   <div class="pw-input-wrap">
                     <input type="password" id="pw-current" placeholder="••••••••" class="pf-input">
-                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-current', this)"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-current', this)"><i
+                        class="fas fa-eye"></i></button>
                   </div>
                 </div>
                 <div class="pf-field">
                   <label>รหัสผ่านใหม่</label>
                   <div class="pw-input-wrap">
                     <input type="password" id="pw-new" placeholder="อย่างน้อย 6 ตัว" class="pf-input">
-                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-new', this)"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-new', this)"><i
+                        class="fas fa-eye"></i></button>
                   </div>
                 </div>
                 <div class="pf-field">
                   <label>ยืนยันรหัสผ่านใหม่</label>
                   <div class="pw-input-wrap">
                     <input type="password" id="pw-confirm" placeholder="ยืนยันอีกครั้ง" class="pf-input">
-                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-confirm', this)"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="pw-eye" onclick="togglePwEye('pw-confirm', this)"><i
+                        class="fas fa-eye"></i></button>
                   </div>
                 </div>
               </div>
-              <div class="pw-strength-bar" id="pw-strength-bar"><div id="pw-strength-fill"></div></div>
+              <div class="pw-strength-bar" id="pw-strength-bar">
+                <div id="pw-strength-fill"></div>
+              </div>
               <p class="pw-strength-text" id="pw-strength-text"></p>
               <button class="btn-save-pw" onclick="changePassword()">
                 <i class="fas fa-key"></i> ยืนยันเปลี่ยนรหัสผ่าน
@@ -1373,12 +1803,16 @@
             <table class="history-table" id="workout-history-table">
               <thead>
                 <tr>
-                  <th>วันที่</th><th>ท่า</th><th>เซ็ต</th><th>ครั้ง/เวลา</th>
+                  <th>วันที่</th>
+                  <th>ท่า</th>
+                  <th>เซ็ต</th>
+                  <th>ครั้ง/เวลา</th>
                 </tr>
               </thead>
               <tbody></tbody>
             </table>
-            <div class="history-empty" id="workout-history-empty" style="display:none;">ยังไม่มีประวัติการออกกำลังกาย</div>
+            <div class="history-empty" id="workout-history-empty" style="display:none;">ยังไม่มีประวัติการออกกำลังกาย
+            </div>
           </div>
         </div>
 
@@ -1394,7 +1828,13 @@
             <table class="history-table" id="meal-history-table">
               <thead>
                 <tr>
-                  <th>วันที่</th><th>มื้อ</th><th>อาหาร</th><th>kcal</th><th>P</th><th>C</th><th>F</th>
+                  <th>วันที่</th>
+                  <th>มื้อ</th>
+                  <th>อาหาร</th>
+                  <th>kcal</th>
+                  <th>P</th>
+                  <th>C</th>
+                  <th>F</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -1459,19 +1899,23 @@
         <div class="wizard-step" id="step-2">
           <label class="wizard-label">เป้าหมายของคุณคือ?</label>
           <div class="selection-grid">
-            <div class="select-card" onclick="selectOption(this, 'goal', 'lose-fat'); onGoalChange('lose-fat')"><i class="fas fa-fire"></i>
+            <div class="select-card" onclick="selectOption(this, 'goal', 'lose-fat'); onGoalChange('lose-fat')"><i
+                class="fas fa-fire"></i>
               ลดไขมัน</div>
-            <div class="select-card" onclick="selectOption(this, 'goal', 'build-muscle'); onGoalChange('build-muscle')"><i
-                class="fas fa-dumbbell"></i> เพิ่มกล้ามเนื้อ</div>
+            <div class="select-card" onclick="selectOption(this, 'goal', 'build-muscle'); onGoalChange('build-muscle')">
+              <i class="fas fa-dumbbell"></i> เพิ่มกล้ามเนื้อ</div>
 
           </div>
 
           <div id="focus-section">
             <label class="wizard-label mt-20">ส่วนที่อยากเน้น?</label>
             <div class="selection-grid" id="focus-grid">
-              <div class="select-card" id="focus-chest-arms" onclick="selectOption(this, 'focus', 'chest-arms')">💪 อก & แขน</div>
-              <div class="select-card" id="focus-legs-core" onclick="selectOption(this, 'focus', 'legs-core')">🦵 ขา & แกนกลาง</div>
-              <div class="select-card" id="focus-full-body" onclick="selectOption(this, 'focus', 'full-body')">🏃 ทั่วร่าง</div>
+              <div class="select-card" id="focus-chest-arms" onclick="selectOption(this, 'focus', 'chest-arms')">💪 อก &
+                แขน</div>
+              <div class="select-card" id="focus-legs-core" onclick="selectOption(this, 'focus', 'legs-core')">🦵 ขา &
+                แกนกลาง</div>
+              <div class="select-card" id="focus-full-body" onclick="selectOption(this, 'focus', 'full-body')">🏃
+                ทั่วร่าง</div>
             </div>
             <p id="focus-note" style="display:none; color:#EF4444; font-size:0.82rem; margin-top:6px;">
               🔒 ลดไขมัน = ระบบจัดโปรแกรม Cardio + Full Body ให้อัตโนมัติ
@@ -1505,7 +1949,6 @@
           <input type="hidden" id="selected-focus">
         </div>
 
-        <!-- STEP 3 -->
         <div class="wizard-step" id="step-3">
           <div id="level-section">
             <label class="wizard-label">ระดับความยาก</label>
@@ -1513,62 +1956,65 @@
               <input type="range" min="1" max="3" value="1" id="inp-level" oninput="updateLevelText(this.value)">
               <p id="level-text">ง่าย</p>
             </div>
-            <p id="level-note" style="display:none; color:#EF4444; font-size:0.82rem; margin-top:6px;">
-              🔒 ลดไขมัน = ระบบใช้ระดับปานกลางให้อัตโนมัติ
+
+            <p style="color:#6B7280; font-size:0.82rem; margin-top:6px;">
+              💡 เลือกระดับที่เหมาะสมกับความฟิตของคุณ
             </p>
           </div>
-
-          <label class="wizard-label mt-20">อาการบาดเจ็บ (ถ้ามี)</label>
-          <div class="checkbox-group">
-            <label><input type="checkbox" value="knee"> เข่า</label>
-            <label><input type="checkbox" value="back"> หลัง</label>
-            <label><input type="checkbox" value="shoulder"> ไหล่</label>
-            <label><input type="checkbox" value="none" checked> ไม่มี</label>
-          </div>
+          ...
         </div>
 
+        <label class="wizard-label mt-20">อาการบาดเจ็บ (ถ้ามี)</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" value="knee"> เข่า</label>
+          <label><input type="checkbox" value="back"> หลัง</label>
+          <label><input type="checkbox" value="shoulder"> ไหล่</label>
+          <label><input type="checkbox" value="none" checked> ไม่มี</label>
         </div>
-
-        <!-- STEP 4 -->
-        <div class="wizard-step" id="step-4">
-          <label class="wizard-label">📅 วันเริ่มต้นโปรแกรม</label>
-          <div class="input-group-wizard">
-            <input type="date" id="inp-start-date">
-          </div>
-
-          <label class="wizard-label mt-20">⏱️ ระยะเวลาโปรแกรม</label>
-          <div class="selection-grid">
-            <div class="select-card" onclick="selectDuration(this, 30)">
-              <i class="fas fa-calendar"></i><br>30 วัน<br><small style="color:#9CA3AF;">1 เดือน</small>
-            </div>
-            <div class="select-card" onclick="selectDuration(this, 60)">
-              <i class="fas fa-calendar-alt"></i><br>60 วัน<br><small style="color:#9CA3AF;">2 เดือน</small>
-            </div>
-            <div class="select-card" onclick="selectDuration(this, 90)">
-              <i class="fas fa-calendar-check"></i><br>90 วัน<br><small style="color:#9CA3AF;">3 เดือน</small>
-            </div>
-          </div>
-          <input type="hidden" id="inp-duration" value="30">
-
-          <div style="margin-top:20px; background:#F0FFF4; border-radius:14px; padding:16px; border:1px solid #BBF7D0;">
-            <p style="margin:0; font-size:0.88rem; color:#065F46;">
-              <i class="fas fa-info-circle"></i>
-              โปรแกรม 7 วันวนลูป — วันที่ 4 และ 7 คือวันพัก<br>
-              ระบบจะจัดท่าออกกำลังกายตาม goal และ focus ที่เลือกไว้
-            </p>
-          </div>
-        </div>
-
-        <!-- FOOTER (ต้องอยู่นอก step เพื่อให้มีทุกหน้า) -->
-        <div class="wizard-footer">
-          <button type="button" class="btn-secondary" id="prev-btn" onclick="changeStep(-1)" disabled>ย้อนกลับ</button>
-          <button type="button" class="btn-primary" id="next-btn" onclick="changeStep(1)">ถัดไป</button>
-          <button type="button" class="btn-success" id="finish-btn" onclick="finishWizard()"
-            style="display:none;">ประมวลผล & เริ่มต้น</button>
-        </div>
-
-      </form>
     </div>
+
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="wizard-step" id="step-4">
+    <label class="wizard-label">📅 วันเริ่มต้นโปรแกรม</label>
+    <div class="input-group-wizard">
+      <input type="date" id="inp-start-date">
+    </div>
+
+    <label class="wizard-label mt-20">⏱️ ระยะเวลาโปรแกรม</label>
+    <div class="selection-grid">
+      <div class="select-card" onclick="selectDuration(this, 30)">
+        <i class="fas fa-calendar"></i><br>30 วัน<br><small style="color:#9CA3AF;">1 เดือน</small>
+      </div>
+      <div class="select-card" onclick="selectDuration(this, 60)">
+        <i class="fas fa-calendar-alt"></i><br>60 วัน<br><small style="color:#9CA3AF;">2 เดือน</small>
+      </div>
+      <div class="select-card" onclick="selectDuration(this, 90)">
+        <i class="fas fa-calendar-check"></i><br>90 วัน<br><small style="color:#9CA3AF;">3 เดือน</small>
+      </div>
+    </div>
+    <input type="hidden" id="inp-duration" value="30">
+
+    <div style="margin-top:20px; background:#F0FFF4; border-radius:14px; padding:16px; border:1px solid #BBF7D0;">
+      <p style="margin:0; font-size:0.88rem; color:#065F46;">
+        <i class="fas fa-info-circle"></i>
+        โปรแกรม 7 วันวนลูป — วันที่ 4 และ 7 คือวันพัก<br>
+        ระบบจะจัดท่าออกกำลังกายตาม goal และ focus ที่เลือกไว้
+      </p>
+    </div>
+  </div>
+
+  <!-- FOOTER (ต้องอยู่นอก step เพื่อให้มีทุกหน้า) -->
+  <div class="wizard-footer">
+    <button type="button" class="btn-secondary" id="prev-btn" onclick="changeStep(-1)" disabled>ย้อนกลับ</button>
+    <button type="button" class="btn-primary" id="next-btn" onclick="changeStep(1)">ถัดไป</button>
+    <button type="button" class="btn-success" id="finish-btn" onclick="finishWizard()" style="display:none;">ประมวลผล &
+      เริ่มต้น</button>
+  </div>
+
+  </form>
+  </div>
   </div>
 
 
