@@ -100,7 +100,7 @@ app.get("/api/me", authenticateToken, async (req, res) => {
 // WORKOUT LOG
 // ===============================
 app.post("/api/workout-log", authenticateToken, async (req, res) => {
-  const { date, title } = req.body;
+  const { date, title, exerciseId, sets, reps, duration } = req.body;
 
   if (!date || !title) {
     return res.status(400).json({ error: "Missing data" });
@@ -110,7 +110,11 @@ app.post("/api/workout-log", authenticateToken, async (req, res) => {
     const log = await prisma.workoutLog.create({
       data: {
         userId: req.user.userId,
+        exerciseId: exerciseId || null,
         date: new Date(date),
+        sets: sets || null,
+        reps: reps || null,
+        duration: duration || null,
         note: title
       }
     });

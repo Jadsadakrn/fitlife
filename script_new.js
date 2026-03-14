@@ -139,7 +139,7 @@ function hydrateArenaImages() {
   });
 }
 
-
+/*
 // render each meal list
 const renderMeal = (meal, containerId, sumId) => {
   const el = document.getElementById(containerId);
@@ -173,7 +173,7 @@ const renderMeal = (meal, containerId, sumId) => {
 renderMeal("breakfast", "food-breakfast-list", "sum-breakfast");
 renderMeal("lunch", "food-lunch-list", "sum-lunch");
 renderMeal("dinner", "food-dinner-list", "sum-dinner");
-
+*/
 
 /* 
   const log = getFoodLog();
@@ -441,9 +441,8 @@ function showToast(message, type = 'success') {
 /* =========================================
    3. DATA & STORAGE
    ========================================= */
-let workoutHistory = JSON.parse(
-  localStorage.getItem("fit_workout_history")
-) || [];
+let workoutHistory = JSON.parse(localStorage.getItem("fit_workout_history")) || [];
+if (!Array.isArray(workoutHistory)) workoutHistory = [];
 
 let currentCalDate = new Date();
 let activeTitle = null;
@@ -520,8 +519,8 @@ function openWorkoutModal(item, mode = "do") {
             title: activeTitle,
             exerciseId: window.activeItem?.id || null,
             sets: window.activeItem?.sets || null,
-            reps: window.activeItem?.isTime ? null : (window.activeItem?.reps || null),
-            duration: window.activeItem?.isTime ? window.activeItem?.reps : null,
+            reps: window.activeItem?.isTime ? null : (window.activeItem?.defaultReps || null),
+            duration: window.activeItem?.isTime ? window.activeItem?.defaultReps : null,
             note: activeTitle
           })
         });
@@ -1483,46 +1482,73 @@ function updateDashboardFromProfile() {
    11. LOAD USER DATA
    ========================================= */
 function loadUserData() {
-  const data = JSON.parse(localStorage.getItem(ukey("fit_user")));
-  if (!data) return;
+const data = JSON.parse(localStorage.getItem(ukey("fit_user")));
+if (!data) return;
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "อรุณสวัสดิ์" : (hour < 18 ? "สวัสดี" : "สวัสดีตอนค่ำ");
-  setText('user-name-display', `${greeting}, ${data.name}`);
+const hour = new Date().getHours();
+const greeting = hour < 12 ? "อรุณสวัสดิ์" : (hour < 18 ? "สวัสดี" : "สวัสดีตอนค่ำ");
+setText('user-name-display', `${greeting}, ${data.name}`);
 
-  setText('dash-weight', data.weight);
-  setText('dash-height', data.height);
-  setText('dash-bmi', data.bmi.toFixed(2));
-  setText('bmi-val', data.bmi.toFixed(2));
-  setText('bmi-status', data.bmiStatus);
+setText('dash-weight', data.weight);
+setText('dash-height', data.height);
+setText('dash-bmi', data.bmi.toFixed(2));
+setText('bmi-val', data.bmi.toFixed(2));
+setText('bmi-status', data.bmiStatus);
 
-  const statusEl = document.getElementById('bmi-status');
-  if (statusEl) {
-    if (data.bmi < 18.5) statusEl.style.color = "#FF9966";
-    else if (data.bmi < 23) statusEl.style.color = "#4CAF50";
-    else if (data.bmi < 25) statusEl.style.color = "#FFC107";
-    else statusEl.style.color = "#FF5252";
-  }
+const statusEl = document.getElementById('bmi-status');
+if (statusEl) {
+if (data.bmi < 18.5) statusEl.style.color = "#FF9966";
+else if (data.bmi < 23) statusEl.style.color = "#4CAF50";
+else if (data.bmi < 25) statusEl.style.color = "#FFC107";
+else statusEl.style.color = "#FF5252";
+}
 
-  // ===== Food (Nutrition Hub) =====
+// ===== Food (Nutrition Hub) =====
+const todayKey = getTodayKey();
 
-  const todayKey = getTodayKey();
+let totalCal = 0;
+let totalP = 0;
+let totalC = 0;
+let totalF = 0;
 
-  let totalCal = 0;
-  let totalP = 0;
-  let totalC = 0;
-  let totalF = 0;
+const foodLog = getFoodLog();
+const dayFood = foodLog[todayKey] || { breakfast: [], lunch: [], dinner: [] };
 
-  const tdee = data.tdee;
-  setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()}`);
+const allFood = [
+...(dayFood.breakfast || []),
+...(dayFood.lunch || []),
+...(dayFood.dinner || [])
+];
 
-  const pGoal = Math.round((tdee * 0.3) / 4);
-  const cGoal = Math.round((tdee * 0.45) / 4);
-  const fGoal = Math.round((tdee * 0.25) / 9);
+allFood.forEach(food => {
+totalCal += Number(food.cal || 0);
+totalP += Number(food.p || 0);
+totalC += Number(food.c || 0);
+totalF += Number(food.f || 0);
+});
 
-  updateWaterUI();
-  updateStreakDisplay();
+// render หน้า food
+renderFoodPage();
 
+const tdee = data.tdee;
+setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()}`);
+
+const pGoal = Math.round((tdee * 0.3) / 4);
+const cGoal = Math.round((tdee * 0.45) / 4);
+const fGoal = Math.round((tdee * 0.25) / 9);
+
+animateValue('dash-protein', 0, totalP, 1500);
+animateValue('dash-carbs', 0, totalC, 1500);
+animateValue('dash-fat', 0, totalF, 1500);
+animateValue('dash-cal-val', 0, totalCal, 1500);
+
+updateMacroBar('bar-protein', totalP, pGoal);
+updateMacroBar('bar-carbs', totalC, cGoal);
+updateMacroBar('bar-fat', totalF, fGoal);
+updateCircleGraph(totalCal, tdee);
+
+updateWaterUI();
+updateStreakDisplay();
 }
 
 /* =========================================
@@ -2249,14 +2275,13 @@ function mapProgramWorkoutsToCards(workouts) {
 
       if (!workout) return null;
 
-      // กันซ้ำด้วย id ของ workout จริง
       if (seen.has(workout.id)) return null;
       seen.add(workout.id);
 
       return {
         id: workout.id,
         title: workout.nameTh || workout.nameEn || "ไม่มีชื่อ",
-        img: workout.imageUrl?.replace("[URL] ", "") || "",
+        img: workout.imageUrl?.replace("[URL]", "").replace("[URL] ", "").trim() || "",
         sub: w.repsInfo || "",
         instruction: workout.description || "",
         sets: extractSets(w.repsInfo),
@@ -2264,8 +2289,6 @@ function mapProgramWorkoutsToCards(workouts) {
       };
     })
     .filter(Boolean);
-
-  return Object.values(grouped).map(group => group[0]);
 }
 
 function extractSets(text) {
