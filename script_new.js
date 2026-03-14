@@ -348,8 +348,6 @@ function renderWorkoutCards(containerId, items) {
   if (!el) return;
 
   const today = getTodayKey();
-
-  // เช็คว่าท่าไหนบันทึกวันนี้แล้ว
   const doneIds = new Set(
     workoutHistory
       .filter(h => h.date && h.date.slice(0, 10) === today)
@@ -364,18 +362,15 @@ function renderWorkoutCards(containerId, items) {
       ${isDone ? `<div class="workout-done-badge">✔ บันทึกแล้ว</div>` : ''}
       <div class="workout-img">
         <img src="${item.img}" alt="${item.title}">
-        <span class="difficulty-badge beginner">
-          ${item.sub}
-        </span>
+        <span class="difficulty-badge beginner">${item.sub}</span>
       </div>
       <div class="workout-content">
         <h3>${item.title}</h3>
         <p>${item.sub}</p>
       </div>
-    </div>
-  `}).join("");
+    </div>`
+  }).join("");
 
-  // อัพเดต progress bar (ถ้าอยู่ใน dashboard)
   if (containerId === "dashboard-workout-list") {
     const total = items.length;
     const done = items.filter(i => doneIds.has(i.id)).length;
@@ -2284,11 +2279,12 @@ async function loadTodayWorkout() {
       title: ex.nameTh,
       nameEn: ex.nameEn,
       img: ex.imageUrl?.replace('[URL]', '').replace('[URL] ', '').trim() || '',
-      sub: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
-      description: ex.description,
-      repsInfo: `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
+      sub: data.isTime ? `${data.reps} x ${data.sets} รอบ` : `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
+      instruction: ex.description || ex.instruction || '',
+      repsGuide: data.isTime ? `${data.reps}` : `${data.reps} ครั้ง`,
       sets: data.sets,
-      reps: data.reps,
+      reps: data.isTime ? data.reps : (parseInt(data.reps) || data.reps),
+      isTime: data.isTime || false,
       bodyPart: ex.bodyPart,
       level: ex.level
     }));
