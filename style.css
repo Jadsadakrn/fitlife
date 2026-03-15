@@ -3614,3 +3614,26 @@ p {
   color: #9CA3AF;
   font-size: 0.9rem;
 }
+
+.food-select-item {
+  transition: background 0.2s;
+}
+
+.food-select-item:hover {
+  background-color: #f9f9f9;
+  border-color: #ccc !important;
+}
+
+/* ปรับ Scrollbar ให้ดูสะอาดตา */
+.popup-food-list::-webkit-scrollbar {
+  width: 4px;
+}
+.popup-food-list::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 10px;
+}
+.meal-dashboard-card.saved {
+    pointer-events: none; /* ล็อกการคลิกจากระดับ Browser */
+    opacity: 0.8;         /* ทำให้ดูจางลงว่าทำเสร็จแล้ว */
+    cursor: not-allowed;  /* เปลี่ยนรูปเมาส์ (ถ้า pointer-events ไม่ได้ล็อก) */
+}
