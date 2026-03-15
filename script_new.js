@@ -696,12 +696,32 @@ async function markTodayAsDone() {
 
   saveDailyLog(dailyLog);
 
-  await loadWorkoutLogs(); // รีโหลดประวัติการออกกำลังกายเพื่ออัปเดตข้อมูลล่าสุด
-  await loadExercisesFromAPI(); // รีโหลดข้อมูลท่าออกกำลังกายเพื่ออัปเดตสถานะท่าที่ทำแล้ว
+  await loadWorkoutLogs();
+
+  // 🔥 อัปเดต completedWorkouts ใหม่
+  completedWorkouts = workoutHistory
+    .filter(item => (item.date ? item.date.slice(0, 10) : "") === key)
+    .map(item => item.exerciseId);
+
+  // 🔥 re-render การ์ดเพื่อแสดงติ๊ก
+  if (window.todayWorkout && window.todayWorkout.length > 0) {
+    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+  }
 
   renderWeeklyStreak();
   updateStreakDisplay();
   updateWeeklyChart();
+  updateWorkoutProgressBar();
+
+  // 🔥 อัปเดตแคลเผาวันนี้
+  const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
+  const weight = user?.weight || 70;
+  const totalBurned = completedWorkouts.length * Math.round(weight * 0.05 * 4);
+  const burnEl = document.getElementById("today-burned-cal");
+  if (burnEl && completedWorkouts.length > 0) {
+    burnEl.style.display = "block";
+    burnEl.innerHTML = `🔥 เผาผลาญวันนี้ <strong>~${totalBurned} kcal</strong> จาก ${completedWorkouts.length} ท่า`;
+  }
 
   showToast("✅ บันทึกการฝึกสำเร็จ!", "success");
 }
@@ -1455,7 +1475,6 @@ function loadUserData() {
   const greeting = hour < 12 ? "อรุณสวัสดิ์" : (hour < 18 ? "สวัสดี" : "สวัสดีตอนค่ำ");
   setText('user-name-display', `${greeting}, ${data.name}`);
 
-  // แสดงข้อมูลร่างกายพื้นฐาน
   setText('dash-weight', data.weight);
   setText('dash-height', data.height);
   setText('dash-bmi', data.bmi.toFixed(2));
@@ -1472,6 +1491,21 @@ function loadUserData() {
 
   const tdee = data.tdee;
   setText('dash-cal-target', `เป้าหมาย ${tdee.toLocaleString()} kcal`);
+
+  // 🔥 อัปเดต macro labels
+  const pGoal = data.protein || 0;
+  const cGoal = data.carbs || 0;
+  const fGoal = data.fat || 0;
+
+  const macroRows = document.querySelectorAll('.flex-between');
+  macroRows.forEach(row => {
+    const label = row.querySelector('span:first-child');
+    const val = row.querySelector('span:last-child');
+    if (!label || !val) return;
+    if (label.textContent.includes('Protein')) val.textContent = `0g / ${pGoal}g`;
+    if (label.textContent.includes('Carbs')) val.textContent = `0g / ${cGoal}g`;
+    if (label.textContent.includes('Fat')) val.textContent = `0g / ${fGoal}g`;
+  });
 
   updateWaterUI();
   updateStreakDisplay();
@@ -1555,7 +1589,7 @@ async function saveProfile() {
   const isConfirm = confirm(
     "ยืนยันการเปลี่ยนแผนการฝึก?\n\n" +
     "• อัปเดตข้อมูลร่างกายทันที\n" +
-    "• ปรับเป้าหมายแคลอรี่ใหม่ให้ทันที\n" +
+    "• ปรับเป้าหมายแคลอรี่ใหม่\n" +
     "• แผนการฝึกใหม่จะเริ่มแสดงผลในวันพรุ่งนี้ครับ"
   );
 

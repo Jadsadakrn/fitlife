@@ -1366,7 +1366,7 @@
       <div class="dashboard-section">
         <h3><i class="fas fa-weight"></i> สุขภาพร่างกาย (Body Stats)</h3>
 
-        
+
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
           <div
@@ -1553,7 +1553,6 @@
           <button class="mission-tab active" onclick="switchMissionTab('workout')">
             <i class="fas fa-dumbbell"></i> ท่าออกกำลังกาย
           </button>
-
           <button class="mission-tab" onclick="switchMissionTab('meal')">
             <i class="fas fa-utensils"></i> มื้ออาหาร
           </button>
@@ -1563,10 +1562,26 @@
         <div id="tab-workout" class="tab-content active">
 
           <div id="dashboard-workout-list"></div>
+
+          <!-- 🔥 สรุปแคลเผาวันนี้ -->
+          <div id="today-burned-cal" style="
+    text-align:center; 
+    padding:12px 20px; 
+    margin:15px 0;
+    background:linear-gradient(135deg, #fff1f2, #fff);
+    border-radius:14px;
+    border:1px solid #fecdd3;
+    font-size:1rem; 
+    color:#FF6B6B; 
+    font-weight:600;
+    display:none;
+  ">
+            🔥 เผาผลาญวันนี้ ~0 kcal
+          </div>
+
           <h2 id="day-title"></h2>
           <p id="day-description"></p>
 
-          <!-- ปุ่ม START อยู่ในนี้ -->
           <button class="start-workout-btn-new" onclick="navigateTo('exercise')">
             <i class="fas fa-play-circle"></i>
             <span>ท่าออกกำลังกาย เพิ่มเติม</span>
@@ -1984,35 +1999,36 @@
 
 
   <div id="timer-modal" class="modal-wrapper">
-  <div class="modal-content-timer" style="background: #f3f4f6; border-radius: 24px; padding: 25px; max-width: 420px;">
-    
-    <span class="close-modal-timer" onclick="closeTimerModal()">&times;</span>
-    
-    <img id="modal-image" src="" alt=""
-      style="width:100%; max-height:220px; object-fit:contain; border-radius:18px; background:white; border: 1px solid #e5e7eb; margin-bottom:15px; display:none;">
-    
-    <h2 id="modal-title" style="margin-bottom: 5px; font-size: 1.5rem;">Workout</h2>
+    <div class="modal-content-timer" style="background: #f3f4f6; border-radius: 24px; padding: 25px; max-width: 420px;">
 
-    <div id="modal-plan-text"
-      style="margin-bottom:15px; padding:10px 12px; border-radius:12px; background:#f2f2f2; text-align:center; font-weight:700;">
-      ...
-    </div>
+      <span class="close-modal-timer" onclick="closeTimerModal()">&times;</span>
 
-    <div class="instruction-box-timer" style="background: white; padding: 15px; border-radius: 14px; text-align: left; margin-bottom: 20px; border: 1px solid #e5e7eb;">
-      <p style="margin:0; font-size: 0.95rem; line-height: 1.5;">
-        <strong style="color: #64748b; display: block; margin-bottom: 5px;">คำแนะนำ:</strong> 
-        <span id="instruction-text">...</span>
-      </p>
-    </div>
+      <img id="modal-image" src="" alt=""
+        style="width:100%; max-height:220px; object-fit:contain; border-radius:18px; background:white; border: 1px solid #e5e7eb; margin-bottom:15px; display:none;">
 
-    <div style="display:flex; gap:10px;">
-      <button id="finish-workout-btn" class="timer-btn" 
-              style="flex:1; background:#374151; color:white; border-radius:12px; padding:14px; font-weight:600; border:none; cursor:pointer; font-family: 'Kanit', sans-serif;">
-        จบวันนี้
-      </button>
+      <h2 id="modal-title" style="margin-bottom: 5px; font-size: 1.5rem;">Workout</h2>
+
+      <div id="modal-plan-text"
+        style="margin-bottom:15px; padding:10px 12px; border-radius:12px; background:#f2f2f2; text-align:center; font-weight:700;">
+        ...
+      </div>
+
+      <div class="instruction-box-timer"
+        style="background: white; padding: 15px; border-radius: 14px; text-align: left; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+        <p style="margin:0; font-size: 0.95rem; line-height: 1.5;">
+          <strong style="color: #64748b; display: block; margin-bottom: 5px;">คำแนะนำ:</strong>
+          <span id="instruction-text">...</span>
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button id="finish-workout-btn" class="timer-btn"
+          style="flex:1; background:#374151; color:white; border-radius:12px; padding:14px; font-weight:600; border:none; cursor:pointer; font-family: 'Kanit', sans-serif;">
+          จบวันนี้
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
   <div id="full-calendar-modal" class="modal-wrapper">
     <div class="modal-content-calendar">
@@ -2035,65 +2051,66 @@
 
   <!-- ===== Meal Popup ===== -->
   <div id="meal-popup" class="meal-popup">
-  <div class="meal-popup-card">
-    <span class="close-popup" onclick="closeMealPopup()">×</span>
+    <div class="meal-popup-card">
+      <span class="close-popup" onclick="closeMealPopup()">×</span>
 
-    <img id="popup-img" class="popup-img" />
+      <img id="popup-img" class="popup-img" />
 
-    <h3 id="popup-title"></h3>
-    <p id="popup-meal-label"></p>
+      <h3 id="popup-title"></h3>
+      <p id="popup-meal-label"></p>
 
-    <div class="popup-macro">
-      <span id="popup-kcal"></span>
-      <span id="popup-p"></span>
-      <span id="popup-c"></span>
-      <span id="popup-f"></span>
+      <div class="popup-macro">
+        <span id="popup-kcal"></span>
+        <span id="popup-p"></span>
+        <span id="popup-c"></span>
+        <span id="popup-f"></span>
+      </div>
+
+      <div class="popup-actions">
+        <button onclick="changeMeal()">🔄 เปลี่ยนเมนู</button>
+        <button class="primary" onclick="confirmMeal()">✅ บันทึก</button>
+      </div>
+
+      <div id="food-select-container" style="display:none;"></div>
+
     </div>
-
-    <div class="popup-actions">
-      <button onclick="changeMeal()">🔄 เปลี่ยนเมนู</button>
-      <button class="primary" onclick="confirmMeal()">✅ บันทึก</button>
-    </div>
-
-    <div id="food-select-container" style="display:none;"></div>
-    
   </div>
-</div>
 
-<div id="dash-meal-modal" class="modal-wrapper" style="display: none;">
-  <div class="modal-content-timer">
-    <span class="close-modal-timer" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
-    
-    <img id="dash-meal-img" src="" alt="" style="width:100%; max-height:200px; object-fit:cover; border-radius:15px; margin-bottom:15px;">
-    
-    <h2 id="dash-meal-title" style="margin-bottom:5px;">รายละเอียดอาหาร</h2>
-    <p id="dash-meal-sub" style="color:#666; margin-bottom:15px;"></p>
+  <div id="dash-meal-modal" class="modal-wrapper" style="display: none;">
+    <div class="modal-content-timer">
+      <span class="close-modal-timer" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-      <div style="background:#f8fafc; padding:10px; border-radius:10px;">
-        <small style="color:#888;">แคลอรี่</small><br>
-        <strong id="dash-kcal">0 kcal</strong>
+      <img id="dash-meal-img" src="" alt=""
+        style="width:100%; max-height:200px; object-fit:cover; border-radius:15px; margin-bottom:15px;">
+
+      <h2 id="dash-meal-title" style="margin-bottom:5px;">รายละเอียดอาหาร</h2>
+      <p id="dash-meal-sub" style="color:#666; margin-bottom:15px;"></p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+        <div style="background:#f8fafc; padding:10px; border-radius:10px;">
+          <small style="color:#888;">แคลอรี่</small><br>
+          <strong id="dash-kcal">0 kcal</strong>
+        </div>
+        <div style="background:#f8fafc; padding:10px; border-radius:10px;">
+          <small style="color:#888;">โปรตีน (P)</small><br>
+          <strong id="dash-p">0 g</strong>
+        </div>
+        <div style="background:#f8fafc; padding:10px; border-radius:10px;">
+          <small style="color:#888;">คาร์บ (C)</small><br>
+          <strong id="dash-c">0 g</strong>
+        </div>
+        <div style="background:#f8fafc; padding:10px; border-radius:10px;">
+          <small style="color:#888;">ไขมัน (F)</small><br>
+          <strong id="dash-f">0 g</strong>
+        </div>
       </div>
-      <div style="background:#f8fafc; padding:10px; border-radius:10px;">
-        <small style="color:#888;">โปรตีน (P)</small><br>
-        <strong id="dash-p">0 g</strong>
-      </div>
-      <div style="background:#f8fafc; padding:10px; border-radius:10px;">
-        <small style="color:#888;">คาร์บ (C)</small><br>
-        <strong id="dash-c">0 g</strong>
-      </div>
-      <div style="background:#f8fafc; padding:10px; border-radius:10px;">
-        <small style="color:#888;">ไขมัน (F)</small><br>
-        <strong id="dash-f">0 g</strong>
-      </div>
+
+      <button onclick="this.parentElement.parentElement.style.display='none'"
+        style="width:100%; margin-top:20px; padding:12px; border-radius:10px; border:none; background:#333; color:white; cursor:pointer;">
+        ปิดหน้าต่าง
+      </button>
     </div>
-
-    <button onclick="this.parentElement.parentElement.style.display='none'" 
-            style="width:100%; margin-top:20px; padding:12px; border-radius:10px; border:none; background:#333; color:white; cursor:pointer;">
-      ปิดหน้าต่าง
-    </button>
   </div>
-</div>
 
 </body>
 
