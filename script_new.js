@@ -1859,8 +1859,15 @@ function toggleHistory(type) {
 
 function logout() {
   if (confirm("ออกจากระบบ?")) {
+
+    localStorage.removeItem("token");
     localStorage.removeItem("login");
+
     localStorage.removeItem(ukey("fit_user"));
+    localStorage.removeItem(ukey("selected_meals"));
+    localStorage.removeItem(ukey("cached_today_workout"));
+    localStorage.removeItem(ukey("profile_updated_date"));
+
     window.location.replace("login_new.html");
   }
 }
@@ -2391,6 +2398,13 @@ async function loadTodayWorkout() {
   const cached = localStorage.getItem(ukey("cached_today_workout"));
   if (profileUpdatedDate === getTodayKey() && cached) {
     window.todayWorkout = JSON.parse(cached);
+
+    const todayKey = getTodayKey();
+    completedWorkouts = workoutHistory
+      .filter(item => (item.date ? item.date.slice(0, 10) : "") === todayKey)
+      .map(item => item.exerciseId)
+      .filter(Boolean);
+
     renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
     updateWorkoutProgressBar();
     localStorage.setItem(ukey("cached_today_workout"), JSON.stringify(window.todayWorkout));
@@ -2441,7 +2455,8 @@ async function loadTodayWorkout() {
     const todayKey = getTodayKey();
     completedWorkouts = workoutHistory
       .filter(item => (item.date ? item.date.slice(0, 10) : "") === todayKey)
-      .map(item => item.exerciseId);
+      .map(item => item.exerciseId)
+      .filter(Boolean);
 
     // แก้ไขในส่วน map ข้อมูล (ประมาณบรรทัดที่ 1000+)
     window.todayWorkout = data.exercises.map(ex => ({
@@ -2496,15 +2511,22 @@ function navigateTo(pageId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const profileUpdatedDate = localStorage.getItem(ukey("profile_updated_date"));
-  const cached = localStorage.getItem(ukey("cached_today_workout"));
-  if (profileUpdatedDate === getTodayKey() && cached) {
-    window.todayWorkout = JSON.parse(cached);
-    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
-    updateWorkoutProgressBar();
-  } else {
-    loadTodayWorkout();
-  }
+  loadWorkoutLogs().then(() => { // 🔥 โหลด logs ก่อนเสมอ
+    const profileUpdatedDate = localStorage.getItem(ukey("profile_updated_date"));
+    const cached = localStorage.getItem(ukey("cached_today_workout"));
+    if (profileUpdatedDate === getTodayKey() && cached) {
+      window.todayWorkout = JSON.parse(cached);
+      const todayKey = getTodayKey();
+      completedWorkouts = workoutHistory
+        .filter(item => (item.date ? item.date.slice(0, 10) : "") === todayKey)
+        .map(item => item.exerciseId)
+        .filter(Boolean);
+      renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+      updateWorkoutProgressBar();
+    } else {
+      loadTodayWorkout();
+    }
+  });
   loadTodayMeals();
 });
 
