@@ -17,7 +17,6 @@
 
   function redirectToApp() { window.location.replace("index.html"); }
 
-  // --- 🚀 ส่วนจัดการหน้าจอ (Pane) ---
   function setPane(pane) {
     const panes = ["login", "register", "forgot", "reset"];
     panes.forEach((p) => {
@@ -52,7 +51,6 @@
     }
   }
 
-  // --- 🖱️ Event Listeners ---
   $$(".auth-tabs .tab").forEach((btn) => btn.addEventListener("click", () => setPane(btn.dataset.tab)));
   
   if ($("goForgot")) $("goForgot").addEventListener("click", (e) => { e.preventDefault(); setPane("forgot"); });
@@ -76,6 +74,7 @@
     e.preventDefault();
     const email = $("loginEmail").value.trim();
     const password = $("loginPassword").value.trim();
+    
     if (!email || !password) return showToast("กรุณากรอกข้อมูลให้ครบ");
 
     try {
@@ -84,45 +83,63 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
+      
       const data = await res.json();
-      if (!res.ok) return showToast("ล้มเหลว", data.error);
+      
+      if (!res.ok) {
+        return showToast("เข้าสู่ระบบไม่สำเร็จ", data.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       showToast("สำเร็จ 🎉", "กำลังไปหน้าหลัก...");
       setTimeout(redirectToApp, 1000);
-    } catch (err) { showToast("ติดต่อ Server ไม่ได้"); }
+    } catch (err) { 
+      showToast("ติดต่อ Server ไม่ได้", "กรุณาตรวจสอบการเชื่อมต่อ"); 
+    }
   });
 
-  // FORGOT (ยืนยันอีเมลแล้ววาร์ปไปหน้า Reset)
+  // FORGOT (แค่สลับหน้าจอ)
   $("forgotForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const email = $("forgotEmail").value.trim();
     if (!email) return showToast("กรุณากรอกอีเมล");
-    showToast("ยืนยันตัวตนสำเร็จ", "กรุณาตั้งรหัสผ่านใหม่");
+    showToast("ยืนยันอีเมลสำเร็จ", "กรุณาตั้งรหัสผ่านใหม่");
     setPane("reset");
   });
 
-  // RESET (บันทึกรหัสใหม่ลง Database)
+  // RESET PASSWORD (จุดที่แก้ไขชื่อตัวแปร ✨)
   $("resetForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = $("forgotEmail").value.trim();
+    
+    // ดึงอีเมลจากช่อง Input หน้า Forgot (เพราะหน้า Reset อาจจะไม่มีช่องอีเมล)
+    const email = $("forgotEmail").value.trim(); 
     const newPassword = $("newPassword").value.trim();
-    if (newPassword.length < 4) return showToast("รหัสผ่านสั้นเกินไป");
+    
+    if (!email) return showToast("ไม่พบข้อมูลอีเมล", "กรุณากลับไปกรอกอีเมลที่หน้าลืมรหัสผ่านใหม่");
+    if (newPassword.length < 6) return showToast("รหัสผ่านสั้นเกินไป", "ต้องมีอย่างน้อย 6 ตัวอักษร");
 
     try {
       const res = await fetch(`${API_BASE}/api/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, newPassword })
+        body: JSON.stringify({ 
+          email: email, 
+          newPassword: newPassword // ✅ แก้ชื่อตัวแปรให้ตรงกับ req.body ใน server.js
+        })
       });
+
+      const data = await res.json();
+
       if (res.ok) {
-        showToast("สำเร็จ ✅", "เปลี่ยนรหัสผ่านเรียบร้อย");
+        showToast("สำเร็จ ✅", "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
         setTimeout(() => setPane("login"), 1500);
       } else {
-        const data = await res.json();
-        showToast("ผิดพลาด", data.error);
+        showToast("ผิดพลาด", data.error || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
       }
-    } catch (err) { showToast("Server error"); }
+    } catch (err) { 
+      showToast("Server error", "การเชื่อมต่อล้มเหลว"); 
+    }
   });
 
   setPane("login");

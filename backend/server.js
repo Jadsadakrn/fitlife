@@ -131,29 +131,22 @@ app.get("/api/me", authenticateToken, async (req, res) => {
 // WORKOUT LOG
 // ===============================
 app.post("/api/workout-log", authenticateToken, async (req, res) => {
-  const { date, title, exerciseId, sets, reps, duration } = req.body;
-
-  if (!date || !title) {
-    return res.status(400).json({ error: "Missing data" });
-  }
-
+  const { date, title, exerciseId, sets, reps, duration, note } = req.body;
+  if (!date) return res.status(400).json({ error: "Missing date" });
   try {
     const log = await prisma.workoutLog.create({
       data: {
         userId: req.user.userId,
         exerciseId: exerciseId || null,
         date: new Date(date),
-        sets: sets || null,
-        reps: reps || null,
-        duration: duration || null,
-        note: title
+        sets: sets ? parseInt(sets) : null,
+        reps: reps ? parseInt(reps) : null,
+        duration: duration ? parseInt(duration) : null,
+        note: note || title || null
       }
     });
     res.json({ success: true, log });
   } catch (err) {
-    if (err.code === "P2002") {
-      return res.json({ success: true, message: "Already logged" });
-    }
     console.error(err);
     res.status(500).json({ error: "Database error" });
   }
@@ -384,7 +377,8 @@ app.get("/api/workout-history", authenticateToken, async (req, res) => {
     const logs = await prisma.workoutLog.findMany({
       where: { userId: req.user.userId },
       orderBy: { date: "desc" },
-      take: 50
+      take: 50,
+      include: { exercise: true } // 🔥 เพิ่มตรงนี้
     });
     res.json(logs);
   } catch (err) {

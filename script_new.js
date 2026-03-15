@@ -872,7 +872,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateWeeklyChart();
 
   await loadTodayMeals();
-  await loadTodayWorkout();
+
+  // เช็ค cache ก่อน ถ้าแก้ Profile วันนี้ให้ใช้ท่าเดิม
+  const _profileUpdatedDate = localStorage.getItem(ukey("profile_updated_date"));
+  const _cached = localStorage.getItem(ukey("cached_today_workout"));
+  if (_profileUpdatedDate === getTodayKey() && _cached) {
+    window.todayWorkout = JSON.parse(_cached);
+    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+    updateWorkoutProgressBar();
+  } else {
+    await loadTodayWorkout();
+  }
 
   // สั่งวาดการ์ดอาหารและเช็ค Onboarding
   renderDashboardMeals();
@@ -1588,8 +1598,11 @@ async function saveProfile() {
   };
 
   localStorage.setItem(ukey("fit_user"), JSON.stringify({ ...existing, ...userData }));
+  // snapshot ท่าปัจจุบันไว้ก่อน แล้วค่อยบันทึกวันที่
+  if (window.todayWorkout && window.todayWorkout.length > 0) {
+    localStorage.setItem(ukey("cached_today_workout"), JSON.stringify(window.todayWorkout));
+  }
   localStorage.setItem(ukey("profile_updated_date"), getTodayKey());
-  localStorage.removeItem(ukey("cached_today_workout"));
 
   const token = localStorage.getItem("token");
   if (token) {
@@ -2628,8 +2641,11 @@ async function loadProfileFromServer() {
 
     const profile = await res.json();
 
-    // ถ้ามีข้อมูลใน server ให้ sync ลง localStorage
     if (profile && profile.name) {
+      // เก็บ cache ไว้ก่อน ไม่ให้หายตอน overwrite
+      const savedUpdatedDate = localStorage.getItem(ukey("profile_updated_date"));
+      const savedCachedWorkout = localStorage.getItem(ukey("cached_today_workout"));
+
       localStorage.setItem(ukey("fit_user"), JSON.stringify({
         name: profile.name,
         age: profile.age,
@@ -2646,6 +2662,11 @@ async function loadProfileFromServer() {
         bmi: profile.bmi,
         bmiStatus: profile.bmi < 18.5 ? "ผอม" : profile.bmi < 23 ? "ปกติ" : profile.bmi < 25 ? "ท้วม" : "อ้วน"
       }));
+
+      // restore cache กลับมา
+      if (savedUpdatedDate) localStorage.setItem(ukey("profile_updated_date"), savedUpdatedDate);
+      if (savedCachedWorkout) localStorage.setItem(ukey("cached_today_workout"), savedCachedWorkout);
+
       loadUserData();
     }
   } catch (err) {
