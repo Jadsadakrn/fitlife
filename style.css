@@ -3637,3 +3637,14 @@ p {
     opacity: 0.8;         /* ทำให้ดูจางลงว่าทำเสร็จแล้ว */
     cursor: not-allowed;  /* เปลี่ยนรูปเมาส์ (ถ้า pointer-events ไม่ได้ล็อก) */
 }
+
+#modal-plan-text {
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 1.1rem;
+    padding: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 12px;
+    margin: 10px 0;
+    text-align: center;
+}

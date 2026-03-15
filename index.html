@@ -1984,25 +1984,35 @@
 
 
   <div id="timer-modal" class="modal-wrapper">
-    <div class="modal-content-timer">
-      <span class="close-modal-timer" onclick="closeTimerModal()">&times;</span>
-      <img id="modal-image" src="" alt=""
-        style="width:100%; max-height:220px; object-fit:contain; border-radius:16px; background:#f7f7f7; margin-bottom:12px; display:none;">
-      <h2 id="modal-title">Workout</h2>
+  <div class="modal-content-timer" style="background: #f3f4f6; border-radius: 24px; padding: 25px; max-width: 420px;">
+    
+    <span class="close-modal-timer" onclick="closeTimerModal()">&times;</span>
+    
+    <img id="modal-image" src="" alt=""
+      style="width:100%; max-height:220px; object-fit:contain; border-radius:18px; background:white; border: 1px solid #e5e7eb; margin-bottom:15px; display:none;">
+    
+    <h2 id="modal-title" style="margin-bottom: 5px; font-size: 1.5rem;">Workout</h2>
 
-      <div class="instruction-box-timer">
-        <p><strong>คำแนะนำ:</strong> <span id="instruction-text">...</span></p>
-      </div>
+    <div id="modal-plan-text"
+      style="margin-bottom:15px; padding:10px 12px; border-radius:12px; background:#f2f2f2; text-align:center; font-weight:700;">
+      ...
+    </div>
 
-      <div id="modal-plan-text"
-        style="margin-top:10px; padding:10px 12px; border-radius:12px; background:#f2f2f2; text-align:center; font-weight:700; color:#ff6b6b;">
-        15 ครั้ง x 3 เซ็ต</div>
+    <div class="instruction-box-timer" style="background: white; padding: 15px; border-radius: 14px; text-align: left; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+      <p style="margin:0; font-size: 0.95rem; line-height: 1.5;">
+        <strong style="color: #64748b; display: block; margin-bottom: 5px;">คำแนะนำ:</strong> 
+        <span id="instruction-text">...</span>
+      </p>
+    </div>
 
-      <div style="display:flex; gap:10px; margin-top:16px;">
-        <button id="finish-workout-btn" class="timer-btn" style="flex:1; background:#333;">จบวันนี้</button>
-      </div>
+    <div style="display:flex; gap:10px;">
+      <button id="finish-workout-btn" class="timer-btn" 
+              style="flex:1; background:#374151; color:white; border-radius:12px; padding:14px; font-weight:600; border:none; cursor:pointer; font-family: 'Kanit', sans-serif;">
+        จบวันนี้
+      </button>
     </div>
   </div>
+</div>
 
   <div id="full-calendar-modal" class="modal-wrapper">
     <div class="modal-content-calendar">

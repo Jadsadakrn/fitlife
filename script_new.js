@@ -379,7 +379,7 @@ function updateWorkoutProgressBar() {
   // 1. ดึงข้อมูลดิบจาก LocalStorage มาก่อนเลย (ไม่ต้องรอตัวแปร Global)
   const userData = JSON.parse(localStorage.getItem(ukey("fit_user")));
   const total = window.todayWorkout ? window.todayWorkout.length : 0;
-  
+
   // นับจำนวนท่าที่ทำเสร็จแล้ว (อิงจากประวัติที่โหลดมา)
   const done = completedWorkouts ? completedWorkouts.length : 0;
   const percentage = total > 0 ? (done / total) * 100 : 0;
@@ -422,8 +422,8 @@ function updateWorkoutProgressBar() {
 
 
 function playSound(type) {
-    // ปิดการทำงานไว้ก่อนเพื่อไม่ให้ Error audioCtx 
-    console.log("Sound played (muted):", type);
+  // ปิดการทำงานไว้ก่อนเพื่อไม่ให้ Error audioCtx 
+  console.log("Sound played (muted):", type);
 }
 
 // [Toast]
@@ -482,7 +482,15 @@ function openWorkoutModal(item, mode = "do") {
   window.activeItem = item;
   activeMode = mode;
 
-  // 1. ตั้งข้อมูลพื้นฐาน
+  // --- 🛑 จุดแก้ undefined: ดักค่าและจัดการหน่วยแสดงผลให้สวยงาม ---
+  const repsVal = item.reps || item.defaultReps || 12;
+  const setsVal = item.sets || 3;
+
+  // ตรวจสอบว่าเป็นท่าที่นับเป็นวินาที (เช่น Plank) หรือนับเป็นครั้ง
+  const unit = item.isTime ? "วินาที" : "ครั้ง";
+  const displayPlan = `${repsVal} ${unit} x ${setsVal} เซ็ต`;
+  // -------------------------------------------------------
+
   setText('modal-title', item.title || "Workout Detail");
   setText('instruction-text', item.instruction || "ไม่มีข้อมูลคำแนะนำ");
 
@@ -496,23 +504,34 @@ function openWorkoutModal(item, mode = "do") {
   const finishBtn = document.getElementById("finish-workout-btn");
 
   if (mode === "view") {
-    // --- 📖 โหมดหน้าคลัง (ดูเฉยๆ) ---
-    if (planEl) planEl.style.display = "none";
-    if (finishBtn) finishBtn.style.display = "none";
-    showToast(`📖 ข้อมูลท่า: ${item.title}`, 'info');
-  } else {
-    // --- 🏋️ โหมด Dashboard (บันทึกจริง) ---
+    // --- 📖 กรณีเปิดจากหน้า ARENA (คลังท่า) ---
     if (planEl) {
       planEl.style.display = "block";
-      planEl.innerText = item.sets > 1 ? `${item.repsGuide} x ${item.sets} เซ็ต` : item.repsGuide;
+      planEl.style.background = "#f2f2f2";
+      planEl.style.color = "#64748b";
+      planEl.innerText = displayPlan;
     }
 
     if (finishBtn) {
       finishBtn.style.display = "block";
-      finishBtn.innerText = "จบวันนี้";
-      finishBtn.style.background = "#333";
+      finishBtn.innerText = "ปิดหน้าต่าง";
+      finishBtn.style.background = "#374151";
+      finishBtn.onclick = closeTimerModal;
+    }
+  } else {
 
-      // ✅ เพิ่ม Logic การบันทึก API กลับเข้าไปตรงนี้
+    if (planEl) {
+      planEl.style.display = "block";
+      planEl.style.background = "#fff1f2"; // สีแดงอ่อนเน้นๆ สำหรับคนจะฝึก
+      planEl.style.color = "#ff6b6b";
+      planEl.innerText = displayPlan;
+    }
+
+    if (finishBtn) {
+      finishBtn.style.display = "block";
+      finishBtn.innerText = "บันทึก";
+      finishBtn.style.background = "#26302d";
+
       finishBtn.onclick = async () => {
         if (finishBtn.disabled) return;
         finishBtn.disabled = true;
@@ -528,26 +547,29 @@ function openWorkoutModal(item, mode = "do") {
             body: JSON.stringify({
               date: getTodayKey(),
               title: activeTitle,
-              exerciseId: window.activeItem?.id || null,
-              sets: window.activeItem?.sets || null,
-              reps: window.activeItem?.isTime ? null : (window.activeItem?.reps || null),
-              duration: window.activeItem?.isTime ? window.activeItem?.reps : null,
+              exerciseId: item.id || null,
+              sets: setsVal, // ✅ ใช้ค่าที่ดักไว้
+              reps: item.isTime ? null : repsVal, // ✅ ใช้ค่าที่ดักไว้
+              duration: item.isTime ? repsVal : null, // ✅ ใช้ค่าที่ดักไว้
               note: activeTitle
             })
           });
 
           const result = await res.json();
-          if (result.duplicate) {
-            showToast("บันทึกท่านี้ไปแล้ววันนี้ 👍", "info");
+          if (res.ok) {
+            if (result.duplicate || result.message === "Already logged") {
+              showToast("บันทึกท่านี้ไปแล้ววันนี้ 👍", "info");
+            } else {
+              await markTodayAsDone();
+              showToast("บันทึกเรียบร้อย 💪", "success");
+            }
+            closeTimerModal();
           } else {
-            // ✅ เรียกฟังก์ชันอัปเดตสถานะต่างๆ หลังบันทึกสำเร็จ
-            await markTodayAsDone();
-            showToast("บันทึกเรียบร้อย 💪", "success");
+            showToast(result.error || "บันทึกไม่สำเร็จ", "warning");
           }
-          closeTimerModal();
         } catch (err) {
           console.error(err);
-          showToast("เกิดข้อผิดพลาดในการบันทึก", "warning");
+          showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "warning");
         } finally {
           finishBtn.disabled = false;
         }
@@ -829,12 +851,12 @@ async function loadFoodLibrary() {
 document.addEventListener("DOMContentLoaded", async () => {
   // ✅ 1. [Render ทันที] ดึงจาก LocalStorage มาโชว์ก่อน (แก้ปัญหา Refresh แล้วหาย)
   // ตรวจสอบให้มั่นใจว่าฟังก์ชันเหล่านี้ดึงค่าจาก localStorage.getItem() เป็นหลัก
-  loadUserData(); 
+  loadUserData();
   loadProfilePage();
-  updateWorkoutProgressBar(); 
+  updateWorkoutProgressBar();
 
   // ✅ 2. [Sync ข้อมูล] โหลดโปรไฟล์จาก Server มาอัปเดต LocalStorage ให้เป็นปัจจุบัน
-  await loadProfileFromServer(); 
+  await loadProfileFromServer();
 
   // ✅ 3. [โหลด Data หนัก] ใช้ Promise.all เพื่อความเร็ว
   await Promise.all([
@@ -845,13 +867,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ✅ 4. [Re-Render] อัปเดตหน้าจออีกครั้งด้วยข้อมูลล่าสุดจาก Server
   // การเรียกซ้ำตรงนี้จะทำให้ตัวเลขแคลอรี่หรือวันที่แม่นยำขึ้นถ้ามีการอัปเดตจากเครื่องอื่น
-  loadUserData(); 
+  loadUserData();
   loadProfilePage(); // 🔥 เพิ่มตรงนี้เข้าไปด้วย เพื่อให้ Input ในหน้าตั้งค่าอัปเดตตาม Server
   updateWeeklyChart();
-  
-  await loadTodayMeals(); 
-  await loadTodayWorkout(); 
-  
+
+  await loadTodayMeals();
+  await loadTodayWorkout();
+
   // สั่งวาดการ์ดอาหารและเช็ค Onboarding
   renderDashboardMeals();
   initPwStrength();
@@ -1519,12 +1541,12 @@ function updateWaterUI() {
    14. PROFILE & LOGOUT
    ========================================= */
 async function saveProfile() {
-  // 1. ถามยืนยัน (ปรับข้อความให้ตรงกับ Logic ใหม่: เปลี่ยนแผนแต่นับวันต่อ)
+  // 1. ข้อความยืนยันชัดเจน (คุณแก้ตรงนี้ไว้ดีแล้ว)
   const isConfirm = confirm(
-    "ยืนยันการเปลี่ยนแปลงข้อมูล?\n\n" +
-    "- ข้อมูลร่างกายจะอัปเดตทันที\n" +
-    "- ตารางฝึกและอาหารจะปรับตามเป้าหมายใหม่\n" +
-    "- วันที่เริ่มต้น (Day) จะยังนับต่อเนื่องจากเดิมครับ"
+    "ยืนยันการเปลี่ยนแผนการฝึก?\n\n" +
+    "• อัปเดตข้อมูลร่างกายทันที\n" +
+    "• ปรับเป้าหมายแคลอรี่ใหม่ให้ทันที\n" +
+    "• แผนการฝึกใหม่จะเริ่มแสดงผลในวันพรุ่งนี้ครับ"
   );
 
   if (!isConfirm) return;
@@ -1538,36 +1560,36 @@ async function saveProfile() {
   const equipment = document.getElementById('equipSelect')?.value || 'gym';
 
   const btn = document.querySelector('.btn-save-new');
-  if (btn) { 
-    btn.textContent = "กำลังบันทึก..."; 
-    btn.style.opacity = "0.7"; 
+  if (btn) {
+    btn.textContent = "กำลังบันทึก...";
+    btn.style.opacity = "0.7";
     btn.disabled = true;
   }
 
-  // 2. ดึงข้อมูลเดิมจาก LocalStorage เพื่อเอา startDate เดิมมาใช้ (นับวันต่อ)
   const existing = JSON.parse(localStorage.getItem(ukey("fit_user"))) || {};
   const currentStartDate = existing.startDate || new Date().toISOString().split('T')[0];
 
-  // 3. คำนวณค่าร่างกายใหม่ตามข้อมูลที่อัปเดต
+  // 3. คำนวณค่าร่างกายใหม่ (Logic เดิมของคุณ)
   let bmi = null, tdee = null, protein = null, fat = null, carbs = null;
   if (weight && height) {
     bmi = parseFloat((weight / ((height / 100) ** 2)).toFixed(1));
-    const bmr = 10 * weight + 6.25 * height - 5 * 25 + 5; 
+    const bmr = 10 * weight + 6.25 * height - 5 * 25 + 5;
     tdee = Math.round(bmr * 1.55);
     protein = Math.round(weight * 2);
     fat = Math.round((tdee * 0.25) / 9);
     carbs = Math.round((tdee - (protein * 4) - (fat * 9)) / 4);
   }
 
-  // 4. เตรียมข้อมูล (ใช้ currentStartDate เดิม)
-  const userData = { 
-    name, weight, height, goal, focus, level, equipment, 
+  const userData = {
+    name, weight, height, goal, focus, level, equipment,
     bmi, tdee, protein, fat, carbs,
-    startDate: currentStartDate // ✅ นับต่อจากวันเดิม ไม่รีเซ็ต
+    startDate: currentStartDate,
+    profileUpdatedDate: new Date().toISOString().split('T')[0]
   };
 
-  // 5. บันทึกข้อมูลลง LocalStorage และ Server
   localStorage.setItem(ukey("fit_user"), JSON.stringify({ ...existing, ...userData }));
+  localStorage.setItem(ukey("profile_updated_date"), getTodayKey());
+  localStorage.removeItem(ukey("cached_today_workout"));
 
   const token = localStorage.getItem("token");
   if (token) {
@@ -1580,26 +1602,31 @@ async function saveProfile() {
     } catch (err) { console.error("Save profile error:", err); }
   }
 
-  if (btn) { 
-    btn.textContent = "บันทึกและนับวันต่อเรียบร้อย! ✅"; 
-    btn.style.opacity = "1"; 
-    setTimeout(() => { 
-      btn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล'; 
+  if (btn) {
+    btn.textContent = "บันทึกสำเร็จ! ✅";
+    btn.style.opacity = "1";
+    setTimeout(() => {
+      btn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล';
       btn.disabled = false;
-    }, 2000); 
+    }, 2000);
   }
 
+  // อัปเดตตัวเลขแคลอรี่/น้ำหนักบนหน้าจอทันที
   loadProfilePage();
   loadUserData();
-  
-  // โหลดท่าออกกำลังกายใหม่ให้ตรงกับเป้าหมาย/ระดับที่เพิ่งเปลี่ยน (แต่วันที่ยังนับต่อ)
-  if (typeof loadTodayWorkout === 'function') loadTodayWorkout();
+
+  // 🛑 ลบ loadTodayWorkout() ออกแล้ว เพื่อให้ท่าของวันนี้ไม่เปลี่ยนแผนกลางคัน
+
+  // แจ้งเตือนย้ำอีกครั้ง
+  if (typeof showToast === 'function') {
+    showToast("บันทึกเป้าหมายใหม่แล้ว แผนการฝึกจะเริ่มในวันพรุ่งนี้ครับ", "info");
+  }
 }
 
 function loadProfilePage() {
   // 1. ดึงจาก LocalStorage มาก่อนเลย (Render ทันทีไม่ต้องรอ Server)
   const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
-  
+
   if (!user) {
     console.log("ยังไม่มีข้อมูล User ใน LocalStorage");
     return;
@@ -1609,7 +1636,7 @@ function loadProfilePage() {
   const nameInp = document.getElementById('profile-inp-name');
   const weightInp = document.getElementById('profile-inp-weight');
   const heightInp = document.getElementById('profile-inp-height');
-  
+
   if (nameInp) nameInp.value = user.name || '';
   if (weightInp) weightInp.value = user.weight || '';
   if (heightInp) heightInp.value = user.height || '';
@@ -1626,7 +1653,7 @@ function loadProfilePage() {
   const focusSel = document.getElementById('focusSelect');
   const levelSel = document.getElementById('levelSelect');
   const equipSel = document.getElementById('equipSelect');
-  
+
   if (goalSel && user.goal) goalSel.value = user.goal;
   if (focusSel && user.focus) focusSel.value = user.focus;
   if (levelSel && user.level) levelSel.value = user.level;
@@ -1937,8 +1964,8 @@ function attachMealCardEvents() {
       const id = card.dataset.id;
 
       if (selectedMeals && selectedMeals[meal]) {
-          console.log(`มื้อ ${meal} บันทึกไปแล้ว กดไม่ได้`);
-          return; 
+        console.log(`มื้อ ${meal} บันทึกไปแล้ว กดไม่ได้`);
+        return;
       }
 
       console.log("CARD CLICKED"); // แก้จาก CLICKEND
@@ -2017,7 +2044,7 @@ function openMealPopup(mealKey, foodId) {
   // ถ้าบันทึกแล้ว (มีข้อมูลใน selectedMeals[mealKey]) ให้หยุดทำงานทันที
   if (selectedMeals && selectedMeals[mealKey]) {
     showToast(`📍 มื้อ${mealLabel(mealKey).replace('🍳 ', '').replace('🍛 ', '').replace('🍽 ', '')}บันทึกไปเรียบร้อยแล้วครับ`, "info");
-    return; 
+    return;
   }
 
   // --- โค้ดเดิมของคุณ ---
@@ -2028,7 +2055,7 @@ function openMealPopup(mealKey, foodId) {
   }
 
   currentPopupMeal = mealKey;
-  currentselectedFood = food; 
+  currentselectedFood = food;
 
   document.getElementById("popup-img").src = food.img || "";
   document.getElementById("popup-title").innerText = food.name;
@@ -2313,6 +2340,17 @@ async function loadTodayWorkout() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
+  const profileUpdatedDate = localStorage.getItem(ukey("profile_updated_date"));
+  const cached = localStorage.getItem(ukey("cached_today_workout"));
+  if (profileUpdatedDate === getTodayKey() && cached) {
+    window.todayWorkout = JSON.parse(cached);
+    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+    updateWorkoutProgressBar();
+    localStorage.setItem(ukey("cached_today_workout"), JSON.stringify(window.todayWorkout));
+
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/today-workout`, {
       headers: { "Authorization": `Bearer ${token}` }
@@ -2332,24 +2370,24 @@ async function loadTodayWorkout() {
     // คำนวณวันที่ 1/30, 60, 90 สำหรับ Banner 
     let dayProgressText = "";
     const user = JSON.parse(localStorage.getItem(ukey("fit_user")));
-    
+
     if (user && user.startDate) {
-        const start = new Date(user.startDate);
-        const today = new Date();
-        start.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
+      const start = new Date(user.startDate);
+      const today = new Date();
+      start.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
 
-        const diffTime = today - start;
-        const dayDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        const duration = user.duration || 30;
+      const diffTime = today - start;
+      const dayDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      const duration = user.duration || 30;
 
-        if (dayDiff > 0 && dayDiff <= duration) {
-            dayProgressText = `วันที่ ${dayDiff}/${duration} • `;
-        } else if (dayDiff > duration) {
-            dayProgressText = `จบโปรแกรมแล้ว • `;
-        } else {
-            dayProgressText = `เริ่มแผนใหม่พรุ่งนี้ • `;
-        }
+      if (dayDiff > 0 && dayDiff <= duration) {
+        dayProgressText = `วันที่ ${dayDiff}/${duration} • `;
+      } else if (dayDiff > duration) {
+        dayProgressText = `จบโปรแกรมแล้ว • `;
+      } else {
+        dayProgressText = `เริ่มแผนใหม่พรุ่งนี้ • `;
+      }
     }
 
     // ดึงข้อมูลท่าออกกำลังกายของวันนี้
@@ -2358,21 +2396,25 @@ async function loadTodayWorkout() {
       .filter(item => (item.date ? item.date.slice(0, 10) : "") === todayKey)
       .map(item => item.exerciseId);
 
+    // แก้ไขในส่วน map ข้อมูล (ประมาณบรรทัดที่ 1000+)
     window.todayWorkout = data.exercises.map(ex => ({
       id: ex.id,
       title: ex.nameTh,
       img: ex.imageUrl?.replace('[URL]', '').trim() || '',
-      sub: data.isTime ? `${data.reps} x ${data.sets} รอบ` : `${data.reps} ครั้ง x ${data.sets} เซ็ต`,
+      // ✅ จุดแก้: เช็คก่อนว่า data.reps มีค่าไหม ถ้าไม่มีให้ใส่ 12
+      sub: data.isTime
+        ? `${data.reps || 30} วินาที x ${data.sets || 3} รอบ`
+        : `${data.reps || 12} ครั้ง x ${data.sets || 3} เซ็ต`,
       instruction: ex.description,
-      sets: data.sets,
-      reps: data.reps
+      sets: data.sets || 3,
+      reps: data.reps || 12
     }));
 
     // ✅ อัปเดต Banner สถานะการทำโปรแกรม + ความคืบหน้า
     if (headerEl) {
-        const doneCount = completedWorkouts.length;
-        const totalCount = window.todayWorkout.length;
-        headerEl.innerHTML = `<strong>${dayProgressText}</strong>เป้าหมายวันนี้ • ทำแล้ว ${doneCount}/${totalCount} ท่า`;
+      const doneCount = completedWorkouts.length;
+      const totalCount = window.todayWorkout.length;
+      headerEl.innerHTML = `<strong>${dayProgressText}</strong>เป้าหมายวันนี้ • ทำแล้ว ${doneCount}/${totalCount} ท่า`;
     }
 
     renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
@@ -2391,7 +2433,15 @@ function navigateTo(pageId) {
   if (targetPage) targetPage.classList.add('active');
 
   if (pageId === "dashboard") {
-    loadTodayWorkout();
+    const profileUpdatedDate = localStorage.getItem(ukey("profile_updated_date"));
+    const cached = localStorage.getItem(ukey("cached_today_workout"));
+    if (profileUpdatedDate === getTodayKey() && cached) {
+      window.todayWorkout = JSON.parse(cached);
+      renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+      updateWorkoutProgressBar();
+    } else {
+      loadTodayWorkout();
+    }
   }
   if (pageId === "profile") {
     loadProfilePage();
@@ -2399,7 +2449,15 @@ function navigateTo(pageId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadTodayWorkout();
+  const profileUpdatedDate = localStorage.getItem(ukey("profile_updated_date"));
+  const cached = localStorage.getItem(ukey("cached_today_workout"));
+  if (profileUpdatedDate === getTodayKey() && cached) {
+    window.todayWorkout = JSON.parse(cached);
+    renderWorkoutCards("dashboard-workout-list", window.todayWorkout);
+    updateWorkoutProgressBar();
+  } else {
+    loadTodayWorkout();
+  }
   loadTodayMeals();
 });
 
@@ -2757,7 +2815,7 @@ window.handleFoodClick = function (index) {
 
 // สร้างฟังก์ชันทิ้งไว้เพื่อป้องกัน Error "ensureAudio is not defined"
 function ensureAudio() {
-    // ไม่ต้องใส่โค้ดอะไรข้างในก็ได้ครับ แค่มีชื่อฟังก์ชันไว้ให้ระบบเรียกหาเจอพอ
-    console.log("Audio system bypassed (Function placeholder)");
-    return Promise.resolve();
+  // ไม่ต้องใส่โค้ดอะไรข้างในก็ได้ครับ แค่มีชื่อฟังก์ชันไว้ให้ระบบเรียกหาเจอพอ
+  console.log("Audio system bypassed (Function placeholder)");
+  return Promise.resolve();
 }
