@@ -16,7 +16,7 @@ const ukey = (k) => `${k}_${__userId}`;
 const API_BASE =
   window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    : "https://fitlife-dlfz.onrender.com";
+    : "https://fitlife-web.onrender.com";
 
 
 

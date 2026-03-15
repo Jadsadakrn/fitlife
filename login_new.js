@@ -4,7 +4,7 @@
   // ✅ เพิ่มตรงนี้
   const API_BASE = window.location.hostname === "localhost"
     ? "http://localhost:3000"
-    : "https://fitlife-dlfz.onrender.com";
+    : "https://fitlife-web.onrender.com";
 
   const $ = (id) => document.getElementById(id);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
