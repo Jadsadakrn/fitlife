@@ -38,6 +38,43 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+// ✅ แก้ไข API สำหรับรีเซ็ตรหัสผ่าน (ใช้ Prisma + Bcrypt)
+app.post('/api/reset-password', async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    // 1. ตรวจสอบข้อมูลเบื้องต้น
+    if (!email || !newPassword) {
+        return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+    }
+
+    if (newPassword.length < 6) {
+        return res.status(400).json({ error: 'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' });
+    }
+
+    try {
+        // 2. ตรวจสอบว่ามีผู้ใช้นี้จริงไหม
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ error: 'ไม่พบอีเมลนี้ในระบบ' });
+        }
+
+        // 3. Hash รหัสผ่านใหม่ (ห้ามเก็บเป็น Text ธรรมดาเด็ดขาด)
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // 4. อัปเดตข้อมูลผ่าน Prisma
+        await prisma.user.update({
+            where: { email },
+            data: { password: hashedPassword },
+        });
+
+        res.json({ message: 'เปลี่ยนรหัสผ่านสำเร็จแล้ว ✅' });
+
+    } catch (err) {
+        console.error('Reset Password Error:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดที่ระบบ Server' });
+    }
+});
+
 // LOGIN
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;

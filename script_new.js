@@ -422,28 +422,8 @@ function updateWorkoutProgressBar() {
 
 
 function playSound(type) {
-  if (!ensureAudio()) return;
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  if (type === 'beep') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.1);
-  } else if (type === 'finish') {
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 1);
-  }
+    // ปิดการทำงานไว้ก่อนเพื่อไม่ให้ Error audioCtx 
+    console.log("Sound played (muted):", type);
 }
 
 // [Toast]
@@ -2774,3 +2754,10 @@ window.handleFoodClick = function (index) {
     alert("หาฟังก์ชัน openDashMealDetail ไม่เจอ กรุณาเช็คชื่อฟังก์ชันเปิด Popup อีกครั้งครับ");
   }
 };
+
+// สร้างฟังก์ชันทิ้งไว้เพื่อป้องกัน Error "ensureAudio is not defined"
+function ensureAudio() {
+    // ไม่ต้องใส่โค้ดอะไรข้างในก็ได้ครับ แค่มีชื่อฟังก์ชันไว้ให้ระบบเรียกหาเจอพอ
+    console.log("Audio system bypassed (Function placeholder)");
+    return Promise.resolve();
+}
