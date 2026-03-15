@@ -60,6 +60,7 @@ model Food {
   carbs       Int
   fat         Int
   imageUrl    String
+  category    String?
   mealLogs MealLog[]
 }
 

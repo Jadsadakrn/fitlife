@@ -137,18 +137,14 @@ async function seedProgramWorkouts() {
 
 async function seedFoods() {
     const results = [];
-
     return new Promise((resolve, reject) => {
         fs.createReadStream("prisma/food.csv")
             .pipe(csv())
             .on("data", (data) => results.push(data))
             .on("end", async () => {
                 try {
-
                     console.log("Seeding Food...");
-
-                    // 🔥 เพิ่มบรรทัดนี้
-                    await prisma.food.deleteMany();
+                    await prisma.food.deleteMany(); // ล้างของเก่า
 
                     await prisma.food.createMany({
                         data: results.map(row => ({
@@ -158,10 +154,9 @@ async function seedFoods() {
                             carbs: parseInt(row.carbs_g) || 0,
                             fat: parseInt(row.fat_g) || 0,
                             imageUrl: row.image_url.trim() || "",
+                            category: row.category ? row.category.trim() : "ทั่วไป" // 👈 ดึงค่ามาใส่
                         })),
                     });
-
-
                     console.log("✅ Food seeded");
                     resolve();
                 } catch (err) {
@@ -170,7 +165,6 @@ async function seedFoods() {
             });
     });
 }
-
 
 
 async function seedFocus() {
