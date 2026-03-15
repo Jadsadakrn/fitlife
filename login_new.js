@@ -36,29 +36,17 @@
 
     const titleEl = $("authTitle");
     const subEl = $("authSub");
-    if (pane === "login") {
-        titleEl.textContent = "เข้าสู่ระบบ";
-        subEl.textContent = "เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน";
-    } else if (pane === "forgot") {
-        titleEl.textContent = "ลืมรหัสผ่าน";
-        subEl.textContent = "กรอกอีเมลเพื่อยืนยันตัวตน";
-    } else if (pane === "reset") {
-        titleEl.textContent = "ตั้งรหัสผ่านใหม่";
-        subEl.textContent = "กำหนดรหัสผ่านใหม่เพื่อเข้าใช้งาน";
-    } else if (pane === "register") {
-        titleEl.textContent = "สมัครสมาชิก";
-        subEl.textContent = "เริ่มต้นการเดินทางเพื่อสุขภาพของคุณ";
-    }
+    if (pane === "login") { titleEl.textContent = "เข้าสู่ระบบ"; subEl.textContent = "เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน"; }
+    else if (pane === "forgot") { titleEl.textContent = "ลืมรหัสผ่าน"; subEl.textContent = "กรอกอีเมลเพื่อยืนยันตัวตน"; }
+    else if (pane === "reset") { titleEl.textContent = "ตั้งรหัสผ่านใหม่"; subEl.textContent = "กำหนดรหัสผ่านใหม่เพื่อเข้าใช้งาน"; }
+    else if (pane === "register") { titleEl.textContent = "สมัครสมาชิก"; subEl.textContent = "เริ่มต้นการเดินทางเพื่อสุขภาพของคุณ"; }
   }
 
   $$(".auth-tabs .tab").forEach((btn) => btn.addEventListener("click", () => setPane(btn.dataset.tab)));
-  
   if ($("goForgot")) $("goForgot").addEventListener("click", (e) => { e.preventDefault(); setPane("forgot"); });
-  
   ["backToLogin1", "backToLogin2"].forEach((id) => {
     if ($(id)) $(id).addEventListener("click", () => setPane("login"));
   });
-
   if ($("pwToggle") && $("loginPassword")) {
     $("pwToggle").addEventListener("click", () => {
       const isPw = $("loginPassword").type === "password";
@@ -67,39 +55,50 @@
     });
   }
 
-  // --- 🌐 API Connection ---
-
   // LOGIN
   $("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = $("loginEmail").value.trim();
     const password = $("loginPassword").value.trim();
-    
     if (!email || !password) return showToast("กรุณากรอกข้อมูลให้ครบ");
-
     try {
       const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
-      
       const data = await res.json();
-      
-      if (!res.ok) {
-        return showToast("เข้าสู่ระบบไม่สำเร็จ", data.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-      }
-
+      if (!res.ok) return showToast("เข้าสู่ระบบไม่สำเร็จ", data.error || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       showToast("สำเร็จ 🎉", "กำลังไปหน้าหลัก...");
       setTimeout(redirectToApp, 1000);
-    } catch (err) { 
-      showToast("ติดต่อ Server ไม่ได้", "กรุณาตรวจสอบการเชื่อมต่อ"); 
-    }
+    } catch (err) { showToast("ติดต่อ Server ไม่ได้", "กรุณาตรวจสอบการเชื่อมต่อ"); }
   });
 
-  // FORGOT (แค่สลับหน้าจอ)
+  // REGISTER
+  $("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = $("regEmail").value.trim();
+    const password = $("regPassword").value.trim();
+    const password2 = $("regPassword2").value.trim();
+    if (!email || !password) return showToast("กรุณากรอกข้อมูลให้ครบ");
+    if (password.length < 6) return showToast("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+    if (password !== password2) return showToast("รหัสผ่านไม่ตรงกัน");
+    try {
+      const res = await fetch(`${API_BASE}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) return showToast("สมัครไม่สำเร็จ", data.error || "");
+      showToast("สมัครสมาชิกสำเร็จ 🎉", "กรุณาเข้าสู่ระบบ");
+      setTimeout(() => setPane("login"), 1500);
+    } catch (err) { showToast("ติดต่อ Server ไม่ได้"); }
+  });
+
+  // FORGOT
   $("forgotForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const email = $("forgotEmail").value.trim();
@@ -108,39 +107,24 @@
     setPane("reset");
   });
 
-  // RESET PASSWORD (จุดที่แก้ไขชื่อตัวแปร ✨)
+  // RESET PASSWORD
   $("resetForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    
-    // ดึงอีเมลจากช่อง Input หน้า Forgot (เพราะหน้า Reset อาจจะไม่มีช่องอีเมล)
-    const email = $("forgotEmail").value.trim(); 
+    const email = $("forgotEmail").value.trim();
     const newPassword = $("newPassword").value.trim();
-    
     if (!email) return showToast("ไม่พบข้อมูลอีเมล", "กรุณากลับไปกรอกอีเมลที่หน้าลืมรหัสผ่านใหม่");
     if (newPassword.length < 6) return showToast("รหัสผ่านสั้นเกินไป", "ต้องมีอย่างน้อย 6 ตัวอักษร");
-
     try {
       const res = await fetch(`${API_BASE}/api/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email: email, 
-          newPassword: newPassword // ✅ แก้ชื่อตัวแปรให้ตรงกับ req.body ใน server.js
-        })
+        body: JSON.stringify({ email, newPassword })
       });
-
       const data = await res.json();
-
-      if (res.ok) {
-        showToast("สำเร็จ ✅", "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
-        setTimeout(() => setPane("login"), 1500);
-      } else {
-        showToast("ผิดพลาด", data.error || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
-      }
-    } catch (err) { 
-      showToast("Server error", "การเชื่อมต่อล้มเหลว"); 
-    }
+      if (res.ok) { showToast("สำเร็จ ✅", "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว"); setTimeout(() => setPane("login"), 1500); }
+      else showToast("ผิดพลาด", data.error || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
+    } catch (err) { showToast("Server error", "การเชื่อมต่อล้มเหลว"); }
   });
 
-  setPane("login");
+  setPane("login"); // 🔥 เรียกครั้งเดียวตอนท้าย
 })();
